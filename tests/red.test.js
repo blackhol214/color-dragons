@@ -17,7 +17,11 @@ describe('mensajes', () => {
   });
   it('lee una posición', () => {
     const m = leerMensaje(JSON.stringify({ tipo: 'pos', x: 1, y: 0, z: 2, rot: 0.5, color: 5, t: 100 }));
-    expect(m).toEqual({ tipo: 'pos', x: 1, y: 0, z: 2, rot: 0.5, color: 5, t: 100 });
+    expect(m).toEqual({ tipo: 'pos', x: 1, y: 0, z: 2, rot: 0.5, color: 5, oculto: 0, t: 100 });
+  });
+  it('escondido en una caja: solo 1 cuenta como escondido', () => {
+    const pos = o => leerMensaje(JSON.stringify({ tipo: 'pos', x: 0, y: 0, z: 0, rot: 0, oculto: o })).oculto;
+    expect(pos(1)).toBe(1); expect(pos('si')).toBe(0); expect(pos(undefined)).toBe(0);
   });
   it('ignora mensajes rotos o con trampas', () => {
     expect(leerMensaje('no es json')).toBe(null);

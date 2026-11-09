@@ -72,12 +72,12 @@ export function parseSave(text) {
 // ---------- 🤖 El bot guía: un cubito que te sigue y te explica el juego ----------
 // Lo que dice cuando pulsas «¿Cómo juego?» (en el celular no hay teclas: nombra los botones)
 export const GUIA_COMO = {
-  teclado: 'Para moverte usa WASD, las flechas izquierda/derecha (o arrastrar el mouse) para mover la cámara, y ESPACIO para saltar. Extra: V = primera persona · ENTER = abrir o cerrar este diálogo · H = esconderme o llamarme · C = cambiar mi color. Para guardar, pulsa el botón verde GUARDAR.',
-  touch: 'Para moverte usa el círculo de abajo a la izquierda, arrastra el dedo (o el círculo CÁMARA) para mover la cámara, y toca SALTAR para saltar. El botón 🤖 Guía abre o cierra este diálogo. Para guardar, toca GUARDAR.',
+  teclado: 'Para moverte usa WASD, las flechas izquierda/derecha (o arrastrar el mouse) para mover la cámara, y ESPACIO para saltar. B = meterte en una caja o en el armario (y salir) · en una escotilla, W sube por la escalera y S baja · V = primera persona · ENTER = abrir o cerrar este diálogo · H = esconderme o llamarme · C = cambiar mi color. Para guardar, pulsa el botón verde GUARDAR.',
+  touch: 'Para moverte usa el círculo de abajo a la izquierda, arrastra el dedo (o el círculo CÁMARA) para mover la cámara, y toca SALTAR para saltar. Cerca de una caja aparece 📦 Esconderse. En una escotilla, empuja el círculo hacia arriba para subir por la escalera. El botón 🤖 Guía abre o cierra este diálogo. Para guardar, toca GUARDAR.',
 };
 // Lo que dice cuando pulsas «¿Qué tengo que hacer?», según dónde estás (por ahora solo hay un lugar)
 export const GUIA_QUE_HAGO = {
-  mundo: '¡Bienvenido a Color Dragons! 🐉 Por ahora el mundo está vacío: explóralo con tus amigos. Pronto llegarán los dragones de colores…',
+  mundo: 'Estás en el laboratorio. Explóralo con tus amigos: el Test Lab, el Spawn, los Baños, los Lockers, el Panic Hole y el Center Lab. Por las escotillas (en el Test Lab y en los Lockers) se baja a los subsuelos, y abajo hay túneles que los unen. Si algo te da miedo, métete en una caja. (Los dragones todavía no llegan… 🐉)',
 };
 export const textoQueHago = lugar => GUIA_QUE_HAGO[lugar] || GUIA_QUE_HAGO.mundo;
 // Colores del bot guía: C pasa al siguiente (y después del último vuelve al primero)

@@ -5,6 +5,7 @@
 import { Database } from 'bun:sqlite';
 import { mkdirSync } from 'node:fs';
 import { PUERTO, MAX_JUGADORES, BORDE, leerMensaje, salaDeHost, linkOficial } from './src/red.js';
+import { SPAWN } from './src/laboratorio.js';
 
 // ---------- Base de datos ----------
 mkdirSync(new URL('./datos', import.meta.url), { recursive: true });
@@ -30,7 +31,7 @@ function guardar(j) {
 const conectados = new Map();   // id → { id, nombre, color, x, y, z, rot, ws }
 let siguienteId = 1;
 const aTodos = datos => servidor.publish('juego', JSON.stringify(datos));
-const sinWs = j => ({ id: j.id, nombre: j.nombre, color: j.color, rot: j.rot, x: j.x, y: j.y, z: j.z });
+const sinWs = j => ({ id: j.id, nombre: j.nombre, color: j.color, rot: j.rot, oculto: j.oculto || 0, x: j.x, y: j.y, z: j.z });
 // 🛡️ Nadie puede decir que está fuera del mapa ni volando a 1 km de altura
 const dentro = (n, max) => Math.max(-max, Math.min(max, n));
 
@@ -69,7 +70,7 @@ const servidor = Bun.serve({
         const antes = buscarJugador.get(m.nombre);   // ¿ya había jugado alguna vez?
         if (antes) sumarVisita.run(m.nombre);
         const j = { id: siguienteId++, nombre: m.nombre, color: m.color, rot: 0,
-          x: antes ? antes.x : 0, y: antes ? antes.y : 0, z: antes ? antes.z : 15, ws };
+          x: antes ? antes.x : SPAWN.x, y: antes ? antes.y : SPAWN.y, z: antes ? antes.z : SPAWN.z, ws };
         ws.data.id = j.id;
         // Al nuevo: quién es él, quiénes están ya y dónde quedó la última vez
         ws.send(JSON.stringify({ tipo: 'bienvenida', id: j.id, jugadores: [...conectados.values()].map(sinWs),
@@ -84,9 +85,9 @@ const servidor = Bun.serve({
       if (!yo) return;   // todo lo demás solo vale después de saludar
 
       if (m.tipo === 'pos') {
-        yo.x = dentro(m.x, BORDE); yo.y = dentro(m.y, 200); yo.z = dentro(m.z, BORDE); yo.rot = m.rot;
+        yo.x = dentro(m.x, BORDE); yo.y = dentro(m.y, 200); yo.z = dentro(m.z, BORDE); yo.rot = m.rot; yo.oculto = m.oculto;
         if (m.color !== null) yo.color = m.color;
-        ws.publish('juego', JSON.stringify({ tipo: 'pos', id: yo.id, x: yo.x, y: yo.y, z: yo.z, rot: yo.rot, color: yo.color, t: m.t }));   // t: su hora, para dibujarlo suave
+        ws.publish('juego', JSON.stringify({ tipo: 'pos', id: yo.id, x: yo.x, y: yo.y, z: yo.z, rot: yo.rot, color: yo.color, oculto: yo.oculto, t: m.t }));   // t: su hora, para dibujarlo suave
       }
     },
     close(ws) {

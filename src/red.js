@@ -42,7 +42,8 @@ export function leerMensaje(texto) {
   }
   if (m.tipo === 'pos') {
     if (![m.x, m.y, m.z, m.rot].every(esNumero)) return null;
-    return { tipo: 'pos', x: m.x, y: m.y, z: m.z, rot: m.rot, color: esNumero(m.color) ? m.color : null, t: horaDe(m.t) };
+    // oculto: 1 si estás metido en una caja (tus amigos no te ven)
+    return { tipo: 'pos', x: m.x, y: m.y, z: m.z, rot: m.rot, color: esNumero(m.color) ? m.color : null, oculto: m.oculto === 1 ? 1 : 0, t: horaDe(m.t) };
   }
   return null;
 }
