@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Color Dragons</title>
+<meta name="description" content="Un juego 3D gratis para jugar con tus amigos en el navegador.">
+<meta name="theme-color" content="#2fae4e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="iconos/icono-192.png">
+<link rel="apple-touch-icon" href="iconos/icono-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ADLaM+Display&display=swap">
+<style>
+  :root { color-scheme: light; --sky:#bfe3f2; --ink:#16301f; --panel:rgba(255,255,255,.78); --accent:#2fae4e; }
+  html, body { height:100%; margin:0; overflow:hidden; background:var(--sky); font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; color:var(--ink); }
+  [hidden] { display:none !important; }
+  /* Pantalla de inicio: pide tu usuario */
+  #login { position:fixed; inset:0; z-index:30; display:grid; place-items:center; padding:16px; background:rgba(10,20,14,.55); backdrop-filter:blur(4px); }
+  .login-card { width:min(380px, 100%); display:flex; flex-direction:column; gap:10px; padding:22px; border-radius:14px; background:#fbfaf5; color:#16301f; box-shadow:0 20px 50px rgba(0,0,0,.35); }
+  .login-card h1 { margin:0 0 4px; font:400 34px/1 Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif; color:#1f8a3b; letter-spacing:.02em; }
+  .login-card label { font:700 13px system-ui, sans-serif; }
+  .login-card input { border:2px solid #cfd8d2; border-radius:8px; padding:10px 12px; font:16px system-ui, sans-serif; color:#16301f; background:#fff; }
+  .login-card input:focus { outline:none; border-color:#2fae4e; }
+  .login-card p { margin:0; font:13px/1.4 system-ui, sans-serif; color:#4a5f52; }
+  .login-card button { border:0; border-radius:8px; padding:12px; font:700 16px system-ui, sans-serif; background:#2fae4e; color:#fff; cursor:pointer; }
+  .login-card button:focus-visible { outline:3px solid #1e6bff; outline-offset:2px; }
+  #loginError { color:#c0141a; font-weight:600; }
+  /* Aviso de guardado */
+  #saved { position:fixed; left:50%; top:40%; transform:translate(-50%,-50%) scale(.7); margin:0; z-index:25; font:400 clamp(34px, 8vw, 84px)/1.1 "ADLaM Display", Impact, "Arial Narrow Bold", sans-serif; color:#2fd158; text-shadow:0 4px 0 #0d5a22, 0 8px 18px rgba(0,0,0,.35); white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; }
+  #saved.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  #game { position:fixed; inset:0; display:block; width:100%; height:100%; touch-action:none; }
+  /* Celular: que tocar dos veces rápido (o con dos dedos) no haga zoom en la pantalla */
+  html, body { touch-action:manipulation; overscroll-behavior:none; -webkit-user-select:none; user-select:none; -webkit-text-size-adjust:100%; }
+  input { -webkit-user-select:text; user-select:text; }
+  #stick { position:fixed; left:24px; bottom:calc(24px + env(safe-area-inset-bottom,0px)); width:110px; height:110px; border-radius:50%; background:rgba(255,255,255,.35); border:2px solid rgba(255,255,255,.7); display:none; touch-action:none; }
+  #knob { position:absolute; left:35px; top:35px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.9); }
+  #jump { position:fixed; right:150px; bottom:calc(34px + env(safe-area-inset-bottom,0px)); width:80px; height:80px; border-radius:50%; border:2px solid rgba(255,255,255,.7); background:rgba(47,174,78,.75); color:#fff; font:700 14px system-ui; display:none; touch-action:none; }
+  /* Celular: joystick de la cámara (a la derecha) y botón de primera persona */
+  #camStick { position:fixed; right:24px; bottom:calc(24px + env(safe-area-inset-bottom,0px)); width:110px; height:110px; border-radius:50%; background:rgba(255,255,255,.25); border:2px dashed rgba(255,255,255,.7); display:none; touch-action:none; }
+  #camStick .knob { position:absolute; left:35px; top:35px; width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,.9); }
+  #camStick span { position:absolute; left:0; right:0; bottom:-18px; text-align:center; font:700 11px system-ui; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.6); pointer-events:none; }
+  #fpBtn { position:fixed; left:24px; bottom:calc(150px + env(safe-area-inset-bottom,0px)); width:56px; height:56px; border-radius:50%; border:2px solid rgba(255,255,255,.7); background:rgba(22,48,31,.82); font-size:24px; display:none; touch-action:manipulation; }
+  #fpBtn.on { background:rgba(176,120,0,.9); }
+  /* Los avisos salen en el CENTRO de la pantalla (más fácil de leer) */
+  #toast { position:fixed; left:50%; top:42%; transform:translate(-50%, -50%) scale(.96); z-index:24; margin:0; padding:14px 22px; border-radius:16px; background:rgba(22,48,31,.9); color:#fff;
+    font:700 20px/1.35 system-ui, sans-serif; text-align:center; white-space:normal; width:max-content; max-width:min(560px, calc(100% - 32px)); box-shadow:0 8px 24px rgba(0,0,0,.3);
+    opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; }
+  #toast.show { opacity:1; transform:translate(-50%, -50%) scale(1); }
+  #toast.bad { background:rgba(150,20,20,.9); }
+  #cross { position:fixed; left:50%; top:50%; width:22px; height:22px; margin:-11px 0 0 -11px; pointer-events:none; display:none; }
+  #cross::before, #cross::after { content:""; position:absolute; background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.5); }
+  #cross::before { left:10px; top:0; width:2px; height:22px; }
+  #cross::after { top:10px; left:0; height:2px; width:22px; }
+  #lockHint { position:fixed; left:50%; top:58%; transform:translateX(-50%); margin:0; padding:8px 14px; border-radius:8px; background:rgba(22,48,31,.85); color:#fff; font:600 14px system-ui, sans-serif; pointer-events:none; }
+  /* Botón GUARDAR (esquina de abajo a la derecha) */
+  #saveBtn { position:fixed; right:16px; bottom:calc(16px + env(safe-area-inset-bottom,0px)); z-index:15; border:0; border-radius:12px; padding:12px 22px; font:400 22px/1 "ADLaM Display", Impact, "Arial Narrow Bold", sans-serif; letter-spacing:.04em; color:#fff; background:#1f8a3b; box-shadow:0 4px 0 #0d5a22, 0 8px 18px rgba(0,0,0,.3); cursor:pointer; }
+  #saveBtn:hover { background:#24a046; }
+  #saveBtn:active { transform:translateY(3px); box-shadow:0 1px 0 #0d5a22, 0 4px 10px rgba(0,0,0,.3); }
+  #saveBtn:focus-visible { outline:3px solid #1e6bff; outline-offset:3px; }
+  @media (prefers-reduced-motion: reduce) { #toast, #saved { transition:none; } }
+  /* Botón del bot guía para el celular (no hay teclado) */
+  #guiaBtn { position:fixed; right:16px; bottom:calc(220px + env(safe-area-inset-bottom,0px)); z-index:15; display:none; min-width:64px; border:2px solid rgba(255,255,255,.75); border-radius:14px; padding:8px 12px; font:700 14px/1.1 system-ui, sans-serif; color:#fff; background:rgba(22,48,31,.82); touch-action:manipulation; }
+  @media (pointer:coarse) { #stick, #jump, #camStick, #fpBtn, #guiaBtn { display:block; } #saveBtn { left:16px; right:auto; bottom:calc(220px + env(safe-area-inset-bottom,0px)); padding:10px 16px; font-size:18px; }
+    #toast { font-size:17px; } }
+  /* 🤖 Bot guía: su globo de diálogo (abajo al centro; en el celular, arriba para no tapar los botones) */
+  #guia { position:fixed; left:50%; bottom:calc(16px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); z-index:25; width:min(460px, calc(100% - 32px)); box-sizing:border-box; padding:14px 16px 12px; border-radius:16px; background:#fbfaf5; color:#16301f; border:3px solid #16301f; box-shadow:0 6px 0 #16301f, 0 12px 26px rgba(0,0,0,.3); font:15px/1.45 system-ui, sans-serif; }
+  #guia .guia-quien { margin:0 0 4px; font:800 13px system-ui, sans-serif; color:#1f8a3b; letter-spacing:.03em; }
+  #guia .guia-texto { margin:0 0 10px; }
+  #guia .guia-botones { display:flex; flex-wrap:wrap; gap:8px; }
+  #guia button { border:0; border-radius:10px; padding:9px 12px; font:700 14px system-ui, sans-serif; color:#fff; background:#2fae4e; cursor:pointer; touch-action:manipulation; }
+  #guia button.otro { background:#5b3df5; }
+  #guia button.chico { background:#e6e9e4; color:#16301f; }
+  #guia button.elegido { box-shadow:inset 0 0 0 3px #ffd60a; }
+  #guia button:focus-visible { outline:3px solid #1e6bff; outline-offset:2px; }
+  #guiaCerrar { position:absolute; right:8px; top:8px; width:28px; height:28px; padding:0 !important; }
+  @media (pointer:coarse) { #guia { bottom:auto; top:calc(150px + env(safe-area-inset-top,0px)); font-size:14px; } }
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+<p id="toast" aria-live="polite"></p>
+<div id="cross"></div>
+<div id="login">
+  <form id="loginForm" class="login-card" autocomplete="off">
+    <h1>COLOR DRAGONS</h1>
+    <label for="loginName">Tu usuario</label>
+    <input id="loginName" type="text" maxlength="24" placeholder="el humano" spellcheck="false">
+    <p>Si ya guardaste con este usuario, sigues donde lo dejaste. Para guardar, pulsa el botón verde <b>GUARDAR</b>.</p>
+    <p id="loginError" hidden>Escribe un nombre de usuario para jugar.</p>
+    <button type="submit">Jugar</button>
+  </form>
+</div>
+<p id="saved" aria-live="polite">CAMBIOS GUARDADOS</p>
+<div id="guia" hidden role="dialog" aria-labelledby="guiaQuien">
+  <button type="button" id="guiaCerrar" class="chico" aria-label="Cerrar el diálogo del bot guía">×</button>
+  <p class="guia-quien" id="guiaQuien">🤖 BOT GUÍA</p>
+  <p class="guia-texto" id="guiaTexto" aria-live="polite"></p>
+  <div class="guia-botones">
+    <button type="button" id="guiaComo">¿Cómo juego?</button>
+    <button type="button" id="guiaQue" class="otro">¿Qué tengo que hacer?</button>
+    <button type="button" id="guiaColor" class="chico" aria-label="Cambiar el color del bot guía">🎨 Color</button>
+  </div>
+</div>
+<button type="button" id="saveBtn">GUARDAR</button>
+<button type="button" id="guiaBtn">🤖 Guía</button>
+<p id="lockHint" hidden>Haz clic para mirar con el ratón (Esc para soltarlo)</p>
+<div id="stick"><div id="knob"></div></div>
+<div id="camStick" aria-label="Mover la cámara"><div class="knob"></div><span>CÁMARA</span></div>
+<button id="jump" type="button">SALTAR</button>
+<button id="fpBtn" type="button" aria-label="Cambiar a primera persona">👁️</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module">
+import { moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COMO, textoQueHago, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=1';
+import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=1';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
+(() => {
+  // iPhone ignora user-scalable=no: aquí se bloquea el zoom con dos dedos y el doble toque
+  for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', e => { const now = Date.now(); if (now - lastTouchEnd < 350 && e.target.tagName !== 'INPUT') e.preventDefault(); lastTouchEnd = now; }, { passive: false });
+  document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  const IS_TOUCH = matchMedia('(pointer:coarse)').matches;
+  const canvas = document.getElementById('game');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, IS_TOUCH ? 1.5 : 2));   // en el celular, menos píxeles extra (igual se ve nítido)
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xbfe3f2);
+  scene.fog = new THREE.Fog(0xbfe3f2, 60, 220);
+
+  const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 900);
+  scene.add(camera);
+
+  // Luces
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x3f6b2a, 0.75));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.85);
+  sun.position.set(20, 40, 15);
+  sun.castShadow = true;
+  sun.shadow.mapSize.setScalar(IS_TOUCH ? 1024 : 2048);   // sombras más livianas en el celular
+  Object.assign(sun.shadow.camera, { left:-30, right:30, top:30, bottom:-30, near:1, far:120 });
+  scene.add(sun, sun.target);
+
+  // Todo lo sólido (paredes, pisos, muebles). Por ahora el mundo está vacío: la física las sigue admitiendo, pero la lista está vacía
+  const platforms = [];
+  // Gran zona plana con textura de cuadrícula (¡como la del primer día!)
+  const SIZE = 200;
+  const tex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const g = c.getContext('2d');
+    g.fillStyle = '#8b5a2b'; g.fillRect(0,0,128,128);
+    g.fillStyle = '#7f5226'; g.fillRect(0,0,64,64); g.fillRect(64,64,64,64);
+    g.strokeStyle = 'rgba(50,28,10,.22)'; g.lineWidth = 2; g.strokeRect(0,0,128,128);
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(SIZE/8, SIZE/8);
+    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return t;
+  })();
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(SIZE, SIZE), new THREE.MeshLambertMaterial({ map: tex }));
+  ground.rotation.x = -Math.PI/2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+  const spawn = { x: 0, y: 0, z: 15 };
+
+  // Personaje: rectángulo vertical verde con dos ojos negros
+  const player = new THREE.Group();
+  const H = 2, W = 1, D = 0.6;
+  const body = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), new THREE.MeshLambertMaterial({ color: 0x2fae4e }));
+  body.position.y = H/2; body.castShadow = true;
+  player.add(body);
+  const eyeGeo = new THREE.SphereGeometry(0.11, 16, 12);
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+  [-0.22, 0.22].forEach(x => {
+    const eye = new THREE.Mesh(eyeGeo, eyeMat);
+    eye.scale.z = 0.5;
+    eye.position.set(x, H*0.78, D/2 + 0.02);
+    player.add(eye);
+  });
+  scene.add(player);
+
+  // ---------- Multijugador (datos) ----------
+  // Se conecta si el link trae una sala (github.io/...?sala=palabras-raras) o si el juego viene del servidor (localhost:8080)
+  const SALA = leerSala(new URLSearchParams(location.search).get('sala'));
+  const ONLINE = !!SALA || location.port === String(PUERTO);
+  const SERVER_WS = SALA ? `wss://${SALA}.trycloudflare.com/ws` : `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`;
+  // otros: id → { obj, body, nombre, suave }
+  const red = { ws: null, id: null, otros: new Map(), envio: 0, pedazos: [] };
+  const enviar = datos => { if (red.ws && red.ws.readyState === WebSocket.OPEN) red.ws.send(JSON.stringify(datos)); };
+
+  // Entrada
+  const keys = {};
+  let firstPerson = false, fpPitch = 0;
+  addEventListener('keydown', e => {
+    if (!loginEl.hidden) return;                 // en la pantalla de inicio: solo se escribe el usuario
+    keys[e.code] = true;
+    if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
+    if (e.code === 'KeyV' && !e.repeat) setFirstPerson(!firstPerson);
+    if (e.code === 'KeyH' && !e.repeat) guiaMostrar(!guiaVisible);   // H: esconde o llama al bot guía
+    if ((e.code === 'Enter' || e.code === 'NumpadEnter') && !e.repeat) { e.preventDefault(); guiaDialogo(guiaEl.hidden); }   // ENTER: abre o cierra el diálogo del bot guía
+    if (e.code === 'KeyC' && !e.repeat) guiaCambiarColor();          // C: el bot guía cambia de color
+    if (e.code === 'Escape' && !guiaEl.hidden) guiaEl.hidden = true;
+  });
+  addEventListener('keyup', e => { keys[e.code] = false; });
+
+  let camYaw = 0, camPitch = 0.35, dragging = false, lx = 0, ly = 0;
+
+  // Primera persona: el cursor se bloquea al centro y el ratón mueve la cámara sin hacer clic
+  const cross = document.getElementById('cross'), lockHint = document.getElementById('lockHint');
+  const isLocked = () => document.pointerLockElement === canvas;
+  function requestLock() { try { const r = canvas.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
+  function setFirstPerson(on) {
+    firstPerson = on; player.visible = !on; fpPitch = 0;
+    if (on && !IS_TOUCH) requestLock(); else if (isLocked()) document.exitPointerLock();   // en el celular no hay cursor que bloquear
+    fpBtn.classList.toggle('on', on);
+    fpBtn.setAttribute('aria-label', on ? 'Volver a tercera persona' : 'Cambiar a primera persona');
+    updateLockUI();
+  }
+  function updateLockUI() {
+    cross.style.display = firstPerson && (isLocked() || IS_TOUCH) ? 'block' : 'none';
+    lockHint.hidden = !(firstPerson && !isLocked() && !IS_TOUCH);
+  }
+  const FP_SENS = 0.005; // sensibilidad del ratón en primera persona
+  document.addEventListener('pointerlockchange', updateLockUI);
+  document.addEventListener('mousemove', e => {
+    if (!firstPerson || !isLocked()) return;
+    camYaw -= e.movementX * FP_SENS;
+    fpPitch = Math.min(1.3, Math.max(-1.3, fpPitch - e.movementY * FP_SENS));
+  });
+
+  canvas.addEventListener('pointerdown', e => {
+    if (firstPerson && !IS_TOUCH) { if (!isLocked()) requestLock(); return; }   // el primer clic bloquea el cursor
+    dragging = true; lx = e.clientX; ly = e.clientY;
+  });
+  addEventListener('pointerup', () => { dragging = false; });
+  addEventListener('pointermove', e => {
+    if (!dragging) return;
+    camYaw -= (e.clientX - lx) * 0.005;
+    if (firstPerson) fpPitch = Math.min(1.3, Math.max(-1.3, fpPitch - (e.clientY - ly) * 0.004));
+    else camPitch = Math.min(1.2, Math.max(0.1, camPitch + (e.clientY - ly) * 0.004));
+    lx = e.clientX; ly = e.clientY;
+  });
+
+  // Joysticks táctiles: el de la izquierda te mueve y el de la derecha gira la cámara
+  function makeStick(el, knobEl) {
+    const out = { x: 0, y: 0 };
+    let id = null;
+    const move = e => {
+      const r = el.getBoundingClientRect();
+      let dx = e.clientX - (r.left + r.width/2), dy = e.clientY - (r.top + r.height/2);
+      const m = Math.hypot(dx, dy), max = 40;
+      if (m > max) { dx *= max/m; dy *= max/m; }
+      knobEl.style.transform = `translate(${dx}px,${dy}px)`;
+      out.x = dx/max; out.y = dy/max;
+    };
+    el.addEventListener('pointerdown', e => { id = e.pointerId; try { el.setPointerCapture(e.pointerId); } catch (err) {} move(e); e.stopPropagation(); });
+    el.addEventListener('pointermove', e => { if (e.pointerId === id) move(e); });
+    const end = () => { id = null; out.x = out.y = 0; knobEl.style.transform = ''; };
+    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+    return out;
+  }
+  const joy = makeStick(document.getElementById('stick'), document.getElementById('knob'));
+  const camStickEl = document.getElementById('camStick');
+  const camJoy = makeStick(camStickEl, camStickEl.querySelector('.knob'));
+  const fpBtn = document.getElementById('fpBtn');
+  fpBtn.addEventListener('click', () => setFirstPerson(!firstPerson));
+  const jumpBtn = document.getElementById('jump');
+  jumpBtn.addEventListener('pointerdown', e => { keys.Space = true; e.stopPropagation(); });
+  jumpBtn.addEventListener('pointerup', () => keys.Space = false);
+  document.getElementById('guiaBtn').addEventListener('click', e => { guiaDialogo(guiaEl.hidden); e.currentTarget.blur(); });
+
+  // Física simple
+  const SPEED = 12, GRAV = 30, JUMP = 12.5, EDGE = SIZE/2;
+  const PR = 0.45; // radio de colisión de los personajes contra paredes y pisos
+  const STEP_UP = 0.45; // altura máxima que se sube sin saltar
+  const COLL = { PR, H, STEP_UP };
+  const overlaps = (pl, x, z) => Math.abs(x - pl.x) < pl.hw + PR && Math.abs(z - pl.z) < pl.hd + PR;
+  // Estirar y aplastar al saltar (la regla está en logic.js)
+  function bendState(st, dt) {   // para los que se mueven en esta compu (sabemos si están en el piso)
+    if (st.onGround && st.wasAir) st.landT = 0;
+    st.landT = (st.landT ?? 9) + dt; st.wasAir = !st.onGround;
+    const { tall, wide } = squashStretch(st.vel.y, !st.onGround, st.landT);
+    st.obj.scale.set(wide, tall, wide);
+  }
+  function bendObj(obj, dt) {   // para los que mueve otra compu: se calcula con cuánto subió o bajó
+    const u = obj.userData, y = obj.position.y, vy = dt > 0 && u.lastY !== undefined ? (y - u.lastY) / dt : 0;
+    const air = Math.abs(vy) > 2;
+    if (u.air && !air) u.landT = 0;
+    u.landT = (u.landT ?? 9) + dt; u.air = air; u.lastY = y;
+    const { tall, wide } = squashStretch(vy, air, u.landT);
+    obj.scale.set(wide, tall, wide);
+  }
+  const makeState = obj => ({ obj, pos: obj.position, vel: new THREE.Vector3(), walkX: 0, walkZ: 0, onGround: true, standing: null, facing: 0 });
+
+  // Empuje horizontal, choques laterales, gravedad, suelo y techo
+  function physics(st, dt, wantJump, jump = JUMP) {
+    // Lo que camina este cuadro + el empuje que trae, en pasitos para no atravesar paredes
+    const tx = st.walkX + st.vel.x * dt, tz = st.walkZ + st.vel.z * dt;
+    st.walkX = st.walkZ = 0;
+    moveAndCollide(st, tx, tz, platforms, COLL);
+    // No te puedes salir del terreno
+    st.pos.x = Math.max(-EDGE + PR, Math.min(EDGE - PR, st.pos.x));
+    st.pos.z = Math.max(-EDGE + PR, Math.min(EDGE - PR, st.pos.z));
+    const damp = Math.exp(-(st.onGround ? 6 : 0.4) * dt);
+    st.vel.x *= damp; st.vel.z *= damp;
+
+    if (wantJump && st.onGround) { st.vel.y = jump; st.onGround = false; }
+    const prevY = st.pos.y;
+    let floor = 0, standing = null;
+    for (const pl of platforms) {
+      if (pl.top > floor && pl.top <= prevY + 0.01 && overlaps(pl, st.pos.x, st.pos.z)) { floor = pl.top; standing = pl; }
+    }
+    st.vel.y -= GRAV * dt;
+    st.pos.y += st.vel.y * dt;
+    if (st.vel.y > 0) {
+      for (const pl of platforms) {
+        if (prevY + H <= pl.bottom && st.pos.y + H > pl.bottom && overlaps(pl, st.pos.x, st.pos.z)) {
+          st.pos.y = pl.bottom - H; st.vel.y = 0;
+        }
+      }
+    }
+    if (st.pos.y <= floor) { st.pos.y = floor; st.vel.y = 0; st.onGround = true; }
+    else { st.onGround = false; standing = null; }
+    st.standing = standing;
+  }
+  // Gira el cuerpo suavemente hacia donde camina
+  function turnTo(st, mx, mz, dt) {
+    let d = Math.atan2(mx, mz) - st.facing;
+    d = Math.atan2(Math.sin(d), Math.cos(d));
+    st.facing += d * Math.min(1, dt * 12);
+    st.obj.rotation.y = st.facing;
+  }
+
+  const ps = makeState(player);
+  ps.pos.set(spawn.x, spawn.y, spawn.z);
+
+  // Avisos en el centro de la pantalla
+  const toast = document.getElementById('toast');
+  let toastTimer = null;
+  function showToast(text, bad = false, ms = 2200) {
+    toast.textContent = text; toast.classList.toggle('bad', bad); toast.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), ms);
+  }
+
+  // ---------- Usuario y guardado (localStorage) ----------
+  const loginEl = document.getElementById('login'), loginForm = document.getElementById('loginForm');
+  const loginName = document.getElementById('loginName'), loginError = document.getElementById('loginError');
+  const savedEl = document.getElementById('saved');
+  let userName = null, savedTimer = null, loadedLocal = false;
+  loginName.focus();
+  loginForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const name = loginName.value.trim().replace(/\s+/g, ' ');
+    if (!name) { loginError.hidden = false; loginName.focus(); return; }
+    userName = name;
+    loginEl.hidden = true; loginName.blur();
+    const loaded = loadGame(name);
+    loadedLocal = loaded;
+    showToast(loaded ? `¡Hola de nuevo, ${name}! Seguiste donde guardaste` : `Hola, ${name}. Para guardar, pulsa GUARDAR (abajo a la derecha)`);
+    guiaSaludo = `¡Hola, ${name}! Soy tu bot guía 🤖. `; guiaMostrar(true);   // al empezar, el cubito aparece a tu lado (el diálogo se abre con ENTER)
+    conectarRed(name);
+  });
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.addEventListener('click', () => { saveGame(); saveBtn.blur(); }); // blur: que Espacio siga siendo saltar
+  function saveGame() {
+    if (!userName) return;
+    try {
+      localStorage.setItem(saveKey(userName), serializeSave({ pos: ps.pos }));
+    } catch (e) {
+      showToast('No se pudo guardar: este navegador no deja guardar datos', true);
+      return;
+    }
+    savedEl.classList.add('show');
+    clearTimeout(savedTimer); savedTimer = setTimeout(() => savedEl.classList.remove('show'), 2200);
+  }
+  function loadGame(name) {
+    let raw = null;
+    try { raw = localStorage.getItem(saveKey(name)); } catch (e) { return false; }
+    const data = raw && parseSave(raw);
+    if (!data) return false;
+    // Si el guardado quedó fuera del mapa, vuelves a donde apareces
+    if (data.pos && Math.abs(data.pos.x) < EDGE && Math.abs(data.pos.z) < EDGE) ps.pos.set(data.pos.x, data.pos.y, data.pos.z);
+    return true;
+  }
+
+  // ---------- 🤖 Bot guía: un cubito que flota a tu lado y te explica el juego ----------
+  // Cada jugador tiene el suyo (solo lo ves tú). ENTER abre o cierra su diálogo · H lo esconde o lo llama · C le cambia el color · × cierra el diálogo
+  const guiaEl = document.getElementById('guia'), guiaTexto = document.getElementById('guiaTexto');
+  const guiaBot = (() => {
+    const g = new THREE.Group(), L = 0.55;
+    const cubo = new THREE.Mesh(new THREE.BoxGeometry(L, L, L), new THREE.MeshLambertMaterial({ color: 0xffffff }));
+    g.add(cubo);
+    for (const ex of [-0.12, 0.12]) { const e = new THREE.Mesh(eyeGeo, eyeMat); e.scale.set(0.6, 0.6, 0.3); e.position.set(ex, 0.07, L / 2 + 0.01); cubo.add(e); }
+    const palo = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.22, 6), new THREE.MeshLambertMaterial({ color: 0x333333 }));
+    palo.position.y = L / 2 + 0.11; cubo.add(palo);   // la antenita…
+    const luz = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff3b3b }));
+    luz.position.y = L / 2 + 0.25; cubo.add(luz);     // …con su lucecita (parpadea mientras te habla)
+    g.visible = false; scene.add(g);
+    return { obj: g, cubo, luz, t: 0 };
+  })();
+  let guiaVisible = false, guiaColor = 0;
+  try { guiaColor = Math.floor(+localStorage.getItem('color-dragons:guia-color')) % GUIA_COLORES.length || 0; } catch (e) {}
+  guiaBot.cubo.material.color.setHex(GUIA_COLORES[guiaColor]);
+  function guiaCambiarColor() {
+    guiaColor = siguienteColorGuia(guiaColor);
+    guiaBot.cubo.material.color.setHex(GUIA_COLORES[guiaColor]);
+    try { localStorage.setItem('color-dragons:guia-color', guiaColor); } catch (e) {}   // tu color se recuerda en este navegador
+  }
+  function guiaDecir(boton, antes = '') {
+    const texto = boton === 'guiaQue' ? textoQueHago('mundo') : GUIA_COMO[IS_TOUCH ? 'touch' : 'teclado'];
+    guiaTexto.textContent = antes + texto;
+    for (const b of guiaEl.querySelectorAll('button')) b.classList.toggle('elegido', b.id === boton);
+  }
+  // El cubito: H lo esconde o lo llama (sin abrir el diálogo) · el diálogo SOLO se abre con ENTER (o el botón 🤖 Guía del celular)
+  let guiaSaludo = '';   // lo que dice la primera vez que abres el diálogo
+  function guiaMostrar(on) {
+    if (on && !guiaVisible) guiaBot.t = -1;   // -1: en el próximo cuadro aparece justo a tu lado (no viene volando desde lejos)
+    guiaVisible = on; guiaBot.obj.visible = on;
+    if (!on) guiaEl.hidden = true;
+  }
+  function guiaDialogo(on) {
+    if (on) { guiaMostrar(true); guiaEl.hidden = false; guiaDecir('guiaComo', guiaSaludo); guiaSaludo = ''; }
+    else guiaEl.hidden = true;
+  }
+  document.getElementById('guiaComo').addEventListener('click', e => { guiaDecir('guiaComo'); e.currentTarget.blur(); });   // blur: que Espacio siga siendo saltar
+  document.getElementById('guiaQue').addEventListener('click', e => { guiaDecir('guiaQue'); e.currentTarget.blur(); });
+  document.getElementById('guiaColor').addEventListener('click', e => { guiaCambiarColor(); e.currentTarget.blur(); });
+  document.getElementById('guiaCerrar').addEventListener('click', () => { guiaEl.hidden = true; });
+  const guiaMeta = new THREE.Vector3();
+  function updateGuia(dt) {
+    if (!guiaVisible) return;
+    const b = guiaBot;
+    b.t = b.t < 0 ? 0 : b.t + dt;
+    // Flota a tu derecha (mirando desde la cámara), un poco más arriba de tu cabeza, subiendo y bajando
+    guiaMeta.set(ps.pos.x + Math.cos(camYaw) * 1.3, ps.pos.y + 1.9 + Math.sin(b.t * 2.5) * 0.12, ps.pos.z - Math.sin(camYaw) * 1.3);
+    if (b.t === 0 || b.obj.position.distanceTo(guiaMeta) > 25) b.obj.position.copy(guiaMeta);   // recién llamado o te teletransportaste: aparece ahí
+    else b.obj.position.lerp(guiaMeta, Math.min(1, dt * 5));                                   // si no, te sigue suave
+    b.obj.rotation.y = camYaw + Math.sin(b.t * 1.7) * 0.25;   // te mira (hacia la cámara) y se balancea un poquito
+    b.luz.visible = guiaEl.hidden || Math.floor(b.t * 3) % 2 === 0;
+  }
+
+  // ---------- Multijugador: tus amigos en tiempo real ----------
+  // Cartelito con el nombre encima de la cabeza
+  function makeLabel(text, color = '#fff') {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 64;
+    const g = c.getContext('2d');
+    g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, 8, 256, 48);
+    g.fillStyle = color; g.font = 'bold 34px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, 128, 33);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false }));
+    s.scale.set(2.4, 0.6, 1); s.position.y = H + 0.6;
+    return s;
+  }
+  // Un amigo: rectángulo de su color con ojos, igual que tú
+  function addFriend(j) {
+    const obj = new THREE.Group();
+    const b = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), new THREE.MeshLambertMaterial({ color: j.color }));
+    b.position.y = H/2; b.castShadow = true; obj.add(b);
+    [-0.22, 0.22].forEach(x => { const e = new THREE.Mesh(eyeGeo, eyeMat); e.scale.z = 0.5; e.position.set(x, H*0.78, D/2 + 0.02); obj.add(e); });
+    obj.add(makeLabel(j.nombre));
+    obj.position.set(j.x, j.y, j.z); obj.rotation.y = j.rot || 0;
+    scene.add(obj);
+    red.otros.set(j.id, { obj, body: b, nombre: j.nombre, suave: nuevoSuavizador() });
+  }
+  // ¡BOOM! El rectángulo se rompe en pedacitos de su color que salen volando
+  const pieceGeo = new THREE.BoxGeometry(0.25, 0.25, 0.25);
+  function explode(f) {
+    const p = f.obj.position;
+    // Un solo material para los 40 pedacitos (todos se desvanecen igual): menos trabajo para la tarjeta de video
+    const mat = f.body.material.clone(); mat.transparent = true;
+    const boom = { mat, vida: 1.6, piezas: [] };
+    for (const q of piezasExplosion(40)) {
+      const m = new THREE.Mesh(pieceGeo, mat);
+      m.position.set(p.x, p.y + q.y, p.z);
+      scene.add(m);
+      boom.piezas.push({ m, ...q });
+    }
+    red.pedazos.push(boom);
+    scene.remove(f.obj);
+  }
+  function conectarRed(name) {
+    if (!ONLINE || red.ws) return;
+    const ws = new WebSocket(SERVER_WS);
+    red.ws = ws;
+    ws.onopen = () => ws.send(JSON.stringify({ tipo: 'hola', nombre: name, color: body.material.color.getHex() }));
+    ws.onmessage = e => {
+      const m = JSON.parse(e.data);
+      if (m.tipo === 'bienvenida') {
+        red.id = m.id;
+        for (const j of m.jugadores) addFriend(j);
+        // En una compu nueva (sin guardado en el navegador) apareces donde te dejó la base de datos
+        if (m.guardado && !loadedLocal && Math.abs(m.guardado.x) < EDGE && Math.abs(m.guardado.z) < EDGE) ps.pos.set(m.guardado.x, m.guardado.y, m.guardado.z);
+        const n = m.jugadores.length;
+        showToast(n ? `¡Conectado! Hay ${n} amigo${n > 1 ? 's' : ''} jugando` : '¡Conectado! Eres el primero en llegar', false, 3000);
+      } else if (m.tipo === 'entra') {
+        addFriend(m); showToast(`${m.nombre} entró al juego`);
+      } else if (m.tipo === 'pos') {
+        const f = red.otros.get(m.id);
+        if (f) { f.body.material.color.setHex(m.color); agregarMuestra(f.suave, [m.x, m.y, m.z, m.rot], m.t, performance.now()); }
+      } else if (m.tipo === 'sale') {
+        const f = red.otros.get(m.id);
+        if (f) { explode(f); red.otros.delete(m.id); }
+        showToast(`💥 ${m.nombre} se desconectó`, true, 3000);
+      } else if (m.tipo === 'error') {
+        red.error = true;   // (para que al cerrarse no diga "¿el servidor está encendido?")
+        showToast(m.texto, true, 5000);
+      }
+    };
+    ws.onclose = () => {
+      // Si nunca llegó la bienvenida, la sala no existe o el servidor está apagado
+      if (red.id === null) { red.ws = null; if (!red.error) showToast('No se pudo entrar a la sala: ¿el servidor está encendido? Juegas solo', true, 5000); red.error = false; return; }
+      for (const f of red.otros.values()) scene.remove(f.obj);
+      red.otros.clear(); red.ws = null; red.id = null;
+      showToast('Se cortó la conexión con el servidor', true, 4000);
+    };
+  }
+  function updateRed(dt) {
+    // Mandar tu posición unas 10 veces por segundo
+    if (red.id !== null && (red.envio -= dt) <= 0) {
+      red.envio = Math.max(red.envio + 1 / ENVIOS_POR_SEGUNDO, 0);   // sumar (no reemplazar): así salen 10 por segundo de verdad, no 8
+      // Si no te moviste, no hace falta repetirlo 10 veces por segundo: basta una vez por segundo (para que el servidor sepa que sigues ahí)
+      const pos = { tipo: 'pos', x: corto(ps.pos.x), y: corto(ps.pos.y), z: corto(ps.pos.z), rot: corto(ps.facing), color: body.material.color.getHex() };
+      const txt = JSON.stringify(pos);
+      pos.t = Math.round(performance.now());   // tu hora: los demás la usan para dibujarte suave (va aparte para que "¿te moviste?" no cambie siempre)
+      red.quieto = txt === red.ultimaPos ? (red.quieto || 0) + 1 : 0;
+      if (red.quieto % ENVIOS_POR_SEGUNDO === 0) { enviar(pos); red.ultimaPos = txt; }
+    }
+    // Los amigos se dibujan un poquito en el pasado, entre dos posiciones que ya llegaron (ver valoresEn en red.js)
+    const ahora = performance.now(), giroAmigo = i => (i === 3 ? 'giro' : null);
+    for (const f of red.otros.values()) {
+      const o = f.obj;
+      const v = valoresEn(f.suave, ahora, giroAmigo);
+      if (v) {
+        const vx = dt > 0 ? (v[0] - o.position.x) / dt : 0, vz = dt > 0 ? (v[2] - o.position.z) / dt : 0;
+        o.position.set(v[0], v[1], v[2]);
+        o.rotation.y = acercarAngulo(o.rotation.y, rumboDeMovimiento(vx, vz, v[3]), Math.min(1, dt * 10));   // 🧭 mira hacia donde camina (girando suave)
+      }
+      bendObj(o, dt);
+    }
+    // Pedacitos de la explosión: vuelan, caen, giran y se desvanecen
+    for (let i = red.pedazos.length - 1; i >= 0; i--) {
+      const boom = red.pedazos[i];
+      boom.vida -= dt; boom.mat.opacity = Math.min(1, boom.vida);
+      for (const q of boom.piezas) {
+        q.vy -= 20 * dt;
+        q.m.position.x += q.vx * dt; q.m.position.y += q.vy * dt; q.m.position.z += q.vz * dt;
+        if (q.m.position.y < 0.12) { q.m.position.y = 0.12; q.vy *= -0.4; q.vx *= 0.7; q.vz *= 0.7; }   // rebota en el piso
+        q.m.rotation.x += q.giro * dt; q.m.rotation.z += q.giro * dt;
+      }
+      if (boom.vida <= 0) { for (const q of boom.piezas) scene.remove(q.m); boom.mat.dispose(); red.pedazos.splice(i, 1); }
+    }
+  }
+
+  function resize() {
+    renderer.setSize(innerWidth, innerHeight, false);
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+  }
+  addEventListener('resize', resize);
+  resize();
+
+  const clock = new THREE.Clock();
+  let t = 0;
+  function tick() {
+    const dt = Math.min(clock.getDelta(), 0.05);
+    t += dt;
+
+    let fx = 0, fz = 0;
+    if (keys.KeyW || keys.ArrowUp) fz -= 1;
+    if (keys.KeyS || keys.ArrowDown) fz += 1;
+    if (keys.KeyA) fx -= 1;
+    if (keys.KeyD) fx += 1;
+    // Flechas izquierda/derecha giran la cámara (más rápido que con el ratón)
+    const CAM_TURN = 3;
+    if (keys.ArrowLeft) camYaw += CAM_TURN * dt;
+    if (keys.ArrowRight) camYaw -= CAM_TURN * dt;
+    fx += joy.x; fz += joy.y;
+    // Joystick de la cámara (celular): a los lados gira, arriba y abajo mira hacia arriba o abajo
+    if (camJoy.x || camJoy.y) {
+      camYaw -= camJoy.x * 2.6 * dt;
+      if (firstPerson) fpPitch = Math.min(1.3, Math.max(-1.3, fpPitch - camJoy.y * 1.6 * dt));
+      else camPitch = Math.min(1.2, Math.max(0.1, camPitch + camJoy.y * 1.2 * dt));
+    }
+    const busy = !loginEl.hidden;
+    if (busy) fx = fz = 0; // eligiendo usuario no te mueves
+    const len = Math.hypot(fx, fz);
+    let moving = false;
+    if (len > 0.1) {
+      moving = true;
+      const n = Math.min(len, 1) / len;
+      fx *= n; fz *= n;
+      // relativo a la cámara
+      const s = Math.sin(camYaw), c = Math.cos(camYaw);
+      const mx = fx * c + fz * s, mz = -fx * s + fz * c;
+      ps.walkX += mx * SPEED * dt;
+      ps.walkZ += mz * SPEED * dt;
+      turnTo(ps, mx, mz, dt);
+    }
+
+    physics(ps, dt, keys.Space && !busy);
+    bendState(ps, dt);
+    updateGuia(dt);
+    updateRed(dt);
+
+    // pequeño rebote al caminar
+    body.position.y = H/2 + (moving && ps.onGround ? Math.abs(Math.sin(t * 12)) * 0.08 : 0);
+
+    const p = player.position;
+    if (firstPerson) {
+      // Primera persona: la cámara va en los ojos y mira hacia donde apunta la cámara
+      const ey = p.y + body.position.y - H/2 + H*0.78;
+      camera.position.set(p.x, ey, p.z);
+      camera.lookAt(
+        p.x - Math.sin(camYaw) * Math.cos(fpPitch),
+        ey + Math.sin(fpPitch),
+        p.z - Math.cos(camYaw) * Math.cos(fpPitch)
+      );
+    } else {
+      // Cámara en tercera persona
+      const head = new THREE.Vector3(p.x, p.y + 1.2, p.z);
+      const back = new THREE.Vector3(Math.sin(camYaw) * Math.cos(camPitch), Math.sin(camPitch), Math.cos(camYaw) * Math.cos(camPitch));
+      camera.position.copy(head).addScaledVector(back, 9);
+      camera.lookAt(head);
+    }
+    // La sombra del sol te sigue (si no, solo habría sombras cerca del centro del mapa)
+    sun.position.set(p.x + 20, 40, p.z + 15); sun.target.position.set(p.x, 0, p.z);
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
+</script>
+</body>
+</html>
