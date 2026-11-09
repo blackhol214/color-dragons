@@ -106,28 +106,42 @@ function crearRed() {
   // La cabeza cuadrada va pegada directo al cuerpo (sin cuello), ladeada, con dos cuernos en punta en las esquinas de arriba.
   // ("cuello" es solo el punto donde gira la cabeza: no se ve)
   const cuello = grupo(0, 1.12, 0.02, torso);
-  const cabeza = grupo(0, 0.28, 0, cuello);
-  cabeza.rotation.z = 0.28;   // ladeada, como en el dibujo 3
-  malla(new THREE.BoxGeometry(0.64, 0.56, 0.46), rojo, 0, 0, 0, cabeza);
-  for (const sx of [-1, 1]) { const c = malla(new THREE.ConeGeometry(0.08, 0.42, 8), oscuro, sx * 0.3, 0.38, -0.02, cabeza); c.rotation.z = -sx * 0.55; }
-  // Los ojos (como en el dibujo): óvalos blancos y planos, del mismo tamaño, con la pupila en espiral dibujada
-  const texEspiral = (() => {
-    const c = document.createElement('canvas'); c.width = c.height = 64;
-    const g = c.getContext('2d'); g.strokeStyle = '#111'; g.lineWidth = 5; g.lineCap = 'round'; g.beginPath();
-    for (let a = 0; a < Math.PI * 6; a += 0.1) { const r = 2 + a * 1.45; g.lineTo(32 + Math.cos(a) * r, 32 + Math.sin(a) * r); }
-    g.stroke(); return new THREE.CanvasTexture(c);
-  })();
+  // La cabeza cuadrada: exactamente del mismo ancho que el cuerpo (0,5), con un cuerno en punta
+  const CABEZA = 1, ANCHO = 0.5;   // CABEZA: qué tan grande es (1 = normal) · ANCHO: igual que el cuerpo
+  const cabeza = grupo(0, 0.28 * CABEZA, 0, cuello);
+  cabeza.scale.setScalar(CABEZA);
+  cabeza.rotation.z = 0.15;   // un poquito ladeada, como en el dibujo 3
+  malla(new THREE.BoxGeometry(ANCHO, 0.39, 0.42), rojo, 0, 0.085, 0, cabeza);   // la parte de arriba (la de abajo es la mandíbula)
+  { const c = malla(new THREE.ConeGeometry(0.11, 0.4, 3), oscuro, -0.12, 0.42, -0.02, cabeza); c.rotation.z = 0.5; c.scale.z = 0.3; }   // un solo cuerno plano, como una escama
+  // Los ojos: óvalos blancos y planos, del mismo tamaño, con una pupila negra redonda
   const ojos = [];
   for (const sx of [-1, 1]) {
-    const blanco = malla(new THREE.CircleGeometry(0.15, 24), new THREE.MeshBasicMaterial({ color: 0xf2f0e8 }), sx * 0.15, 0.04, 0.232, cabeza);
+    const blanco = malla(new THREE.CircleGeometry(0.12, 24), new THREE.MeshBasicMaterial({ color: 0xf2f0e8 }), sx * 0.115, 0.1, 0.212, cabeza);
     blanco.scale.set(0.8, 1.15, 1);
-    const pupila = malla(new THREE.CircleGeometry(0.075, 20), new THREE.MeshBasicMaterial({ map: texEspiral, transparent: true }), sx * 0.15, 0.04, 0.236, cabeza);
-    ojos.push({ blanco, pupila, base: pupila.position.clone(), rango: 0.06, loco: true, espiral: pupila });
+    const pupila = malla(new THREE.CircleGeometry(0.045, 20), NEGRO, sx * 0.115, 0.1, 0.216, cabeza);
+    ojos.push({ blanco, pupila, base: pupila.position.clone(), rango: 0.05 });
   }
-  // La boca: una línea pegada a la mandíbula de abajo (siempre cerrada)
-  const mandibula = grupo(0, -0.28, 0.1, cabeza);
-  malla(new THREE.BoxGeometry(0.5, 0.06, 0.28), rojo, 0, 0, 0, mandibula);
-  malla(new THREE.BoxGeometry(0.28, 0.02, 0.02), oscuro, 0, 0.04, 0.15, mandibula);
+  // La boca: la mandíbula de abajo queda FIJA, pegada al torso, y la CABEZA se levanta como una tapa.
+  // Dos filas de dientes en zigzag (arriba y abajo) que encajan entre sí. Sin lengua: adentro solo está oscuro
+  const blancoDiente = lam(0xece6d6), adentro = lam(0x2a0b0a);
+  malla(new THREE.BoxGeometry(ANCHO - 0.04, 0.12, 0.36), adentro, 0, -0.16, 0, cabeza);   // el hueco de arriba (oscuro)
+  const fila = (padre, y, haciaAbajo, desfase) => {   // una fila de dientes por el borde de adelante y los costados
+    const n = 7;
+    for (let i = 0; i < n; i++) {
+      const d = malla(new THREE.ConeGeometry(0.034, 0.09, 4), blancoDiente, -ANCHO / 2 + 0.04 + (i + desfase) * (ANCHO - 0.08) / (n - 1 + desfase), y, 0.19, padre);
+      if (haciaAbajo) d.rotation.x = Math.PI;
+    }
+    for (const sx of [-1, 1]) for (let i = 0; i < 3; i++) {
+      const d = malla(new THREE.ConeGeometry(0.03, 0.08, 4), blancoDiente, sx * (ANCHO / 2 - 0.035), y, 0.1 - (i + desfase) * 0.11, padre);
+      if (haciaAbajo) d.rotation.x = Math.PI;
+    }
+  };
+  fila(cabeza, -0.135, true, 0);
+  const mandibula = grupo(0, 0.28 * CABEZA, 0, cuello);   // (cuelga del cuello, no de la cabeza: así no se mueve cuando la cabeza se levanta)
+  mandibula.scale.setScalar(CABEZA); mandibula.rotation.z = 0.15;
+  malla(new THREE.BoxGeometry(ANCHO, 0.17, 0.42), rojo, 0, -0.195, 0, mandibula);       // el pedazo de abajo de la cara
+  malla(new THREE.BoxGeometry(ANCHO - 0.04, 0.02, 0.36), adentro, 0, -0.105, 0, mandibula);   // el fondo de la boca (oscuro)
+  fila(mandibula, -0.075, false, 0.5);
   // La cola: grande y curva hacia arriba, en 3 pedazos (para que se doble al moverse), con púas en el borde de arriba
   const cola = [];
   let padre = grupo(0, 0.12, -0.16, torso);
@@ -140,7 +154,7 @@ function crearRed() {
     c.rotation.x = i === 0 ? -0.6 : i === 1 ? -1.2 : -1.9;
     cola.push(g);
   });
-  return { obj, cuerpo, torso, piernas, brazos, cuello, cabeza, ojos, mandibula, cola, alto: 2.9 };
+  return { obj, cuerpo, torso, piernas, brazos, cuello, cabeza, ojos, mandibula, cola, alto: 2.9, tamCabeza: CABEZA };
 }
 function animarRed(c, dt, t, paso, correr) {
   // Camina lento y pesado: las piernas curvas se mueven adelante y atrás, y el cuerpo se balancea
@@ -157,7 +171,10 @@ function animarRed(c, dt, t, paso, correr) {
     b.hombro.rotation.z = b.lado * (0.05 + c.tanteo * (b.lado > 0 ? 0.15 : 0.05));
   }
   c.cuello.rotation.y = suave(c.cuello.rotation.y, c.tanteo * Math.sin(t * 0.5) * 0.7, dt, 2);   // parado, mira despacio a un lado y al otro
-  c.cabeza.rotation.z = 0.28;   // la cabeza ladeada (fija, como en el dibujo)
+  c.cabeza.rotation.z = 0.15;   // la cabeza un poquito ladeada (fija, como en el dibujo)
+  // La boca de marioneta: caminando, cerrada. Parado, la cabeza salta hacia arriba (abre, cierra, abre…) y la mandíbula queda fija
+  const salto = c.tanteo > 0.5 ? (Math.sin(t * 7) > 0 ? 0.13 : 0.03) : 0;   // a saltitos: abierta o casi cerrada, sin término medio
+  c.cabeza.position.y = suave(c.cabeza.position.y, (0.28 + salto) * c.tamCabeza, dt, 18);   // la cabeza sube; la mandíbula se queda
   // La cola: se mueve despacio de lado a lado, cada pedazo un poquito después (como una ola)
   c.cola.forEach((g, i) => { g.rotation.y = Math.sin(t * 1.1 - i * 0.7) * (0.22 - i * 0.04); });
 }
