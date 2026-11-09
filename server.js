@@ -2,10 +2,12 @@
 // 1) Entrega el juego (index.html y src/) a quien abra el link
 // 2) Reparte en tiempo real dónde está cada jugador (WebSocket)
 // 3) Guarda a todos los jugadores en una base de datos SQLite (datos/jugadores.sqlite)
+// 4) Mueve a los dragones (el cerebro está en src/dragones.js): así todos los ven en el mismo lugar
 import { Database } from 'bun:sqlite';
 import { mkdirSync } from 'node:fs';
 import { PUERTO, MAX_JUGADORES, BORDE, leerMensaje, salaDeHost, linkOficial } from './src/red.js';
 import { SPAWN } from './src/laboratorio.js';
+import { nuevosDragones, tickDragones, filaDragon } from './src/dragones.js';
 
 // ---------- Base de datos ----------
 mkdirSync(new URL('./datos', import.meta.url), { recursive: true });
@@ -100,6 +102,18 @@ const servidor = Bun.serve({
     },
   },
 });
+
+// 🐉 Los dragones: 10 veces por segundo piensan y se mueven, y se le cuenta a todos dónde están
+const dragones = nuevosDragones();
+let ultimoTick = Date.now();
+setInterval(() => {
+  const ahora = Date.now(), dt = Math.min(0.2, (ahora - ultimoTick) / 1000);
+  ultimoTick = ahora;
+  if (!conectados.size) return;   // sin nadie jugando, los dragones esperan
+  const jugadores = [...conectados.values()].map(j => ({ id: j.id, x: j.x, y: j.y, z: j.z, oculto: j.oculto || 0 }));
+  for (const e of tickDragones(dragones, jugadores, dt)) aTodos({ tipo: 'dragonEvento', que: e.tipo, dragon: e.dragon, jugador: e.jugador });
+  aTodos({ tipo: 'dragones', t: ahora, d: dragones.map(filaDragon) });
+}, 100);
 
 // Cada 10 segundos guarda a todos (por si la compu se apaga de golpe)
 setInterval(() => { for (const j of conectados.values()) guardar(j); }, 10000);

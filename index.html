@@ -66,12 +66,13 @@
   /* 📦 Esconderse: el aviso "Pulsa B", el botón del celular y la vista desde adentro de la caja (todo oscuro menos una rendija) */
   #aviso { position:fixed; left:50%; top:62%; transform:translateX(-50%); margin:0; padding:8px 14px; border-radius:8px; background:rgba(20,22,24,.85); color:#fff; font:600 15px system-ui, sans-serif; pointer-events:none; white-space:nowrap; z-index:12; }
   kbd { font:700 12px ui-monospace, Menlo, monospace; background:#fff; color:#16301f; border-radius:4px; padding:0 5px; }
+  #usarBtn { position:fixed; right:16px; bottom:calc(320px + env(safe-area-inset-bottom,0px)); z-index:15; display:none; border:2px solid rgba(255,255,255,.75); border-radius:14px; padding:10px 14px; font:700 15px/1.1 system-ui, sans-serif; color:#fff; background:rgba(22,48,31,.85); touch-action:manipulation; }
   #cajaBtn { position:fixed; right:16px; bottom:calc(270px + env(safe-area-inset-bottom,0px)); z-index:15; display:none; border:2px solid rgba(255,255,255,.75); border-radius:14px; padding:10px 14px; font:700 15px/1.1 system-ui, sans-serif; color:#fff; background:rgba(122,92,58,.92); touch-action:manipulation; }
   #dentroCaja { position:fixed; inset:0; z-index:10; pointer-events:none; overflow:hidden; }
   #dentroCaja .rendija { position:absolute; left:50%; top:46%; width:min(62vw, 560px); height:clamp(56px, 11vh, 96px); transform:translate(-50%, -50%); border-radius:999px;
     box-shadow:0 0 0 200vmax rgba(52,37,22,.96), inset 0 0 24px 10px rgba(30,20,10,.85); }
   #dentroCaja small { position:absolute; left:50%; top:calc(24px + env(safe-area-inset-top,0px)); transform:translateX(-50%); color:#e8d9c2; font:700 15px system-ui, sans-serif; white-space:nowrap; }
-  @media (pointer:coarse) { #stick, #jump, #camStick, #fpBtn, #guiaBtn { display:block; } #cajaBtn:not([hidden]) { display:block; } #saveBtn { left:16px; right:auto; bottom:calc(220px + env(safe-area-inset-bottom,0px)); padding:10px 16px; font-size:18px; }
+  @media (pointer:coarse) { #stick, #jump, #camStick, #fpBtn, #guiaBtn { display:block; } #cajaBtn:not([hidden]), #usarBtn:not([hidden]) { display:block; } #saveBtn { left:16px; right:auto; bottom:calc(220px + env(safe-area-inset-bottom,0px)); padding:10px 16px; font-size:18px; }
     #toast { font-size:17px; } }
   /* 🤖 Bot guía: su globo de diálogo (abajo al centro; en el celular, arriba para no tapar los botones) */
   #guia { position:fixed; left:50%; bottom:calc(16px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); z-index:25; width:min(460px, calc(100% - 32px)); box-sizing:border-box; padding:14px 16px 12px; border-radius:16px; background:#fbfaf5; color:#16301f; border:3px solid #16301f; box-shadow:0 6px 0 #16301f, 0 12px 26px rgba(0,0,0,.3); font:15px/1.45 system-ui, sans-serif; }
@@ -115,7 +116,8 @@
 </div>
 <button type="button" id="saveBtn">GUARDAR</button>
 <button type="button" id="guiaBtn">🤖 Guía</button>
-<button type="button" id="cajaBtn" hidden>📦 Esconderse</button>
+<button type="button" id="cajaBtn" hidden>📦 Caja</button>
+<button type="button" id="usarBtn" hidden>✋ Usar</button>
 <p id="aviso" hidden></p>
 <div id="dentroCaja" hidden><div class="rendija"></div><small></small></div>
 <p id="lockHint" hidden>Haz clic para mirar con el ratón (Esc para soltarlo)</p>
@@ -126,9 +128,11 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COMO, textoQueHago, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=2';
-import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=2';
-import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=2';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
+import { moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COMO, textoQueHago, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=3';
+import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=3';
+import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=3';
+import { DRAGONES, MODOS, nuevosDragones, tickDragones } from './src/dragones.js?v=3';
+import { crearDragon, animarDragon } from './src/criaturas.js?v=3';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
 (() => {
   // iPhone ignora user-scalable=no: aquí se bloquea el zoom con dos dedos y el doble toque
   for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
@@ -236,9 +240,15 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
     return piezas;
   }
   const lucesTecho = [];
+  // ¿Esta puerta da al Panic Hole? (esas son chicas: el refugio es para ti, no para Red)
+  const REF = SALAS.find(q => q.id === 'panico');
+  function alRefugio(s, lado, a, b) {
+    const m = (a + b) / 2, x = lado === 'n' || lado === 's' ? m : lado === 'e' ? s.x1 : s.x0, z = lado === 'n' ? s.z0 : lado === 's' ? s.z1 : m;
+    return s.y === REF.y && x >= REF.x0 && x <= REF.x1 && z >= REF.z0 && z <= REF.z1;
+  }
   // Una sala: piso, techo con lámparas, 4 paredes con sus puertas (y el marco oscuro de cada puerta)
   function construirSala(s) {
-    const { x0, x1, z0, z1, y } = s, arriba = y + ALTO, tunel = s.id.startsWith('tunel');
+    const { x0, x1, z0, z1, y } = s, arriba = y + altoDe(y), tunel = s.id.startsWith('tunel');
     const matPared = lambert(s.pared, { map: texPared }), matPiso = lambert(s.piso, { map: texBaldosa }), MARCO = METAL_OSCURO;
     // Piso (con el hoyo de la escotilla si la hay) y techo (con el hoyo si una escotilla baja hasta aquí)
     for (const r of restarHoyos(s, ESCOTILLAS.filter(e => e.desde === s.id))) {
@@ -270,24 +280,118 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
       const puertas = s.puertas[L.lado] || [];
       for (const [a, b] of tramosDePared(L.desde, L.hasta, puertas)) L.caja(a, b, y, arriba);
       // Encima de cada puerta, el dintel (menos en las uniones de pasillo, que quedan abiertas hasta el techo)
-      for (const [a, b] of puertas) if (b - a < L.hasta - L.desde - 0.01 && !tunel) L.caja(a, b, y + ALTO_PUERTA, arriba);
+      for (const [a, b] of puertas) if (b - a < L.hasta - L.desde - 0.01 && !tunel) L.caja(a, b, y + puertaDe(y, alRefugio(s, L.lado, a, b)), arriba);
     }
   }
   for (const s of SALAS) construirSala(s);
 
-  // Focos de luz (pocos, para que el juego vaya fluido): uno en cada sala grande. El de Grey's Cove parpadea
+  // ---------- 🚪 Las puertas: cafés, pesadas (se abren y se cierran lento) y de una sola hoja. Solo en la entrada de las salas ----------
+  const PASILLOS = ['escaleras', 'pasilloNorte', 'pasilloOeste', 'pasilloEste'], SIN_PUERTAS = ['salon'];
+  // Las del Panic Hole son distintas: de metal, corredizas, y se abren con un botón rojo (E)
+  const texPuerta = lienzo(128, 256, (g, w, h) => {
+    g.fillStyle = '#6b4a2e'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(40,24,12,.35)'; g.lineWidth = 2; for (let x = 6; x < w; x += 9) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x + 3, h); g.stroke(); }   // vetas
+    g.strokeStyle = '#4a311d'; g.lineWidth = 5; g.strokeRect(16, 110, w - 32, 120);                                                                // panel de abajo
+    g.fillStyle = '#2a3437'; g.fillRect(28, 26, w - 56, 62); g.strokeStyle = '#3e2a19'; g.lineWidth = 6; g.strokeRect(28, 26, w - 56, 62);       // ventanita
+    g.fillStyle = '#9a8b6a'; g.fillRect(w - 26, 128, 10, 30);                                                                                      // manija
+  });
+  const MAT_PUERTA = new THREE.MeshLambertMaterial({ map: texPuerta });
+  const P = SALAS.find(s => s.id === 'panico');
+  const tocaPanico = (x, z) => x >= P.x0 && x <= P.x1 && z >= P.z0 && z <= P.z1;
+  const puertas = [], corredizas = [], vistas = new Set();
+  for (const s of SALAS) {
+    if (s.id.startsWith('tunel')) continue;
+    for (const lado of Object.keys(s.puertas)) for (const [a, b] of s.puertas[lado]) {
+      const horizontal = lado === 'n' || lado === 's', largoLado = horizontal ? s.x1 - s.x0 : s.z1 - s.z0;
+      if (b - a >= largoLado - 0.01) continue;   // (uniones de pasillo: sin puerta)
+      // ¿Con qué sala se conecta? Entre dos pasillos no hay puerta, y el salón queda abierto (así hay menos puertas)
+      const otra = SALAS.find(o => o !== s && o.y === s.y && ({ n: o.z1, s: o.z0, w: o.x1, e: o.x0 })[lado] === ({ n: s.z0, s: s.z1, w: s.x0, e: s.x1 })[lado]
+        && (lado === 'n' || lado === 's' ? o.x0 <= a && o.x1 >= b : o.z0 <= a && o.z1 >= b));
+      const esPanico = s.id === 'panico' || (otra && otra.id === 'panico');
+      if (!esPanico && (!otra || (PASILLOS.includes(s.id) && PASILLOS.includes(otra.id)) || SIN_PUERTAS.includes(s.id) || SIN_PUERTAS.includes(otra.id))) continue;
+      const linea = { n: s.z0, s: s.z1, w: s.x0, e: s.x1 }[lado], clave = `${s.y}|${horizontal}|${linea}|${a}|${b}`;
+      if (vistas.has(clave)) continue;
+      vistas.add(clave);
+      const cx = horizontal ? (a + b) / 2 : linea, cz = horizontal ? linea : (a + b) / 2, ancho = b - a;
+      if (tocaPanico(cx, cz)) {
+        // 🔴 Puerta corrediza de metal: cerrada es una pared; abierta se mete en la pared
+        const AP = puertaDe(s.y, true);   // las del refugio son chicas
+        const hoja = new THREE.Mesh(new THREE.BoxGeometry(horizontal ? ancho : 0.16, AP, horizontal ? 0.16 : ancho), lambert(0x5d6266));
+        for (let i = 0; i < 4; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(horizontal ? ancho * 0.98 : 0.18, 0.12, horizontal ? 0.18 : ancho * 0.98), new THREE.MeshLambertMaterial({ map: texPeligro })); f.position.y = -AP / 2 + 0.3 + i * 0.75; hoja.add(f); }   // franjas de peligro
+        hoja.position.set(cx, s.y + AP / 2, cz); scene.add(hoja);
+        const solido = { x: cx, z: cz, hw: horizontal ? ancho / 2 : 0.1, hd: horizontal ? 0.1 : ancho / 2, top: s.y + AP, bottom: s.y };
+        platforms.push(solido);
+        const puerta = { hoja, solido, abierta: false, k: 0, cx, cz, y: s.y, horizontal, ancho, botones: [], alto: AP };
+        // Un botón rojo a cada lado de la puerta (en la pared, al lado del marco)
+        for (const lado2 of [-1, 1]) {
+          const bx = horizontal ? b + 0.5 : linea + lado2 * 0.2, bz = horizontal ? linea + lado2 * 0.2 : b + 0.5;
+          const caja = bloque(bx - (horizontal ? 0.18 : 0.04), bx + (horizontal ? 0.18 : 0.04), s.y + 1.1, s.y + 1.5, bz - (horizontal ? 0.04 : 0.18), bz + (horizontal ? 0.04 : 0.18), METAL_OSCURO, { solido: false });
+          const boton = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.08, 16), new THREE.MeshLambertMaterial({ color: 0xb3261e, emissive: 0x3a0806 }));
+          boton.rotation[horizontal ? 'x' : 'z'] = Math.PI / 2;
+          boton.position.set(bx + (horizontal ? 0 : lado2 * 0.06), s.y + 1.3, bz + (horizontal ? lado2 * 0.06 : 0)); scene.add(boton);
+          puerta.botones.push({ x: bx, z: bz, boton });
+        }
+        corredizas.push(puerta);
+        continue;
+      }
+      // Puerta café de bisagra: una sola hoja, gruesa y pesada
+      const hojas = [[a, 1]], anchoHoja = ancho;
+      for (const [desde, dir] of hojas) {
+        const bisagra = new THREE.Group();
+        bisagra.position.set(horizontal ? desde : linea, s.y, horizontal ? linea : desde);
+        const r0 = horizontal ? (dir > 0 ? 0 : Math.PI) : (dir > 0 ? -Math.PI / 2 : Math.PI / 2);
+        bisagra.rotation.y = r0;
+        const AP = puertaDe(s.y) - 0.05;
+        const hoja = new THREE.Mesh(new THREE.BoxGeometry(anchoHoja - 0.04, AP, 0.16), MAT_PUERTA);
+        hoja.position.set(anchoHoja / 2, AP / 2, 0); bisagra.add(hoja); scene.add(bisagra);
+        // Para qué lado gira para alejarse de quien empuja (depende de cómo quedó la bisagra)
+        const giroHacia = horizontal ? Math.sign(Math.cos(r0)) : Math.sign(Math.sin(r0));
+        puertas.push({ bisagra, r0, giroHacia, ang: 0, cx, cz, y: s.y, horizontal, linea, medio: ancho / 2 });
+      }
+    }
+  }
+  // Cada cuadro: ¿alguien está empujando la puerta? (tú, tus amigos o un dragón)
+  function updatePuertas(dt, quienes) {
+    for (const p of puertas) {
+      let lado = 0;
+      for (const q of quienes) {
+        if (Math.abs(q.y - p.y) > 2.5) continue;
+        const a = p.horizontal ? q.x - p.cx : q.z - p.cz, n = p.horizontal ? q.z - p.linea : q.x - p.linea;
+        if (Math.abs(a) < p.medio + 0.4 && Math.abs(n) < 1.6) { lado = Math.sign(n) || 1; break; }
+      }
+      // Si ya estaba abierta, sigue hacia el mismo lado (no se da vuelta de golpe cuando la cruzas)
+      const quiere = lado ? (Math.abs(p.ang) > 0.2 ? Math.sign(p.ang) * 1.5 : lado * p.giroHacia * 1.5) : 0;
+      p.ang += (quiere - p.ang) * Math.min(1, dt * (lado ? 2 : 0.7));   // pesada: abre lento y cierra más lento todavía
+      p.bisagra.rotation.y = p.r0 + p.ang;
+    }
+    for (const c of corredizas) {
+      c.k += ((c.abierta ? 1 : 0) - c.k) * Math.min(1, dt * 3);
+      const d = c.k * (c.ancho - 0.2);   // se mete en la pared
+      c.hoja.position.set(c.cx - (c.horizontal ? d : 0), c.y + c.alto / 2, c.cz - (c.horizontal ? 0 : d));
+      c.solido.top = c.k > 0.85 ? -1000 : c.y + c.alto;   // abierta ya no es pared
+      c.solido.bottom = c.k > 0.85 ? -1001 : c.y;
+      for (const b of c.botones) b.boton.material.color.setHex(c.abierta ? 0x3f9a4a : 0xb3261e);   // verde = abierta
+    }
+  }
+  // El botón que tienes cerca (para la E), o null
+  const botonCerca = pos => {
+    for (const c of corredizas) for (const b of c.botones) if (Math.hypot(pos.x - b.x, pos.z - b.z) < 1.7 && Math.abs(pos.y - c.y) < 1.5) return c;
+    return null;
+  };
+
+  // Focos de luz (pocos, para que el juego vaya fluido): uno en cada sala grande
   const focos = {};
   for (const [id, color, k] of [['spawn', 0xe8eee8, 1], ['testLab', 0xd6ece6, 1], ['salon', 0xe6e8ee, 1.1], ['centerLab', 0xe2eaf0, 1.2], ['banos', 0xeef0e6, 0.9],
     ['lockers', 0xe0eadb, 0.9], ['panico', 0xf0d6cf, 0.8], ['greyCove', 0xc9ccd0, 0.9], ['yellowRoom', 0xf0e0a8, 0.9], ['tunelCentro', 0xd8d0b0, 0.6]]) {
     const s = SALAS.find(q => q.id === id);
-    const luz = new THREE.PointLight(color, k, 26, 1.3);
-    luz.position.set((s.x0 + s.x1) / 2, s.y + ALTO - 0.6, (s.z0 + s.z1) / 2);
+    const luz = new THREE.PointLight(color, k * 1.15, 30, 1.3);   // (un poco más fuertes: el techo ahora está más alto)
+    luz.position.set((s.x0 + s.x1) / 2, s.y + altoDe(s.y) - 0.6, (s.z0 + s.z1) / 2);
     scene.add(luz); focos[id] = luz;
   }
 
   // ---------- Las escotillas: un hoyo con borde de peligro, la tapa abierta y una escalera de mano hasta el subsuelo ----------
   for (const e of ESCOTILLAS) {
-    const cx = (e.x0 + e.x1) / 2, cz = (e.z0 + e.z1) / 2, y0 = PISO_SUBSUELO, techoSub = PISO_SUBSUELO + ALTO;
+    const cx = (e.x0 + e.x1) / 2, cz = (e.z0 + e.z1) / 2, y0 = PISO_SUBSUELO, techoSub = PISO_SUBSUELO + ALTO_SUBSUELO;
     const matShaft = lambert(0x55595c, { map: texPared });
     // El tubo de concreto entre el techo del subsuelo y el piso de arriba
     bloque(e.x0 - 0.2, e.x0, techoSub, -0.3, e.z0 - 0.2, e.z1 + 0.2, matShaft, { camara: true });
@@ -406,7 +510,8 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
   });
   const CARTON_LADO = lambert(0xffffff, { map: texCartonLado }), CARTON_ARRIBA = lambert(0xffffff, { map: texCartonArriba });
   const CAJA = { w: 1.3, h: 1.25 };
-  function cajaCarton(e) {
+  // Tu caja (y la de tus amigos): se lleva puesta, así que no es sólida ni tiene lugar fijo
+  function cajaCarton() {
     const g = new THREE.Group(), { w, h } = CAJA;
     const cuerpo = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), [CARTON_LADO, CARTON_LADO, CARTON_ARRIBA, CARTON_ARRIBA, CARTON_LADO, CARTON_LADO]);
     cuerpo.position.y = h / 2; g.add(cuerpo);
@@ -421,23 +526,27 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
       bisagra.userData.abierta = bisagra.rotation.x;
       g.add(giro); solapas.push(bisagra);
     }
-    g.position.set(e.x, e.y, e.z); g.rotation.y = (Math.random() - 0.5) * 0.5; scene.add(g);
-    platforms.push({ x: e.x, z: e.z, hw: w / 2, hd: w / 2, top: e.y + h, bottom: e.y });
+    g.visible = false;
     return { obj: g, solapas };
   }
+  // El armario de Yellow: hueco por dentro (oscuro), con una puerta que empieza abierta. E la cierra y la abre
   function armario(e) {
     const g = new THREE.Group(), mat = lambert(0x8a8f86);
-    const cuerpo = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.3, 0.9), mat); cuerpo.position.y = 1.15; g.add(cuerpo);
-    const raya = new THREE.Mesh(new THREE.BoxGeometry(0.03, 2.1, 0.02), METAL_OSCURO); raya.position.set(0, 1.15, 0.46); g.add(raya);
-    for (const sx of [-1, 1]) {
-      const manija = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.05), METAL_OSCURO); manija.position.set(sx * 0.12, 1.2, 0.48); g.add(manija);
-      for (let i = 0; i < 4; i++) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.03, 0.02), METAL_OSCURO); r.position.set(sx * 0.42, 1.9 - i * 0.08, 0.46); g.add(r); }   // rejillas
-    }
+    const pieza = (w, h, d, x, y, z, m = mat) => { const p = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); p.position.set(x, y, z); g.add(p); return p; };
+    pieza(1.6, 2.3, 0.06, 0, 1.15, -0.42); pieza(0.06, 2.3, 0.9, -0.77, 1.15, 0); pieza(0.06, 2.3, 0.9, 0.77, 1.15, 0);   // atrás y costados
+    pieza(1.6, 0.06, 0.9, 0, 2.27, 0); pieza(1.6, 0.06, 0.9, 0, 0.03, 0);                                                    // techo y piso
+    pieza(1.48, 2.2, 0.02, 0, 1.15, -0.38, new THREE.MeshBasicMaterial({ color: 0x15130f }));                                 // adentro, oscuro
+    pieza(1.48, 0.03, 0.03, 0, 1.95, -0.1, METAL_OSCURO);                                                                     // el palo de colgar
+    // La puerta (una sola hoja con rejillas y manija), con bisagra a la izquierda
+    const bisagra = new THREE.Group(); bisagra.position.set(-0.78, 0, 0.45); g.add(bisagra);
+    const hoja = new THREE.Mesh(new THREE.BoxGeometry(1.54, 2.24, 0.05), mat); hoja.position.set(0.77, 1.15, 0); bisagra.add(hoja);
+    for (let i = 0; i < 5; i++) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.03, 0.02), METAL_OSCURO); r.position.set(0.77, 1.95 - i * 0.08, 0.035); bisagra.add(r); }
+    const manija = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.05), METAL_OSCURO); manija.position.set(1.4, 1.2, 0.05); bisagra.add(manija);
     g.position.set(e.x, e.y, e.z); scene.add(g);
     platforms.push({ x: e.x, z: e.z, hw: 0.8, hd: 0.45, top: e.y + 2.3, bottom: e.y });
-    return { obj: g, solapas: [] };
+    return { obj: g, bisagra, abierto: true, ang: -1.9 };
   }
-  const escondites = ESCONDITES.map(e => ({ ...e, ...(e.tipo === 'caja' ? cajaCarton(e) : armario(e)) }));
+  const escondites = ESCONDITES.map(e => ({ ...e, ...armario(e) }));
 
   // ---------- Lo que hay en cada sala (según los dibujos) ----------
   // 🧪 Test Lab: dos tanques de prueba (uno rosado), mesas con frascos y monitores
@@ -486,12 +595,25 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
       letras(g, 'KEEP', w / 2, 125, 74, '#d8cfc2'); letras(g, 'CALM', w / 2, 210, 74, '#d8cfc2');
     });
     enPared(calma, -33.68, 1.9, 12, 'e');
-    const carita = cartel(256, 256, 3, 3, (g, w) => {
-      g.strokeStyle = 'rgba(40,36,34,.75)'; g.lineWidth = 12; g.lineCap = 'round';
-      g.beginPath(); g.moveTo(92, 70); g.lineTo(92, 112); g.moveTo(164, 70); g.lineTo(164, 112); g.stroke();
-      g.beginPath(); g.arc(w / 2, 120, 80, 0.2 * Math.PI, 0.8 * Math.PI); g.stroke();
+    // La sonrisa pintada en la pared: ojos de punto y una boca enorme y temblorosa (desquiciada 😬)
+    const carita = cartel(512, 512, 4.2, 4.2, (g, w) => {
+      const tinta = 'rgba(34,30,28,.85)';
+      g.fillStyle = tinta; g.strokeStyle = tinta; g.lineCap = 'round'; g.lineJoin = 'round';
+      g.beginPath(); g.arc(175, 160, 16, 0, Math.PI * 2); g.fill();   // ojos de punto
+      g.beginPath(); g.arc(335, 160, 16, 0, Math.PI * 2); g.fill();
+      // La boca: una curva de oreja a oreja que tiembla (como dibujada con la mano temblando)
+      for (const [grosor, baja, des] of [[14, 0, 0], [6, 14, 5]]) {
+        g.lineWidth = grosor; g.beginPath();
+        for (let i = 0; i <= 60; i++) {
+          const k = i / 60, x = 60 + k * 392, y = 270 + baja + Math.sin(k * Math.PI) * 120 + Math.sin(i * 1.9 + des) * 7 + Math.sin(i * 0.7) * 5;
+          i ? g.lineTo(x, y) : g.moveTo(x, y);
+        }
+        g.stroke();
+      }
+      g.lineWidth = 6;
+      for (const [x, y, l] of [[140, 352, 55], [258, 404, 80], [372, 352, 45]]) { g.beginPath(); g.moveTo(x, y); g.lineTo(x + 2, y + l); g.stroke(); g.beginPath(); g.arc(x + 2, y + l + 4, 5, 0, Math.PI * 2); g.fill(); }   // pintura que chorrea
     });
-    enPared(carita, -28, 1.8, 19.68, 'n');
+    enPared(carita, -28, 2.6, 19.68, 'n');
     bloque(-26.5, -23.4, 0, 0.3, 15.6, 19.2, lambert(0x7a6a62));   // colchón
     bloque(-33.6, -33.2, 1.2, 2, 8.5, 9.5, lambert(0xa8a49c));      // botiquín en la pared
   }
@@ -520,11 +642,26 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
       p.scale.set(1, 0.45, 0.7); p.position.set(cx + Math.cos(a) * 2.3, y + 0.85, cz + Math.sin(a) * 2.3); p.rotation.y = -a; scene.add(p);
     }
     platforms.push({ x: cx, z: cz, hw: 2.2, hd: 2.2, top: y + 0.65, bottom: y });
-    // La comida: un plato grande y una caja de madera con el letrero FOOD
-    const plato = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.5, 0.25, 20), lambert(0x7b7f80)); plato.position.set(41, y + 0.125, 8.6); scene.add(plato);
-    bloque(42.4, 43.6, y, 0.9 + y, 8.3, 9.5, lambert(0x7a6648));
-    const food = cartel(128, 64, 1, 0.5, (g, w, h) => { g.fillStyle = '#7a6648'; g.fillRect(0, 0, w, h); letras(g, 'FOOD', w / 2, h / 2 + 2, 40, '#2e261b'); });
-    enPared(food, 43, y + 0.5, 8.28, 'n');
+    // 🍽️ La máquina de comida de Yellow (diseño propio): un depósito de vidrio lleno de bolitas, sobre patas,
+    // con un tubo que baja hasta el plato y una manivela al costado
+    const mx = 42.6, mz = 8.7, metalM = lambert(0x7e7a6c);
+    for (const [dx, dz] of [[-0.45, -0.35], [0.45, -0.35], [-0.45, 0.35], [0.45, 0.35]]) bloque(mx + dx - 0.05, mx + dx + 0.05, y, y + 1.3, mz + dz - 0.05, mz + dz + 0.05, metalM, { solido: false });
+    bloque(mx - 0.55, mx + 0.55, y + 1.3, y + 1.4, mz - 0.45, mz + 0.45, metalM);                        // la base del depósito
+    bloque(mx - 0.5, mx + 0.5, y + 1.4, y + 2.5, mz - 0.4, mz + 0.4, VIDRIO, { solido: false });         // el depósito de vidrio
+    bloque(mx - 0.47, mx + 0.47, y + 1.4, y + 2.05, mz - 0.37, mz + 0.37, lambert(0x8a6a3c), { solido: false });   // las bolitas de comida
+    for (let i = 0; i < 18; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 5), lambert(0x9b7a45)); b.position.set(mx + (Math.random() - 0.5) * 0.85, y + 2.08, mz + (Math.random() - 0.5) * 0.65); scene.add(b); }
+    bloque(mx - 0.55, mx + 0.55, y + 2.5, y + 2.6, mz - 0.45, mz + 0.45, metalM, { solido: false });    // la tapa
+    platforms.push({ x: mx, z: mz, hw: 0.55, hd: 0.45, top: y + 2.6, bottom: y });
+    const tuboC = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.2, 10), metalM);                 // el tubo inclinado hasta el plato
+    tuboC.position.set(mx - 0.75, y + 0.95, mz - 0.1); tuboC.rotation.z = 0.75; scene.add(tuboC);
+    const plato = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.45, 0.22, 20), lambert(0x7b7f80)); plato.position.set(mx - 1.35, y + 0.11, mz - 0.1); scene.add(plato);
+    const relleno = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.04, 20), lambert(0x8a6a3c)); relleno.position.set(mx - 1.35, y + 0.2, mz - 0.1); scene.add(relleno);
+    const manivela = new THREE.Group(); manivela.position.set(mx + 0.6, y + 1.7, mz); scene.add(manivela);
+    const brazo = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 0.06), METAL_OSCURO); brazo.position.y = 0.2; manivela.add(brazo);
+    const pomo = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), lambert(0x8a3a33)); pomo.position.y = 0.42; manivela.add(pomo);
+    manivela.rotation.x = 0.6;
+    const food = cartel(128, 64, 0.7, 0.35, (g, w, h) => { g.fillStyle = '#b5ab92'; g.fillRect(0, 0, w, h); letras(g, 'FOOD', w / 2, h / 2 + 2, 40, '#2e261b'); });
+    enPared(food, mx, y + 1.95, mz + 0.42, 's');
   }
   // ⚫ Grey's Cove (subsuelo 2): cartel STOP, las mesas de White, la caja gigante con hoyos envuelta en cintas DANGER y NO,
   // el cartel KEEP OUT, el diario sobre una mesa y otra mesa con una mancha
@@ -532,12 +669,22 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
     const y = PISO_SUBSUELO;
     // STOP en su poste
     bloque(-37.05, -36.95, y, y + 1.9, -21.05, -20.95, METAL_OSCURO);
-    const stop = cartel(128, 128, 0.8, 0.8, (g, w) => {
-      g.fillStyle = '#7e3b36'; g.beginPath();
-      for (let i = 0; i < 8; i++) { const a = (i + 0.5) / 8 * Math.PI * 2; g.lineTo(w / 2 + Math.cos(a) * 60, w / 2 + Math.sin(a) * 60); }
-      g.closePath(); g.fill(); letras(g, 'STOP', w / 2, w / 2 + 3, 42, '#d9d2c8');
+    // El letrero de dos caras (se ve desde los dos lados) sobre una placa de metal octagonal: nunca se vuelve invisible
+    const texStop = lienzo(256, 256, (g, w) => {
+      g.fillStyle = '#8a3a33'; g.beginPath();
+      for (let i = 0; i < 8; i++) { const a = (i + 0.5) / 8 * Math.PI * 2; g.lineTo(w / 2 + Math.cos(a) * 124, w / 2 + Math.sin(a) * 124); }
+      g.closePath(); g.fill();
+      g.strokeStyle = '#d9d2c8'; g.lineWidth = 8; g.beginPath();
+      for (let i = 0; i < 8; i++) { const a = (i + 0.5) / 8 * Math.PI * 2; g.lineTo(w / 2 + Math.cos(a) * 110, w / 2 + Math.sin(a) * 110); }
+      g.closePath(); g.stroke();
+      letras(g, 'STOP', w / 2, w / 2 + 6, 84, '#e2dccf');
     });
-    stop.position.set(-37, y + 2.1, -20.9); scene.add(stop);
+    const placa = new THREE.Mesh(new THREE.CylinderGeometry(0.47, 0.47, 0.04, 8), METAL_OSCURO);
+    placa.rotation.x = Math.PI / 2; placa.rotation.y = Math.PI / 8; placa.position.set(-37, y + 2.1, -21); scene.add(placa);
+    for (const lado of [1, -1]) {
+      const cara = new THREE.Mesh(new THREE.PlaneGeometry(0.98, 0.98), new THREE.MeshLambertMaterial({ map: texStop, alphaTest: 0.5, emissive: 0x2a0d0b }));
+      cara.position.set(-37, y + 2.1, -21 + lado * 0.025); cara.rotation.y = lado > 0 ? 0 : Math.PI; scene.add(cara);
+    }
     // Las mesas de White (blancas, viejas)
     const blanca = lambert(0xb9bab4);
     mesaLab(-46, -27, y, 3, 1.4, blanca); mesaLab(-46, -21.5, y, 3, 1.4, blanca); frascos(-46.5, -27, y + 0.94);
@@ -550,8 +697,18 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
     const cinta1 = new THREE.Mesh(new THREE.BoxGeometry(4.08, 0.35, 2.68), [danger, danger, danger, danger, danger, danger]); cinta1.position.set(-40, y + 1.4, -29.5); scene.add(cinta1);
     const cinta2 = new THREE.Mesh(new THREE.BoxGeometry(0.4, 2.28, 2.7), [no, no, no, no, no, no]); cinta2.position.set(-40.6, y + 1.1, -29.5); cinta2.rotation.z = 0.3; scene.add(cinta2);
     // Cinta DANGER colgada entre dos postes (cerca de la caja)
-    for (const x of [-43.5, -36.5]) bloque(x - 0.06, x + 0.06, y, y + 1.1, -26.8, -26.68, METAL_OSCURO);
-    const tira = new THREE.Mesh(new THREE.PlaneGeometry(7, 0.22), danger); tira.position.set(-40, y + 1, -26.74); scene.add(tira);
+    // Cordón de cinta DANGER alrededor de la caja (más lejos de ella) y sólido: no se puede pasar
+    const CZ = -25.4;
+    for (const x of [-45, -40, -35.9]) bloque(x - 0.07, x + 0.07, y, y + 1.15, CZ - 0.07, CZ + 0.07, METAL_OSCURO);
+    for (const zz of [-28.5, -31.4]) for (const x of [-45, -35.9]) bloque(x - 0.07, x + 0.07, y, y + 1.15, zz - 0.07, zz + 0.07, METAL_OSCURO);
+    const cinta = (x0, x1, z0, z1) => {   // una tira entre dos postes (con las letras de los dos lados) que además es pared
+      const largo = Math.hypot(x1 - x0, z1 - z0), m = new THREE.Mesh(new THREE.BoxGeometry(largo, 0.24, 0.04), danger);
+      m.position.set((x0 + x1) / 2, y + 1, (z0 + z1) / 2); m.rotation.y = -Math.atan2(z1 - z0, x1 - x0); scene.add(m);
+      bloque(Math.min(x0, x1) - 0.05, Math.max(x0, x1) + 0.05, y, y + 1.15, Math.min(z0, z1) - 0.05, Math.max(z0, z1) + 0.05, METAL_OSCURO, { solido: true }).visible = false;
+    };
+    cinta(-45, -40, CZ, CZ); cinta(-40, -35.9, CZ, CZ);
+    cinta(-45, -45, CZ, -28.5); cinta(-45, -45, -28.5, -31.4); cinta(-35.9, -35.9, CZ, -28.5); cinta(-35.9, -35.9, -28.5, -31.4);
+    danger.map.wrapS = THREE.RepeatWrapping; danger.map.repeat.set(1, 1);
     // KEEP OUT en la pared oeste
     const fuera = cartel(256, 160, 1.9, 1.2, (g, w, h) => { g.fillStyle = '#b5ab92'; g.fillRect(0, 0, w, h); g.strokeStyle = '#3a3630'; g.lineWidth = 8; g.strokeRect(6, 6, w - 12, h - 12); letras(g, 'KEEP', w / 2, 52, 56, '#3a3630'); letras(g, 'OUT!', w / 2, 112, 56, '#3a3630'); });
     enPared(fuera, -51.68, 1.8 + y, -24, 'e');
@@ -570,8 +727,9 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
     mancha.rotation.x = -Math.PI / 2; mancha.position.set(-35.2, ym + 0.01, -17.4); scene.add(mancha);
   }
   // Tubos por el techo de los pasillos y túneles
-  tubo(-22, 14, -11.6, -11.6, 3.6); tubo(-25.6, -25.6, -18, 4, 3.6); tubo(19.6, 19.6, -8, 14, 3.6);
-  tubo(-30, 36, -21.6, -21.6, -3.4, 0x5a5546); tubo(-42, 30, 19.6, 19.6, -3.4, 0x5a5546); tubo(-5.6, -5.6, -19, 16, -3.4, 0x5a5546); tubo(39.6, 39.6, -22, 2, -3.4, 0x5a5546);
+  const TA = ALTO - 0.4, TB = PISO_SUBSUELO + ALTO_SUBSUELO - 0.4;   // a qué altura van los tubos (arriba y en los subsuelos)
+  tubo(-22, 14, -11.6, -11.6, TA); tubo(-25.6, -25.6, -18, 4, TA); tubo(19.6, 19.6, -8, 14, TA);
+  tubo(-30, 36, -21.6, -21.6, TB, 0x5a5546); tubo(-42, 30, 19.6, 19.6, TB, 0x5a5546); tubo(-5.6, -5.6, -19, 16, TB, 0x5a5546); tubo(39.6, 39.6, -22, 2, TB, 0x5a5546);
   const spawn = SPAWN;
 
   // Personaje: rectángulo vertical verde con dos ojos negros
@@ -582,11 +740,12 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
   player.add(body);
   const eyeGeo = new THREE.SphereGeometry(0.11, 16, 12);
   const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-  [-0.22, 0.22].forEach(x => {
+  const ojosJugador = [-0.22, 0.22].map(x => {
     const eye = new THREE.Mesh(eyeGeo, eyeMat);
     eye.scale.z = 0.5;
     eye.position.set(x, H*0.78, D/2 + 0.02);
     player.add(eye);
+    return eye;
   });
   scene.add(player);
 
@@ -610,7 +769,8 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
     if (e.code === 'KeyH' && !e.repeat) guiaMostrar(!guiaVisible);   // H: esconde o llama al bot guía
     if ((e.code === 'Enter' || e.code === 'NumpadEnter') && !e.repeat) { e.preventDefault(); guiaDialogo(guiaEl.hidden); }   // ENTER: abre o cierra el diálogo del bot guía
     if (e.code === 'KeyC' && !e.repeat) guiaCambiarColor();          // C: el bot guía cambia de color
-    if (e.code === 'KeyB' && !e.repeat) alternarEscondite();          // B: meterte en una caja (o salir)
+    if (e.code === 'KeyB' && !e.repeat) alternarEscondite();          // B: tu caja (o el armario, si estás al lado)
+    if (e.code === 'KeyE' && !e.repeat) usarE();                      // E: el botón de la puerta del Panic Hole, o la puerta del armario
     if (e.code === 'Escape' && !guiaEl.hidden) guiaEl.hidden = true;
   });
   addEventListener('keyup', e => { keys[e.code] = false; });
@@ -749,38 +909,67 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
   const camRay = new THREE.Raycaster();
   let camDist = 9;
 
-  // ---------- 📦 Esconderse: B (o el botón) te mete en la caja (o en el armario) y B te saca ----------
+  // ---------- 📦 Tu caja: B (o el botón 📦) te la pone encima y te puedes mover con ella. Cerca del armario, B te mete en el armario ----------
+  // Metido en tu caja (o en el armario) los dragones no te ven… a menos que te vean meterte: ahí sale un "!" encima de tu caja
   const dentroEl = document.getElementById('dentroCaja'), avisoEl = document.getElementById('aviso'), cajaBtn = document.getElementById('cajaBtn');
-  let escondido = null, desdeDonde = null;
+  const miCaja = cajaCarton(); player.add(miCaja.obj);
+  const VEL_CAJA = 6;   // con la caja puesta vas más lento (tú corres a 12)
+  let enCaja = false, escondido = null, desdeDonde = null;
+  const oculto = () => enCaja || !!escondido;
   function alternarEscondite() {
     if (!loginEl.hidden) return;
     if (escondido) {
-      // Sales por donde entraste
+      // Sales del armario por donde entraste
       ps.pos.set(desdeDonde.x, desdeDonde.y, desdeDonde.z); ps.vel.set(0, 0, 0);
       escondido = null; dentroEl.hidden = true; fpPitch = 0;
       return;
     }
+    if (enCaja) { enCaja = false; return; }
     const e = esconditeCerca(ps.pos.x, ps.pos.y, ps.pos.z, escondites);
-    if (!e) return;
-    escondido = e; desdeDonde = { x: ps.pos.x, y: ps.pos.y, z: ps.pos.z };
-    camYaw = Math.atan2(e.x - ps.pos.x, e.z - ps.pos.z);   // adentro miras hacia donde estabas (por donde vendrían)
-    fpPitch = 0; ps.vel.set(0, 0, 0); dentroEl.hidden = false; guiaEl.hidden = true;
-    dentroEl.querySelector('small').textContent = `${e.tipo === 'caja' ? '📦 Dentro de la caja' : '🚪 Dentro del armario'} · ${IS_TOUCH ? 'toca 📦 para salir' : 'B para salir'}`;
+    if (e) {
+      escondido = e; desdeDonde = { x: ps.pos.x, y: ps.pos.y, z: ps.pos.z };
+      camYaw = Math.atan2(e.x - ps.pos.x, e.z - ps.pos.z);   // adentro miras hacia donde estabas (por donde vendrían)
+      fpPitch = 0; ps.vel.set(0, 0, 0); dentroEl.hidden = false; guiaEl.hidden = true;
+      dentroEl.querySelector('small').textContent = `🚪 Dentro del armario · ${IS_TOUCH ? 'toca 📦 para salir' : 'B para salir'}`;
+      return;
+    }
+    enCaja = true;
   }
   cajaBtn.addEventListener('click', e => { alternarEscondite(); e.currentTarget.blur(); });
+  // E: aprieta el botón rojo (puerta del Panic Hole) o abre/cierra la puerta del armario
+  const usarBtn = document.getElementById('usarBtn');
+  function queUsar() {
+    if (!loginEl.hidden || oculto()) return null;
+    const c = botonCerca(ps.pos);
+    if (c) return { texto: c.abierta ? 'cerrar la puerta' : 'abrir la puerta', hacer: () => { c.abierta = !c.abierta; } };
+    const a = esconditeCerca(ps.pos.x, ps.pos.y, ps.pos.z, escondites, 2.4);
+    if (a) return { texto: a.abierto ? 'cerrar el armario' : 'abrir el armario', hacer: () => { a.abierto = !a.abierto; } };
+    return null;
+  }
+  function usarE() { const u = queUsar(); if (u) u.hacer(); }
+  usarBtn.addEventListener('click', e => { usarE(); e.currentTarget.blur(); });
   // 🔧 Para probar: con ?debug en el link, la consola puede ver y mover al jugador (window.cd)
-  if (new URLSearchParams(location.search).has('debug')) window.cd = { ps, camera, salaEn, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; }, get escondido() { return escondido; } };
+  if (new URLSearchParams(location.search).has('debug')) window.cd = { ps, camera, salaEn, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; }, get escondido() { return escondido; }, get enCaja() { return enCaja; }, get dragones() { return dragones; }, get cuerpos() { return cuerposDragon; } };
+  // La caja puesta: las solapas se cierran, y al caminar se bambolea un poquito
+  function moverCaja(caja, puesta, caminando, dt, t) {
+    caja.obj.visible = puesta;
+    for (const s of caja.solapas) s.rotation.x += ((puesta ? 0 : s.userData.abierta) - s.rotation.x) * Math.min(1, dt * 8);
+    caja.obj.rotation.z = caminando ? Math.sin(t * 14) * 0.05 : caja.obj.rotation.z * 0.8;
+    caja.obj.position.y = caminando ? Math.abs(Math.sin(t * 14)) * 0.06 : 0;
+  }
   function updateEscondites(dt) {
-    // Las solapas de tu caja se cierran cuando entras (y se vuelven a abrir cuando sales)
-    for (const e of escondites) for (const s of e.solapas) s.rotation.x += ((e === escondido ? 0 : s.userData.abierta) - s.rotation.x) * Math.min(1, dt * 8);
-    const cerca = !escondido && loginEl.hidden && esconditeCerca(ps.pos.x, ps.pos.y, ps.pos.z, escondites);
-    avisoEl.hidden = !cerca || IS_TOUCH;
-    if (cerca) avisoEl.innerHTML = `Pulsa <kbd>B</kbd> para meterte en ${cerca.tipo === 'caja' ? 'la caja' : 'el armario'}`;
-    cajaBtn.hidden = !cerca && !escondido;
-    cajaBtn.textContent = escondido ? '📦 Salir' : '📦 Esconderse';
+    const cerca = !oculto() && loginEl.hidden && esconditeCerca(ps.pos.x, ps.pos.y, ps.pos.z, escondites), u = queUsar();
+    avisoEl.hidden = !(cerca || u) || IS_TOUCH;
+    avisoEl.innerHTML = [u && `<kbd>E</kbd> ${u.texto}`, cerca && '<kbd>B</kbd> meterte en el armario'].filter(Boolean).join(' · ');
+    usarBtn.hidden = !u; if (u) usarBtn.textContent = `✋ ${u.texto[0].toUpperCase()}${u.texto.slice(1)}`;
+    // La puerta del armario gira de a poco hacia abierta o cerrada
+    for (const a of escondites) { a.ang += ((a.abierto ? -1.9 : 0) - a.ang) * Math.min(1, dt * 6); a.bisagra.rotation.y = a.ang; }
+    cajaBtn.hidden = !loginEl.hidden;
+    cajaBtn.textContent = oculto() ? '📦 Salir' : cerca ? '🚪 Armario' : '📦 Caja';
+    body.visible = !enCaja;   // en la caja no se te ve el cuerpo ni los ojos: solo la caja
+    for (const o of ojosJugador) o.visible = !enCaja;
     if (escondido) player.visible = false;
   }
-
   // Avisos en el centro de la pantalla
   const toast = document.getElementById('toast');
   let toastTimer = null;
@@ -803,7 +992,8 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
     loginEl.hidden = true; loginName.blur();
     const loaded = loadGame(name);
     loadedLocal = loaded;
-    showToast(loaded ? `¡Hola de nuevo, ${name}! Seguiste donde guardaste` : `Hola, ${name}. Para guardar, pulsa GUARDAR (abajo a la derecha)`);
+    ps.pos.set(spawn.x, spawn.y, spawn.z); ps.vel.set(0, 0, 0); camYaw = Math.PI;   // 🌞 siempre empiezas en el Spawn
+    showToast(loaded ? `¡Hola de nuevo, ${name}!` : `Hola, ${name}. Bienvenido al laboratorio`);
     guiaSaludo = `¡Hola, ${name}! Soy tu bot guía 🤖. `; guiaMostrar(true);   // al empezar, el cubito aparece a tu lado (el diálogo se abre con ENTER)
     conectarRed(name);
   });
@@ -826,7 +1016,6 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
     const data = raw && parseSave(raw);
     if (!data) return false;
     // Si el guardado quedó fuera del mapa, vuelves a donde apareces
-    if (data.pos && salaEn(data.pos.x, data.pos.y, data.pos.z)) ps.pos.set(data.pos.x, data.pos.y, data.pos.z);
     return true;
   }
 
@@ -901,14 +1090,15 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
   }
   // Un amigo: rectángulo de su color con ojos, igual que tú
   function addFriend(j) {
-    const obj = new THREE.Group();
+    const obj = new THREE.Group(), look = new THREE.Group();   // look: el rectángulo con ojos (se esconde si está en su caja)
     const b = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), new THREE.MeshLambertMaterial({ color: j.color }));
-    b.position.y = H/2; b.castShadow = true; obj.add(b);
-    [-0.22, 0.22].forEach(x => { const e = new THREE.Mesh(eyeGeo, eyeMat); e.scale.z = 0.5; e.position.set(x, H*0.78, D/2 + 0.02); obj.add(e); });
-    obj.add(makeLabel(j.nombre));
-    obj.position.set(j.x, j.y, j.z); obj.rotation.y = j.rot || 0; obj.visible = !j.oculto;   // (si está metido en una caja, no se ve)
+    b.position.y = H/2; b.castShadow = true; look.add(b);
+    [-0.22, 0.22].forEach(x => { const e = new THREE.Mesh(eyeGeo, eyeMat); e.scale.z = 0.5; e.position.set(x, H*0.78, D/2 + 0.02); look.add(e); });
+    const label = makeLabel(j.nombre), caja = cajaCarton();
+    obj.add(look, label, caja.obj);
+    obj.position.set(j.x, j.y, j.z); obj.rotation.y = j.rot || 0;
     scene.add(obj);
-    red.otros.set(j.id, { obj, body: b, nombre: j.nombre, suave: nuevoSuavizador() });
+    red.otros.set(j.id, { id: j.id, obj, look, label, caja, body: b, nombre: j.nombre, oculto: !!j.oculto, suave: nuevoSuavizador() });
   }
   // ¡BOOM! El rectángulo se rompe en pedacitos de su color que salen volando
   const pieceGeo = new THREE.BoxGeometry(0.25, 0.25, 0.25);
@@ -937,18 +1127,19 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
         red.id = m.id;
         for (const j of m.jugadores) addFriend(j);
         // En una compu nueva (sin guardado en el navegador) apareces donde te dejó la base de datos
-        if (m.guardado && !loadedLocal && salaEn(m.guardado.x, m.guardado.y, m.guardado.z)) ps.pos.set(m.guardado.x, m.guardado.y, m.guardado.z);
         const n = m.jugadores.length;
         showToast(n ? `¡Conectado! Hay ${n} amigo${n > 1 ? 's' : ''} jugando` : '¡Conectado! Eres el primero en llegar', false, 3000);
       } else if (m.tipo === 'entra') {
         addFriend(m); showToast(`${m.nombre} entró al juego`);
       } else if (m.tipo === 'pos') {
         const f = red.otros.get(m.id);
-        if (f) { f.body.material.color.setHex(m.color); f.obj.visible = !m.oculto; agregarMuestra(f.suave, [m.x, m.y, m.z, m.rot], m.t, performance.now()); }
+        if (f) { f.body.material.color.setHex(m.color); f.oculto = !!m.oculto; agregarMuestra(f.suave, [m.x, m.y, m.z, m.rot], m.t, performance.now()); }
       } else if (m.tipo === 'sale') {
         const f = red.otros.get(m.id);
         if (f) { explode(f); red.otros.delete(m.id); }
         showToast(`💥 ${m.nombre} se desconectó`, true, 3000);
+      } else if (m.tipo === 'dragones' || m.tipo === 'dragonEvento') {
+        mensajeDragones(m);
       } else if (m.tipo === 'error') {
         red.error = true;   // (para que al cerrarse no diga "¿el servidor está encendido?")
         showToast(m.texto, true, 5000);
@@ -958,7 +1149,7 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
       // Si nunca llegó la bienvenida, la sala no existe o el servidor está apagado
       if (red.id === null) { red.ws = null; if (!red.error) showToast('No se pudo entrar a la sala: ¿el servidor está encendido? Juegas solo', true, 5000); red.error = false; return; }
       for (const f of red.otros.values()) scene.remove(f.obj);
-      red.otros.clear(); red.ws = null; red.id = null;
+      red.otros.clear(); red.ws = null; red.id = null; red.dragones = false;   // (sin servidor, tu compu vuelve a mover a los dragones)
       showToast('Se cortó la conexión con el servidor', true, 4000);
     };
   }
@@ -967,7 +1158,7 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
     if (red.id !== null && (red.envio -= dt) <= 0) {
       red.envio = Math.max(red.envio + 1 / ENVIOS_POR_SEGUNDO, 0);   // sumar (no reemplazar): así salen 10 por segundo de verdad, no 8
       // Si no te moviste, no hace falta repetirlo 10 veces por segundo: basta una vez por segundo (para que el servidor sepa que sigues ahí)
-      const pos = { tipo: 'pos', x: corto(ps.pos.x), y: corto(ps.pos.y), z: corto(ps.pos.z), rot: corto(ps.facing), color: body.material.color.getHex(), oculto: escondido ? 1 : 0 };
+      const pos = { tipo: 'pos', x: corto(ps.pos.x), y: corto(ps.pos.y), z: corto(ps.pos.z), rot: corto(ps.facing), color: body.material.color.getHex(), oculto: oculto() ? 1 : 0 };
       const txt = JSON.stringify(pos);
       pos.t = Math.round(performance.now());   // tu hora: los demás la usan para dibujarte suave (va aparte para que "¿te moviste?" no cambie siempre)
       red.quieto = txt === red.ultimaPos ? (red.quieto || 0) + 1 : 0;
@@ -983,7 +1174,12 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
         o.position.set(v[0], v[1], v[2]);
         o.rotation.y = acercarAngulo(o.rotation.y, rumboDeMovimiento(vx, vz, v[3]), Math.min(1, dt * 10));   // 🧭 mira hacia donde camina (girando suave)
       }
-      bendObj(o, dt);
+      // En su caja: se ve solo la caja (sin nombre, ¡así no lo delata!)
+      f.look.visible = !f.oculto; f.label.visible = !f.oculto;
+      f.velVista = v ? Math.hypot(v[0] - (f.antesX ?? v[0]), v[2] - (f.antesZ ?? v[2])) / Math.max(dt, 1e-3) : 0;
+      if (v) { f.antesX = v[0]; f.antesZ = v[2]; }
+      moverCaja(f.caja, f.oculto, f.velVista > 0.5, dt, t);
+      if (!f.oculto) bendObj(o, dt); else o.scale.set(1, 1, 1);
     }
     // Pedacitos de la explosión: vuelan, caen, giran y se desvanecen
     for (let i = red.pedazos.length - 1; i >= 0; i--) {
@@ -996,6 +1192,84 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
         q.m.rotation.x += q.giro * dt; q.m.rotation.z += q.giro * dt;
       }
       if (boom.vida <= 0) { for (const q of boom.piezas) scene.remove(q.m); boom.mat.dispose(); red.pedazos.splice(i, 1); }
+    }
+  }
+
+  // ---------- 🐉 Los dragones (diseños de Mathias) ----------
+  // El cerebro (src/dragones.js) decide adónde van: si juegas solo lo corre tu compu; con amigos, el servidor (así todos los ven igual).
+  // El cuerpo y las animaciones están en src/criaturas.js
+  const dragones = nuevosDragones();
+  const CAMA_YELLOW = { x: 47.4, z: 6, y: PISO_SUBSUELO, r: 2.2, alto: 0.62 };   // (la cama redonda del cuarto de Yellow)
+  const cuerposDragon = new Map(DRAGONES.map(d => { const c = crearDragon(d.id); scene.add(c.obj); return [d.id, c]; }));
+  const suaveDragon = new Map(DRAGONES.map(d => [d.id, nuevoSuavizador()]));
+  const claseDragon = i => (i === 3 ? 'giro' : i === 4 ? 'fijo' : null);   // [x, y, z, giro, modo]
+  // ❗ El signo de admiración: sale encima de la caja de quien un dragón vio meterse (y la sigue mientras se mueve)
+  const texAlerta = lienzo(64, 128, (g, w, h) => {
+    g.fillStyle = '#e8c547'; g.strokeStyle = '#3a2a00'; g.lineWidth = 6;
+    g.beginPath(); g.roundRect ? g.roundRect(18, 6, 28, 78, 12) : g.rect(18, 6, 28, 78); g.fill(); g.stroke();
+    g.beginPath(); g.arc(32, 108, 14, 0, Math.PI * 2); g.fill(); g.stroke();
+  });
+  const alertas = [];
+  function alertaSobre(quien) {   // quien: 'yo' o el id de un amigo
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: texAlerta, depthTest: false, transparent: true }));
+    sp.scale.set(0.6, 1.2, 1); scene.add(sp);
+    alertas.push({ sp, quien, vida: 2.5 });
+  }
+  function atrapado(idDragon) {
+    const def = DRAGONES.find(d => d.id === idDragon);
+    if (escondido) alternarEscondite();
+    enCaja = false;
+    ps.pos.set(spawn.x, spawn.y, spawn.z); ps.vel.set(0, 0, 0);
+    showToast(`🐉 ¡${def ? def.nombre : 'Un dragón'} te atrapó! Vuelves al spawn`, true, 3000);
+  }
+  // Mensajes de los dragones que llegan del servidor
+  function mensajeDragones(m) {
+    if (m.tipo === 'dragones') {
+      red.dragones = true;
+      m.d.forEach((fila, i) => { const d = dragones[i]; if (!d) return; agregarMuestra(suaveDragon.get(d.id), fila, m.t, performance.now()); d.modo = MODOS[fila[4]] || 'pasear'; });
+    } else if (m.tipo === 'dragonEvento') {
+      const quien = m.jugador === red.id ? 'yo' : m.jugador;
+      if (m.que === 'alerta') alertaSobre(quien);
+      else if (m.que === 'atrapado' && quien === 'yo') atrapado(m.dragon);
+    }
+  }
+  const miraA = new THREE.Vector3();
+  function updateDragones(dt) {
+    const conServidor = red.id !== null && red.dragones;
+    // Jugando solo: el cerebro corre aquí
+    if (!conServidor && loginEl.hidden) {
+      for (const e of tickDragones(dragones, [{ id: 'yo', x: ps.pos.x, y: ps.pos.y, z: ps.pos.z, oculto: oculto() ? 1 : 0 }], dt)) {
+        if (e.tipo === 'alerta') alertaSobre('yo');
+        else if (e.tipo === 'atrapado') atrapado(e.dragon);
+      }
+    }
+    const ahora = performance.now();
+    for (const d of dragones) {
+      const c = cuerposDragon.get(d.id), o = c.obj;
+      let x = d.x, y = d.y, z = d.z, rot = d.rot;
+      if (conServidor) { const v = valoresEn(suaveDragon.get(d.id), ahora, claseDragon); if (v) [x, y, z, rot] = v; }
+      // Qué tan rápido va DE VERDAD (lo que se movió en este cuadro, suavizado): con eso se mueven las piernas
+      const movio = dt > 0 ? Math.hypot(x - o.position.x, z - o.position.z) / dt : 0;
+      c.vel = movio > 30 ? 0 : (c.vel || 0) + (movio - (c.vel || 0)) * Math.min(1, dt * 8);   // (si apareció de golpe, no cuenta)
+      // Si está encima de la cama de Yellow, se ve arriba del colchón (y baja suave al bajarse)
+      const enCama = Math.hypot(x - CAMA_YELLOW.x, z - CAMA_YELLOW.z) < CAMA_YELLOW.r && Math.abs(y - CAMA_YELLOW.y) < 1;
+      c.extraY = (c.extraY || 0) + ((enCama ? CAMA_YELLOW.alto : 0) - (c.extraY || 0)) * Math.min(1, dt * 6);
+      o.position.set(x, y + c.extraY, z);
+      o.rotation.y = acercarAngulo(o.rotation.y, rot, Math.min(1, dt * 10));
+      const persigue = d.modo === 'perseguir' || d.modo === 'caja';
+      const cerca = Math.hypot(ps.pos.x - x, ps.pos.z - z) < 22 && Math.abs(ps.pos.y - y) < 3;
+      animarDragon(c, dt, { vel: c.vel, persigue, mirar: persigue && cerca ? miraA.set(ps.pos.x, ps.pos.y + 1.2, ps.pos.z) : null });
+    }
+    // Los "!" flotan sobre la caja (siguiéndola) y se desvanecen
+    for (let i = alertas.length - 1; i >= 0; i--) {
+      const a = alertas[i], f = a.quien === 'yo' ? null : red.otros.get(a.quien);
+      const p = a.quien === 'yo' ? ps.pos : f ? f.obj.position : null;
+      a.vida -= dt;
+      if (!p || a.vida <= 0) { scene.remove(a.sp); a.sp.material.dispose(); alertas.splice(i, 1); continue; }
+      a.sp.position.set(p.x, p.y + 2 + Math.sin(a.vida * 8) * 0.08, p.z);
+      a.sp.material.opacity = Math.min(1, a.vida * 2);
+      const pop = Math.min(1, (2.5 - a.vida) * 6);   // aparece de golpe, como un "¡pop!"
+      a.sp.scale.set(0.6 * pop, 1.2 * pop, 1);
     }
   }
 
@@ -1030,7 +1304,7 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
       else camPitch = Math.min(1.2, Math.max(0.1, camPitch + camJoy.y * 1.2 * dt));
     }
     const busy = !loginEl.hidden || !!escondido;
-    if (busy) fx = fz = 0; // eligiendo usuario (o metido en una caja) no te mueves
+    if (busy) fx = fz = 0; // eligiendo usuario (o metido en el armario) no te mueves
     const len = Math.hypot(fx, fz);
     let moving = false;
     if (len > 0.1) {
@@ -1040,13 +1314,14 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
       // relativo a la cámara
       const s = Math.sin(camYaw), c = Math.cos(camYaw);
       const mx = fx * c + fz * s, mz = -fx * s + fz * c;
-      ps.walkX += mx * SPEED * dt;
-      ps.walkZ += mz * SPEED * dt;
+      const rapidez = enCaja ? VEL_CAJA : SPEED;   // con la caja puesta vas más lento
+      ps.walkX += mx * rapidez * dt;
+      ps.walkZ += mz * rapidez * dt;
       turnTo(ps, mx, mz, dt);
     }
 
     // 🪜 En una escotilla: W o ESPACIO suben por la escalera, S baja. Si no tocas nada, resbalas despacito hacia abajo
-    const esc = !escondido && escotillaEn(ps.pos.x, ps.pos.y, ps.pos.z);
+    const esc = !oculto() && escotillaEn(ps.pos.x, ps.pos.y, ps.pos.z);
     if (esc) {
       const sube = keys.KeyW || keys.ArrowUp || keys.Space || joy.y < -0.5, baja = keys.KeyS || keys.ArrowDown || joy.y > 0.5;
       if (sube || baja) {
@@ -1059,22 +1334,23 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
         ps.pos.x += ((esc.x0 + esc.x1) / 2 - ps.pos.x) * k; ps.pos.z += ((esc.z0 + esc.z1) / 2 - ps.pos.z) * k;
       } else ps.vel.y = Math.max(ps.vel.y, -6);
     }
-    if (!escondido) physics(ps, dt, keys.Space && !busy && !esc);
+    if (!escondido) physics(ps, dt, keys.Space && !busy && !esc && !enCaja);   // (con la caja puesta no se salta)
     if (esc && ps.pos.y > PISO_PRINCIPAL + 0.5) { ps.pos.y = PISO_PRINCIPAL + 0.5; ps.vel.y = 0; }   // arriba de todo: te bajas caminando
     if (ps.pos.y < PISO_SUBSUELO - 15) { ps.pos.set(spawn.x, spawn.y, spawn.z); ps.vel.set(0, 0, 0); showToast('Te caíste del laboratorio: vuelves al spawn', true); }
     bendState(ps, dt);
     updateGuia(dt);
     updateRed(dt);
     updateEscondites(dt);
+    moverCaja(miCaja, enCaja, moving, dt, t);
+    updateDragones(dt);
+    updatePuertas(dt, [ps.pos, ...[...red.otros.values()].map(f => f.obj.position), ...[...cuerposDragon.values()].map(c => c.obj.position)]);
 
     // pequeño rebote al caminar
-    body.position.y = H/2 + (moving && ps.onGround ? Math.abs(Math.sin(t * 12)) * 0.08 : 0);
+    body.position.y = H/2 + (moving && ps.onGround && !enCaja ? Math.abs(Math.sin(t * 12)) * 0.08 : 0);
     // La sombrita redonda debajo de ti (más chica mientras más alto saltas)
     const alturaSombra = ps.pos.y - (ps.floorY ?? ps.pos.y);
     sombra.visible = !escondido && ps.floorY > -1e8 && alturaSombra < 8;
     sombra.position.set(ps.pos.x, (ps.floorY ?? 0) + 0.02, ps.pos.z); sombra.scale.setScalar(Math.max(0.4, 1 - alturaSombra * 0.08));
-    // El foco de Grey's Cove parpadea de vez en cuando
-    focos.greyCove.intensity = Math.sin(t * 13) > 0.97 || Math.sin(t * 2.3) > 0.995 ? 0.15 : 0.9;
 
     const p = player.position;
     if (escondido) {
@@ -1105,6 +1381,8 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, ALTO, ALTO_PUERTA, PISO_PRINCIPAL
       player.visible = camDist > 1.3;   // si la cámara queda pegada a ti, te escondes para no tapar la vista
     }
 
+    // 🔧 (solo con ?debug) cámara libre para revisar cosas: cd.libre = { x, y, z, mx, my, mz }
+    if (window.cd && cd.libre) { const L = cd.libre; camera.position.set(L.x, L.y, L.z); camera.lookAt(L.mx, L.my, L.mz); }
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
   }

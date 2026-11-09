@@ -6,10 +6,15 @@
 // Cada sala es un rectángulo { x0, x1, z0, z1 } en su piso (y). Sus puertas son huecos en sus paredes:
 //   n (norte, z = z0) y s (sur, z = z1) → tramos en x · e (este, x = x1) y w (oeste, x = x0) → tramos en z
 
-export const ALTO = 4;           // de piso a techo
+// Alturas: techos altos (¡nada de claustrofobia!). Las puertas de arriba son altas para que Red (4 m) pase
+export const ALTO = 6;           // de piso a techo, en el piso principal
+export const ALTO_SUBSUELO = 6;  // de piso a techo, en los subsuelos
 export const PISO_PRINCIPAL = 0;
 export const PISO_SUBSUELO = -7; // los dos subsuelos están a la misma profundidad (así se pueden unir con pasillos)
-export const ALTO_PUERTA = 3;
+export const ALTO_PUERTA = 4.5;      // las puertas del piso principal (Red mide 4 m: pasa justo)
+export const ALTO_PUERTA_CHICA = 3;  // las de los subsuelos y las del Panic Hole (ahí Red no entra)
+export const altoDe = y => (y < PISO_PRINCIPAL - 1 ? ALTO_SUBSUELO : ALTO);
+export const puertaDe = (y, refugio = false) => (refugio || y < PISO_PRINCIPAL - 1 ? ALTO_PUERTA_CHICA : ALTO_PUERTA);
 
 // Los colores son apagados: es un laboratorio. pared = tinte de las paredes · piso = tinte de las baldosas
 export const SALAS = [
@@ -65,17 +70,9 @@ export const ESCOTILLAS = [
 // Dónde apareces: en el centro del Spawn (sobre el sol)
 export const SPAWN = { x: -4, y: 0, z: -24 };
 
-// 📦 Escondites: las cajas (y el armario de Yellow). Con B te metes y con B sales
+// 🚪 Escondites fijos: el armario de Yellow (B cerca de él te mete adentro). En cualquier otro lado, B te pone TU caja
 export const ESCONDITES = [
-  { tipo: 'caja', x: -31, z: -20.2, y: 0 }, { tipo: 'caja', x: -17, z: -28, y: 0 },          // Test Lab
-  { tipo: 'caja', x: 3.6, z: -20.4, y: 0 },                                                   // Spawn
-  { tipo: 'caja', x: -18.6, z: -2.2, y: 0 }, { tipo: 'caja', x: 11.4, z: 9.6, y: 0 }, { tipo: 'caja', x: -10, z: 9.8, y: 0 },   // Salón
-  { tipo: 'caja', x: -31.4, z: 17.4, y: 0 }, { tipo: 'caja', x: -31.6, z: 6.6, y: 0 },      // Panic Hole
-  { tipo: 'caja', x: 24, z: 7.6, y: 0 },                                                      // Lockers
-  { tipo: 'caja', x: -7.4, z: 29.4, y: 0 }, { tipo: 'caja', x: 27.4, z: 29.4, y: 0 },       // Center Lab
-  { tipo: 'caja', x: 39, z: -10, y: -7 }, { tipo: 'caja', x: -38, z: 19.2, y: -7 },     // túneles
-  { tipo: 'caja', x: -49.4, z: -29.4, y: -7 },                                                // Grey's Cove
-  { tipo: 'armario', x: 34, z: 2.9, y: -7 },                                                  // el armario para esconderse (cuarto de Yellow)
+  { tipo: 'armario', x: 34, z: 2.9, y: -7 },   // el armario para esconderse (cuarto de Yellow)
 ];
 export const DIST_ESCONDITE = 1.9;   // qué tan cerca tienes que estar para meterte
 
@@ -83,7 +80,7 @@ const dentro = (r, x, z) => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1;
 
 // ¿En qué sala estás? (null = en ninguna: te caíste del mapa)
 export function salaEn(x, y, z) {
-  return SALAS.find(s => dentro(s, x, z) && y >= s.y - 0.5 && y <= s.y + ALTO) || null;
+  return SALAS.find(s => dentro(s, x, z) && y >= s.y - 0.5 && y <= s.y + altoDe(s.y)) || null;
 }
 
 // La escotilla en la que estás parado (o colgado de su escalera), o null. y: de un piso al otro

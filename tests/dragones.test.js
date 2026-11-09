@@ -1,0 +1,113 @@
+import { describe, it, expect } from 'vitest';
+import { DRAGONES, VECINOS, ruta, hayLinea, teVe, nuevosDragones, tickDragones, filaDragon, MODOS } from '../src/dragones.js';
+import { SALAS, salaEn } from '../src/laboratorio.js';
+
+const def = id => DRAGONES.find(d => d.id === id);
+const dragon = (id, extra = {}) => ({ ...nuevosDragones().find(d => d.id === id), ...extra });
+const jugador = (x, y, z, extra = {}) => ({ id: 'yo', x, y, z, oculto: 0, ...extra });
+
+describe('el mapa de los dragones', () => {
+  it('cada sala tiene al menos una puerta a otra', () => { for (const s of SALAS.filter(q => q.id !== 'panico')) expect(VECINOS.get(s.id).length, s.id).toBeGreaterThan(0); });
+  it('desde el Spawn se llega al Center Lab', () => {
+    const r = ruta('spawn', 'centerLab');
+    expect(r.length).toBeGreaterThan(1);
+  });
+  it('todas las salas de un piso se conectan entre sí (menos el refugio)', () => {
+    for (const a of SALAS) for (const b of SALAS) if (a.y === b.y && a.id !== 'panico' && b.id !== 'panico') expect(ruta(a.id, b.id), `${a.id} → ${b.id}`).not.toBe(null);
+  });
+  it('😐 al Panic Hole no entran los dragones, ni ven adentro', () => {
+    expect(ruta('salon', 'panico')).toBe(null);
+    expect(hayLinea(0, { x: -15, z: 9.5 }, { x: -28, z: 9.5 })).toBe(false);   // por la puerta del salón
+  });
+  it('del piso principal no se llega al subsuelo caminando (solo por las escotillas)', () => expect(ruta('spawn', 'greyCove')).toBe(null));
+  it('una pared tapa la vista; una puerta no', () => {
+    expect(hayLinea(0, { x: -4, z: -24 }, { x: -25, z: -24 })).toBe(true);    // Spawn → Test Lab por la puerta
+    expect(hayLinea(0, { x: -4, z: -24 }, { x: -25, z: -29 })).toBe(false);   // a través de la pared
+  });
+  it('🌞 ninguno empieza en el Spawn, y paseando nunca se mete ahí', () => {
+    const ds = nuevosDragones();
+    for (let i = 0; i < 2000; i++) {
+      tickDragones(ds, [], 0.05);
+      for (const d of ds) expect(['spawn', 'escaleras']).not.toContain(salaEn(d.x, d.y, d.z).id);
+    }
+  });
+  it('⚪ White empieza en sus mesas y 🟡 Yellow en su cama', () => {
+    const ds = nuevosDragones(), w = ds.find(d => d.id === 'white'), y = ds.find(d => d.id === 'yellow');
+    expect(salaEn(w.x, w.y, w.z).id).toBe('greyCove'); expect(Math.abs(w.x + 46)).toBeLessThan(2.5);
+    expect(Math.hypot(y.x - 47.4, y.z - 6)).toBeLessThan(0.5);
+  });
+  it('cada dragón empieza en su casa, en su piso', () => {
+    for (const d of nuevosDragones()) expect(salaEn(d.x, d.y, d.z).id).toBe(def(d.id).casa);
+  });
+});
+
+describe('ver', () => {
+  // (White vive en Grey's Cove, en el subsuelo: y = -7)
+  it('te ve si estás enfrente y cerca', () => expect(teVe(dragon('white', { x: -41, z: -30, rot: 0 }), jugador(-41, -7, -24), def('white'))).toBe(true));
+  it('no te ve si estás en una caja', () => expect(teVe(dragon('white', { x: -41, z: -30, rot: 0 }), jugador(-41, -7, -24, { oculto: 1 }), def('white'))).toBe(false));
+  it('no te ve a la espalda (de lejos)', () => expect(teVe(dragon('white', { x: -41, z: -22, rot: 0 }), jugador(-41, -7, -28), def('white'))).toBe(false));
+  it('🟡 Yellow ve más angosto: de costado ya no te ve', () => {
+    const y = dragon('yellow', { x: 34, z: 6, rot: Math.PI / 2 });   // mirando hacia +x
+    expect(teVe(y, jugador(40, -7, 6), def('yellow'))).toBe(true);
+    expect(teVe(y, jugador(38, -7, 9.5), def('yellow'))).toBe(false);   // un poco de lado
+  });
+  it('no ve a través de los pisos', () => expect(teVe(dragon('grey', { x: 10, z: 20 }), jugador(10, 0, 22), def('grey'))).toBe(false));
+});
+
+describe('el cerebro', () => {
+  it('paseando, se mueve despacio y sigue en su piso', () => {
+    const ds = nuevosDragones();
+    for (let i = 0; i < 600; i++) tickDragones(ds, [], 0.05);
+    for (const d of ds) {
+      expect(salaEn(d.x, d.y, d.z), d.id).not.toBe(null);   // nunca atraviesa una pared hacia afuera
+      expect(d.vel).toBeLessThanOrEqual(def(d.id).camina + 0.01);
+    }
+  });
+  it('si te ve, corre hacia ti', () => {
+    const d = dragon('white', { x: -41, z: -30, rot: 0 }), j = jugador(-41, -7, -22);
+    tickDragones([d], [j], 0.1);
+    expect(d.modo).toBe('perseguir');
+    tickDragones([d], [j], 0.1);
+    expect(d.z).toBeGreaterThan(-30);
+    expect(d.vel).toBeGreaterThan(def('white').camina);
+  });
+  it('🔴 Red es ciego: no te ve aunque estés enfrente…', () => {
+    const d = dragon('red', { x: 10, z: 20, rot: 0 });
+    tickDragones([d], [jugador(10, 0, 24)], 0.1);
+    expect(d.modo).toBe('pasear');
+  });
+  it('…pero si te choca, te lleva (¡aunque estés en tu caja!)', () => {
+    const d = dragon('red', { x: 10, z: 20 });
+    expect(tickDragones([d], [jugador(10.5, 0, 20.5, { oculto: 1 })], 0.1)).toContainEqual({ tipo: 'atrapado', dragon: 'red', jugador: 'yo' });
+  });
+  it('Grey corre más rápido que todos', () => { for (const d of DRAGONES) if (d.id !== 'grey') expect(def('grey').corre).toBeGreaterThan(d.corre); });
+  it('si te ve meterte en tu caja: alerta "!" y sigue a tu caja (aunque te muevas)', () => {
+    const d = dragon('white', { x: -41, z: -30, rot: 0 }), j = jugador(-41, -7, -24);
+    tickDragones([d], [j], 0.1);
+    expect(d.modo).toBe('perseguir');
+    j.oculto = 1;
+    const ev = tickDragones([d], [j], 0.1);
+    expect(ev).toContainEqual({ tipo: 'alerta', dragon: 'white', jugador: 'yo' });
+    expect(d.modo).toBe('caja');
+    j.x = -37;   // te mueves con la caja
+    let atrapado = false;
+    for (let k = 0; k < 200 && !atrapado; k++) atrapado = tickDragones([d], [j], 0.1).some(e => e.tipo === 'atrapado');
+    expect(atrapado).toBe(true);
+  });
+  it('si ya estabas en tu caja, pasa de largo', () => {
+    const d = dragon('white', { x: -41, z: -30, rot: 0 });
+    const ev = tickDragones([d], [jugador(-41, -7, -26, { oculto: 1 })], 0.1);
+    expect(ev).toEqual([]); expect(d.modo).toBe('pasear');
+  });
+  it('si te pierde, va a buscarte donde te vio', () => {
+    const d = dragon('white', { x: -41, z: -30, rot: 0 }), j = jugador(-41, -7, -22);
+    tickDragones([d], [j], 0.1);
+    j.x = 100;   // desapareció de su vista
+    tickDragones([d], [j], 0.1);
+    expect(d.modo).toBe('buscar');
+  });
+  it('se manda cortito por la red', () => {
+    const f = filaDragon(dragon('red', { x: 1.234, z: 5.678, rot: 0.5 }));
+    expect(f).toEqual([1.23, 0, 5.68, 0.5, MODOS.indexOf('pasear')]);
+  });
+});
