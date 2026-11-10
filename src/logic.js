@@ -59,6 +59,18 @@ export const rumboDeMovimiento = (vx, vz, rot, umbral = 0.5) => (Math.hypot(vx, 
 // Por ahora solo se guarda dónde estás. Cuando haya más cosas (dragones, colores…), se agregan aquí.
 export const normalizeName = name => String(name).trim().replace(/\s+/g, ' ').toLowerCase();
 export const saveKey = name => `color-dragons:partida:${normalizeName(name)}`;
+// 🎨 Cada jugador tiene su color (sale de su nombre: el mismo nombre, siempre el mismo color). Así tus amigos no son todos verdes
+export const COLORES_JUGADOR = [0x2fae4e, 0x3d8bff, 0xe8b23a, 0xd9534f, 0x9b6bff, 0x2ec4b6, 0xff7f50, 0xe85da8];
+export function colorDeNombre(nombre) {
+  let h = 0;
+  for (const c of normalizeName(nombre)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return COLORES_JUGADOR[h % COLORES_JUGADOR.length];
+}
+// Un lugar al lado de un punto (para que dos jugadores no aparezcan uno adentro del otro)
+export function alLado(p, azar = Math.random) {
+  const a = azar() * Math.PI * 2, r = 0.8 + azar() * 1.4;
+  return { x: p.x + Math.cos(a) * r, y: p.y, z: p.z + Math.sin(a) * r };
+}
 export const serializeSave = ({ pos }) => JSON.stringify({ v: 1, pos: { x: pos.x, y: pos.y, z: pos.z } });
 // Lee un guardado. Si está roto o es raro, devuelve null (y el juego empieza de cero)
 export function parseSave(text) {

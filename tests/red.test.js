@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { leerSala, salaDeHost, linkOficial, leerMensaje, limpiarNombre, corto, acercarAngulo, nuevoSuavizador, agregarMuestra, valoresEn, mezclar, TELETRANSPORTE } from '../src/red.js';
+import { BORDE, leerSala, salaDeHost, linkOficial, leerMensaje, limpiarNombre, corto, acercarAngulo, nuevoSuavizador, agregarMuestra, valoresEn, mezclar, TELETRANSPORTE } from '../src/red.js';
 
 describe('salas', () => {
   it('acepta nombres de túnel normales', () => expect(leerSala('Palabras-Raras-123')).toBe('palabras-raras-123'));
@@ -35,6 +35,9 @@ describe('mensajes', () => {
     expect(leerMensaje(JSON.stringify({ tipo: 'recoger', i: -1 }))).toBe(null);
     expect(leerMensaje(JSON.stringify({ tipo: 'recoger', i: 'todos' }))).toBe(null);
     expect(leerMensaje(JSON.stringify({ tipo: 'alimentar' }))).toEqual({ tipo: 'alimentar' });
+  });
+  it('el borde deja caber el lobby y la fiesta (si no, tus amigos aparecen en otro lugar)', () => {
+    expect(BORDE).toBeGreaterThan(242);   // la salida de la fiesta llega hasta x = 242
   });
   it('nombres de máximo 20 letras', () => expect(limpiarNombre('a'.repeat(30)).length).toBe(20));
   it('números cortos', () => expect(corto(1.23456)).toBe(1.23));

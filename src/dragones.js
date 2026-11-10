@@ -6,7 +6,7 @@
 //   perseguir → te vio: corre derecho hacia ti
 //   buscar    → te perdió de vista: va a donde te vio por última vez
 //   caja      → te vio meterte en tu caja: la sigue aunque te muevas (y sobre tu caja sale un "!")
-import { SALAS, ESCOTILLAS, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, delLab } from './laboratorio.js?v=8';
+import { SALAS, ESCOTILLAS, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, delLab } from './laboratorio.js?v=10';
 
 export const MODOS = ['pasear', 'perseguir', 'buscar', 'caja', 'dormir', 'comer'];
 // 🟡 Yellow es dormilón: duerme en su cama y cada 30–40 s se despierta con hambre. Si su plato tiene comida, come y

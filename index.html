@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Color Dragons</title>
 <meta name="description" content="Un juego 3D gratis para jugar con tus amigos en el navegador.">
-<meta name="theme-color" content="#2fae4e">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" href="iconos/icono-192.png">
-<link rel="apple-touch-icon" href="iconos/icono-192.png">
+<meta name="theme-color" content="#1b2426">
+<link rel="manifest" href="manifest.webmanifest?v=2">
+<link rel="icon" type="image/png" href="iconos/icono-192.png?v=2">
+<link rel="apple-touch-icon" href="iconos/icono-192.png?v=2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -147,13 +147,13 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COMO, textoQueHago, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=8';
-import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=8';
-import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=8';
-import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=8';
-import { crearDragon, animarDragon } from './src/criaturas.js?v=8';
-import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=8';
-import * as F from './src/fiesta.js?v=8';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
+import { colorDeNombre, alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COMO, textoQueHago, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=10';
+import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=10';
+import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=10';
+import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=10';
+import { crearDragon, animarDragon } from './src/criaturas.js?v=10';
+import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=10';
+import * as F from './src/fiesta.js?v=10';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
 (() => {
   // iPhone ignora user-scalable=no: aquí se bloquea el zoom con dos dedos y el doble toque
   for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
@@ -988,7 +988,7 @@ import * as F from './src/fiesta.js?v=8';   // cambiar ?v= al cambiar estos arch
   function usarE() { const u = queUsar(); if (u) u.hacer(); }
   usarBtn.addEventListener('click', e => { usarE(); e.currentTarget.blur(); });
   // 🔧 Para probar: con ?debug en el link, la consola puede ver y mover al jugador (window.cd)
-  if (new URLSearchParams(location.search).has('debug')) window.cd = { ps, camera, salaEn, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; }, get escondido() { return escondido; }, get enCaja() { return enCaja; }, get dragones() { return dragones; }, get cuerpos() { return cuerposDragon; }, get noche() { return noche; }, get fiesta() { return fiesta; } };
+  if (new URLSearchParams(location.search).has('debug')) window.cd = { ps, camera, salaEn, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; }, get escondido() { return escondido; }, get enCaja() { return enCaja; }, get dragones() { return dragones; }, get cuerpos() { return cuerposDragon; }, get noche() { return noche; }, get fiesta() { return fiesta; }, get red() { return red; } };
   // La caja puesta: las solapas se cierran, y al caminar se bambolea un poquito
   function moverCaja(caja, puesta, caminando, dt, t) {
     caja.obj.visible = puesta;
@@ -1028,6 +1028,7 @@ import * as F from './src/fiesta.js?v=8';   // cambiar ?v= al cambiar estos arch
     const name = loginName.value.trim().replace(/\s+/g, ' ');
     if (!name) { loginError.hidden = false; loginName.focus(); return; }
     userName = name;
+    body.material.color.setHex(colorDeNombre(name));   // 🎨 tu color (tus amigos te ven de este color)
     loginEl.hidden = true; loginName.blur();
     const loaded = loadGame(name);
     loadedLocal = loaded;
@@ -1431,7 +1432,7 @@ import * as F from './src/fiesta.js?v=8';   // cambiar ?v= al cambiar estos arch
     platoLleno = true;
     apagon(!!def.apagon);
     if (escondido) alternarEscondite();
-    enCaja = false; ps.pos.set(spawn.x, spawn.y, spawn.z); ps.vel.set(0, 0, 0); camYaw = Math.PI;
+    enCaja = false; ps.pos.copy(alLado(spawn)); ps.vel.set(0, 0, 0); camYaw = Math.PI;
     cartelEl.hidden = true;
     pintarContador();
   }
@@ -1594,7 +1595,7 @@ import * as F from './src/fiesta.js?v=8';   // cambiar ?v= al cambiar estos arch
     mallasObjetos = []; apagon(false);
     contadorEl.hidden = true; introEl.hidden = true; cartelEl.hidden = true; escapasteEl.hidden = true;
     if (escondido) alternarEscondite();
-    enCaja = false; ps.pos.set(LOBBY_SPAWN.x, LOBBY_SPAWN.y, LOBBY_SPAWN.z); ps.vel.set(0, 0, 0); camYaw = 0;
+    enCaja = false; ps.pos.copy(alLado(LOBBY_SPAWN)); ps.vel.set(0, 0, 0); camYaw = 0;   // (al lado del punto: así tus amigos no aparecen adentro tuyo)
     pintarPantallaLobby();
   }
   // Cruzar la puerta del lobby → empieza la noche que te toca
@@ -1744,7 +1745,7 @@ import * as F from './src/fiesta.js?v=8';   // cambiar ?v= al cambiar estos arch
     for (const m of mallasObjetos) scene.remove(m);
     mallasObjetos = []; apagon(false); contadorEl.hidden = true; cartelEl.hidden = true; escapasteEl.hidden = true;
     if (escondido) alternarEscondite();
-    enCaja = false; ps.pos.set(FIESTA_SPAWN.x, FIESTA_SPAWN.y, FIESTA_SPAWN.z); ps.vel.set(0, 0, 0); camYaw = Math.PI / 2;
+    enCaja = false; ps.pos.copy(alLado(FIESTA_SPAWN)); ps.vel.set(0, 0, 0); camYaw = Math.PI / 2;
     // Todo vuelve a su lugar: globos, sombrero, compuerta, rampa, puertas y bloques
     mallasGlobos.forEach(g => { g.visible = true; g.userData.bola.position.y = 2.3; });
     globoQueCae.position.y = 5.5; globoQueCae.visible = true; cayendo = -1;

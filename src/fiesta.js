@@ -10,7 +10,7 @@
 //   6. 'hat'      → aparece el sombrero completo y habla
 //   7. 'fin'      → "ESCAPASTE" y vuelves al lobby
 
-import { SALAS, tramosDePared, salaEn } from './laboratorio.js?v=8';
+import { SALAS, tramosDePared, salaEn } from './laboratorio.js?v=10';
 
 export const MENSAJE_INICIO = "Now this is the final night. I've decided to invite you to the goodbye celebration.";
 export const MENSAJE_FINAL = "I'm still not done with you. Things are going to get a lot more EPIC.";

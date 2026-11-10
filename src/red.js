@@ -13,7 +13,7 @@ export const salaDeHost = host => { const m = /^([a-z0-9-]+)\.trycloudflare\.com
 export const linkOficial = sala => `${OFICIAL}?sala=${sala}`;
 export const MAX_JUGADORES = 12;
 export const ENVIOS_POR_SEGUNDO = 10;   // cuántas veces por segundo mandas tu posición
-export const BORDE = 100;               // la mitad del tamaño del mapa (200)
+export const BORDE = 260;               // hasta dónde puede estar un jugador (en metros): el lab, el lobby (x ≈ 113) y la fiesta (x ≈ 160–242)
 
 // Números cortos para mandar menos letras por la red (2 decimales)
 export const corto = n => Math.round(n * 100) / 100;
