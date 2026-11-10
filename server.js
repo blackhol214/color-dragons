@@ -3,11 +3,13 @@
 // 2) Reparte en tiempo real dónde está cada jugador (WebSocket)
 // 3) Guarda a todos los jugadores en una base de datos SQLite (datos/jugadores.sqlite)
 // 4) Mueve a los dragones (el cerebro está en src/dragones.js): así todos los ven en el mismo lugar
+// 5) Lleva la noche (src/noches.js): dónde están los objetos, quién los agarra y cuándo se gana
 import { Database } from 'bun:sqlite';
 import { mkdirSync } from 'node:fs';
 import { PUERTO, MAX_JUGADORES, BORDE, leerMensaje, salaDeHost, linkOficial } from './src/red.js';
 import { SPAWN } from './src/laboratorio.js';
 import { nuevosDragones, tickDragones, filaDragon } from './src/dragones.js';
+import { nocheDe, nuevaNoche, recoger, entregar, soltar, tickNoche, siguienteNoche, FIN_SEGUNDOS } from './src/noches.js';
 
 // ---------- Base de datos ----------
 mkdirSync(new URL('./datos', import.meta.url), { recursive: true });
@@ -77,6 +79,7 @@ const servidor = Bun.serve({
         // Al nuevo: quién es él, quiénes están ya y dónde quedó la última vez
         ws.send(JSON.stringify({ tipo: 'bienvenida', id: j.id, jugadores: [...conectados.values()].map(sinWs),
           guardado: antes ? { x: antes.x, y: antes.y, z: antes.z, veces: antes.veces + 1 } : null }));
+        if (noche) ws.send(JSON.stringify(fotoNoche()));   // si ya hay una noche jugándose, entra a esa (si no, se queda en el lobby)
         conectados.set(j.id, j);
         guardar(j);
         ws.subscribe('juego');
@@ -86,6 +89,28 @@ const servidor = Bun.serve({
       }
       if (!yo) return;   // todo lo demás solo vale después de saludar
 
+      if (m.tipo === 'empezar') {
+        // 🏠 Alguien cruzó la puerta del lobby: empieza la noche para todos (si ya hay una, no pasa nada)
+        if (noche) { ws.send(JSON.stringify(fotoNoche())); return; }
+        if (m.n === 6) aTodos({ tipo: 'nocheFase', fase: 'final' });   // 🎈 la final se juega en cada compu
+        else empezarNoche(m.n);
+        return;
+      }
+      if (m.tipo === 'recoger') {
+        // 🌙 Agarró un objeto (solo si de verdad estaba al lado)
+        if (noche && recoger(noche, m.i, yo, yo.id)) aTodos(fotoNoche());
+        return;
+      }
+      if (m.tipo === 'entregar') {
+        // 🎩 Llegó a la máquina del Center Lab: entrega lo que lleva (o, si no estaba cerca, igual le contesta para que pueda volver a intentar)
+        if (noche) { entregar(noche, yo, yo.id); aTodos(fotoNoche()); }
+        return;
+      }
+      if (m.tipo === 'alimentar') {
+        // 🍽️ Le sirvió comida a Yellow (solo si estaba en el cuarto de Yellow, abajo)
+        if (yo.y < -5 && yo.x > 26) { plato = true; aTodos({ tipo: 'plato', lleno: true }); }
+        return;
+      }
       if (m.tipo === 'pos') {
         yo.x = dentro(m.x, BORDE); yo.y = dentro(m.y, 200); yo.z = dentro(m.z, BORDE); yo.rot = m.rot; yo.oculto = m.oculto;
         if (m.color !== null) yo.color = m.color;
@@ -96,6 +121,8 @@ const servidor = Bun.serve({
       const yo = ws.data.id && conectados.get(ws.data.id);
       if (!yo) return;
       conectados.delete(yo.id);
+      if (noche && soltar(noche, yo.id)) aTodos(fotoNoche());   // si se fue llevando cosas, vuelven a su lugar
+      if (!conectados.size) noche = null;   // se fueron todos: la próxima vez se empieza de nuevo
       guardar(yo);
       aTodos({ tipo: 'sale', id: yo.id, nombre: yo.nombre });   // ¡BOOM! en la pantalla de todos
       console.log(`💥 ${yo.nombre} se desconectó (${conectados.size} jugando)`);
@@ -104,14 +131,36 @@ const servidor = Bun.serve({
 });
 
 // 🐉 Los dragones: 10 veces por segundo piensan y se mueven, y se le cuenta a todos dónde están
-const dragones = nuevosDragones();
+let dragones = nuevosDragones();
 let ultimoTick = Date.now();
+// 🌙 La noche de ahora (null = todavía nadie entró)
+let noche = null, plato = true;
+function empezarNoche(n) {
+  noche = nuevaNoche(n); plato = true;
+  dragones = nuevosDragones();   // cada noche los dragones empiezan en su casa
+  aTodos(fotoNoche());
+  console.log(`🌙 Empieza la noche ${n}`);
+}
+const ESTADOS = ['suelto', 'llevado', 'entregado'];
+const fotoNoche = () => ({ tipo: 'noche', n: noche.n, fase: noche.fase, tiempo: noche.tiempo, plato,
+  activos: nocheDe(noche.n).dragones, objetos: noche.objetos.map(o => [o.x, o.y, o.z, ESTADOS.indexOf(o.estado), o.quien]) });
 setInterval(() => {
   const ahora = Date.now(), dt = Math.min(0.2, (ahora - ultimoTick) / 1000);
   ultimoTick = ahora;
-  if (!conectados.size) return;   // sin nadie jugando, los dragones esperan
-  const jugadores = [...conectados.values()].map(j => ({ id: j.id, x: j.x, y: j.y, z: j.z, oculto: j.oculto || 0 }));
-  for (const e of tickDragones(dragones, jugadores, dt)) aTodos({ tipo: 'dragonEvento', que: e.tipo, dragon: e.dragon, jugador: e.jugador });
+  if (!conectados.size || !noche) return;   // sin nadie jugando, los dragones esperan
+  // La noche: intro → jugando → ganada → (5 segundos) → la siguiente
+  if (tickNoche(noche, dt)) aTodos({ tipo: 'nocheFase', fase: noche.fase });
+  if (noche.fase === 'ganada' && noche.tiempo >= FIN_SEGUNDOS) {
+    const sig = siguienteNoche(noche.n);
+    if (sig) empezarNoche(sig); else { noche = null; aTodos({ tipo: 'nocheFase', fase: 'final' }); return; }   // 🎈 después de la 5: la fiesta
+  }
+  if (noche.fase !== 'jugando') { aTodos({ tipo: 'dragones', t: ahora, d: dragones.map(filaDragon) }); return; }   // (en la intro, los dragones esperan)
+  const activos = nocheDe(noche.n).dragones, jugadores = [...conectados.values()].map(j => ({ id: j.id, x: j.x, y: j.y, z: j.z, oculto: j.oculto || 0 }));
+  for (const e of tickDragones(dragones.filter(d => activos.includes(d.id)), jugadores, dt, Math.random, { plato })) {
+    if (e.tipo === 'come') { plato = false; aTodos({ tipo: 'plato', lleno: false }); continue; }
+    aTodos({ tipo: 'dragonEvento', que: e.tipo, dragon: e.dragon, jugador: e.jugador });
+    if (e.tipo === 'atrapado' && soltar(noche, e.jugador)) aTodos(fotoNoche());   // lo que llevaba se le cae y vuelve a su lugar
+  }
   aTodos({ tipo: 'dragones', t: ahora, d: dragones.map(filaDragon) });
 }, 100);
 

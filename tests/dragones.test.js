@@ -1,25 +1,29 @@
 import { describe, it, expect } from 'vitest';
-import { DRAGONES, VECINOS, ruta, hayLinea, teVe, nuevosDragones, tickDragones, filaDragon, MODOS } from '../src/dragones.js';
-import { SALAS, salaEn } from '../src/laboratorio.js';
+import { DRAGONES, VECINOS, ruta, hayLinea, teVe, nuevosDragones, tickDragones, filaDragon, MODOS, CAMA, HAMBRE } from '../src/dragones.js';
+import { SALAS, salaEn, delLab } from '../src/laboratorio.js';
 
 const def = id => DRAGONES.find(d => d.id === id);
 const dragon = (id, extra = {}) => ({ ...nuevosDragones().find(d => d.id === id), ...extra });
 const jugador = (x, y, z, extra = {}) => ({ id: 'yo', x, y, z, oculto: 0, ...extra });
 
 describe('el mapa de los dragones', () => {
-  it('cada sala tiene al menos una puerta a otra', () => { for (const s of SALAS.filter(q => q.id !== 'panico')) expect(VECINOS.get(s.id).length, s.id).toBeGreaterThan(0); });
+  it('cada sala tiene al menos una puerta a otra', () => { for (const s of SALAS.filter(q => q.id !== 'panico' && delLab(q))) expect(VECINOS.get(s.id).length, s.id).toBeGreaterThan(0); });
   it('desde el Spawn se llega al Center Lab', () => {
     const r = ruta('spawn', 'centerLab');
     expect(r.length).toBeGreaterThan(1);
   });
   it('todas las salas de un piso se conectan entre sí (menos el refugio)', () => {
-    for (const a of SALAS) for (const b of SALAS) if (a.y === b.y && a.id !== 'panico' && b.id !== 'panico') expect(ruta(a.id, b.id), `${a.id} → ${b.id}`).not.toBe(null);
+    for (const a of SALAS.filter(delLab)) for (const b of SALAS.filter(delLab)) if (a.y === b.y && a.id !== 'panico' && b.id !== 'panico') expect(ruta(a.id, b.id), `${a.id} → ${b.id}`).not.toBe(null);
   });
   it('😐 al Panic Hole no entran los dragones, ni ven adentro', () => {
     expect(ruta('salon', 'panico')).toBe(null);
     expect(hayLinea(0, { x: -15, z: 9.5 }, { x: -28, z: 9.5 })).toBe(false);   // por la puerta del salón
   });
-  it('del piso principal no se llega al subsuelo caminando (solo por las escotillas)', () => expect(ruta('spawn', 'greyCove')).toBe(null));
+  it('🪜 del piso principal al subsuelo se va trepando por una escotilla', () => {
+    const r = ruta('spawn', 'greyCove');
+    expect(r.some(p => p.trepar && p.y === -7)).toBe(true);
+    expect(ruta('greyCove', 'spawn').some(p => p.trepar && p.y === 0)).toBe(true);
+  });
   it('una pared tapa la vista; una puerta no', () => {
     expect(hayLinea(0, { x: -4, z: -24 }, { x: -25, z: -24 })).toBe(true);    // Spawn → Test Lab por la puerta
     expect(hayLinea(0, { x: -4, z: -24 }, { x: -25, z: -29 })).toBe(false);   // a través de la pared
@@ -28,7 +32,7 @@ describe('el mapa de los dragones', () => {
     const ds = nuevosDragones();
     for (let i = 0; i < 2000; i++) {
       tickDragones(ds, [], 0.05);
-      for (const d of ds) expect(['spawn', 'escaleras']).not.toContain(salaEn(d.x, d.y, d.z).id);
+      for (const d of ds) if (!d.trepando) expect(['spawn', 'escaleras']).not.toContain(salaEn(d.x, d.y, d.z).id);
     }
   });
   it('⚪ White empieza en sus mesas y 🟡 Yellow en su cama', () => {
@@ -59,7 +63,7 @@ describe('el cerebro', () => {
     const ds = nuevosDragones();
     for (let i = 0; i < 600; i++) tickDragones(ds, [], 0.05);
     for (const d of ds) {
-      expect(salaEn(d.x, d.y, d.z), d.id).not.toBe(null);   // nunca atraviesa una pared hacia afuera
+      if (!d.trepando) expect(salaEn(d.x, d.y, d.z), d.id).not.toBe(null);   // nunca atraviesa una pared hacia afuera
       expect(d.vel).toBeLessThanOrEqual(def(d.id).camina + 0.01);
     }
   });
@@ -108,6 +112,56 @@ describe('el cerebro', () => {
   });
   it('se manda cortito por la red', () => {
     const f = filaDragon(dragon('red', { x: 1.234, z: 5.678, rot: 0.5 }));
-    expect(f).toEqual([1.23, 0, 5.68, 0.5, MODOS.indexOf('pasear')]);
+    expect(f).toEqual([1.23, 0, 5.68, 0.5, MODOS.indexOf('pasear'), 0]);
+  });
+});
+
+describe('🟡 Yellow, el dormilón', () => {
+  const yellow = () => nuevosDragones().find(d => d.id === 'yellow');
+  const correr = (d, segundos, mundo) => { const ev = []; for (let t = 0; t < segundos; t += 0.1) ev.push(...tickDragones([d], [], 0.1, Math.random, mundo)); return ev; };
+  it('empieza dormido en su cama y no se mueve', () => {
+    const d = yellow(); d.hambre = 100;
+    correr(d, 10, { plato: true });
+    expect(d.modo).toBe('dormir');
+    expect(Math.hypot(d.x - CAMA.x, d.z - CAMA.z)).toBeLessThan(0.5);
+  });
+  it('durmiendo no te ve aunque estés enfrente', () => {
+    const d = yellow(); d.hambre = 100;
+    tickDragones([d], [{ id: 'yo', x: CAMA.x - 3, y: -7, z: CAMA.z, oculto: 0 }], 0.1, Math.random, { plato: true });
+    expect(d.modo).toBe('dormir');
+  });
+  it('con comida en el plato: come y vuelve a dormir', () => {
+    const d = yellow(); d.hambre = 0.1;
+    const ev = correr(d, 20, { plato: true });
+    expect(ev).toContainEqual({ tipo: 'come', dragon: 'yellow' });
+    expect(d.modo).toBe('dormir');
+  });
+  it('con el plato vacío: ¡sale a buscar!', () => {
+    const d = yellow(); d.hambre = 0.1;
+    const ev = correr(d, 15, { plato: false });
+    expect(ev).toContainEqual({ tipo: 'despierta', dragon: 'yellow' });
+    expect(d.modo).not.toBe('dormir');
+  });
+  it('después de buscar un rato, vuelve a su cama', () => {
+    const d = yellow(); d.hambre = 0.1;
+    correr(d, 15 + HAMBRE.buscando, { plato: false });
+    expect(d.modo).toBe('dormir');
+  });
+});
+
+describe('🪜 trepar por las escaleras', () => {
+  it('un dragón baja por la escotilla, trepando, y llega abajo', () => {
+    const d = { ...nuevosDragones().find(q => q.id === 'white'), x: -30, y: 0, z: -22, modo: 'buscar', ultimo: null };
+    d.ruta = [...ruta('testLab', 'greyCove'), { x: -40, z: -24 }];
+    let trepo = false;
+    for (let i = 0; i < 400 && d.ruta.length; i++) { tickDragones([d], [], 0.05); if (d.trepando) trepo = true; }
+    expect(trepo).toBe(true);
+    expect(d.y).toBe(-7);
+    expect(salaEn(d.x, d.y, d.z).id).toBe('greyCove');
+  });
+  it('trepando no atrapa a nadie (primero termina de subir)', () => {
+    const d = { ...nuevosDragones().find(q => q.id === 'white'), x: -34.4, y: -3, z: -25, modo: 'pasear' };
+    d.ruta = [{ x: -34.4, z: -25, y: 0, trepar: true, mira: 0 }];
+    expect(tickDragones([d], [{ id: 'yo', x: -34.4, y: -3, z: -25, oculto: 0 }], 0.05)).toEqual([]);
   });
 });

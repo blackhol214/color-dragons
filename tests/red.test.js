@@ -30,6 +30,12 @@ describe('mensajes', () => {
     expect(leerMensaje(JSON.stringify({ tipo: 'gigante' }))).toBe(null);
     expect(leerMensaje('x'.repeat(5000))).toBe(null);
   });
+  it('🌙 mensajes de las noches', () => {
+    expect(leerMensaje(JSON.stringify({ tipo: 'recoger', i: 3 }))).toEqual({ tipo: 'recoger', i: 3 });
+    expect(leerMensaje(JSON.stringify({ tipo: 'recoger', i: -1 }))).toBe(null);
+    expect(leerMensaje(JSON.stringify({ tipo: 'recoger', i: 'todos' }))).toBe(null);
+    expect(leerMensaje(JSON.stringify({ tipo: 'alimentar' }))).toEqual({ tipo: 'alimentar' });
+  });
   it('nombres de máximo 20 letras', () => expect(limpiarNombre('a'.repeat(30)).length).toBe(20));
   it('números cortos', () => expect(corto(1.23456)).toBe(1.23));
 });

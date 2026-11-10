@@ -45,6 +45,11 @@ export function leerMensaje(texto) {
     // oculto: 1 si estás metido en una caja (tus amigos no te ven)
     return { tipo: 'pos', x: m.x, y: m.y, z: m.z, rot: m.rot, color: esNumero(m.color) ? m.color : null, oculto: m.oculto === 1 ? 1 : 0, t: horaDe(m.t) };
   }
+  // 🌙 Las noches: agarrar el objeto número i (E), entregar lo que llevas en el Center Lab, servirle comida a Yellow
+  if (m.tipo === 'recoger') return Number.isInteger(m.i) && m.i >= 0 && m.i < 100 ? { tipo: 'recoger', i: m.i } : null;
+  if (m.tipo === 'entregar' || m.tipo === 'alimentar') return { tipo: m.tipo };
+  // 🏠 Desde el lobby: empezar la noche n (1 a 5; 6 = la noche final)
+  if (m.tipo === 'empezar') return Number.isInteger(m.n) && m.n >= 1 && m.n <= 6 ? { tipo: 'empezar', n: m.n } : null;
   return null;
 }
 

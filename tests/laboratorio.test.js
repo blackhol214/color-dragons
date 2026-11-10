@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, PISO_PRINCIPAL, PISO_SUBSUELO, salaEn, escotillaEn, esconditeCerca, tramosDePared, puertasSinPareja } from '../src/laboratorio.js';
+import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, PISO_PRINCIPAL, PISO_SUBSUELO, salaEn, escotillaEn, esconditeCerca, tramosDePared, puertasSinPareja } from '../src/laboratorio.js';
 
 const sala = id => SALAS.find(s => s.id === id);
 
@@ -23,6 +23,13 @@ describe('el plano del laboratorio', () => {
   it('cada escondite está dentro de una sala de su piso', () => {
     for (const e of ESCONDITES) expect(salaEn(e.x, e.y, e.z), `${e.tipo} en ${e.x}, ${e.z}`).not.toBe(null);
   });
+  it('🏠 el lobby y 🎈 la fiesta existen, aparte del laboratorio', () => {
+    expect(sala('lobby').zona).toBe('lobby');
+    expect(SALAS.filter(q => q.zona === 'fiesta').length).toBeGreaterThan(5);
+    expect(salaEn(LOBBY_SPAWN.x, LOBBY_SPAWN.y, LOBBY_SPAWN.z).id).toBe('lobby');
+    expect(salaEn(FIESTA_SPAWN.x, FIESTA_SPAWN.y, FIESTA_SPAWN.z).id).toBe('fSpawn');
+  });
+  it('las ventilaciones son bajitas', () => expect(sala('fVent1').alto).toBeLessThan(3));
   it('el piso principal tiene las salas del dibujo', () => {
     for (const id of ['testLab', 'spawn', 'banos', 'lockers', 'panico', 'centerLab']) expect(sala(id).y).toBe(0);
   });

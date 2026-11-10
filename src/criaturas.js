@@ -385,9 +385,9 @@ export function crearDragon(id) {
 
 const _v = new THREE.Vector3();
 // Anima un cuadro. vel: a cuántos m/s va de verdad · persigue: si está persiguiendo · mirar: hacia dónde mirar (Vector3 del mundo) o null
-export function animarDragon(c, dt, { vel, persigue, mirar = null }) {
+export function animarDragon(c, dt, { vel, persigue, mirar = null, trepa = false, velTrepa = 0 }) {
   c.t += dt;
-  c.fase += vel * dt * PASOS_POR_METRO[c.id];                 // 👣 las piernas avanzan lo que camina (nunca patinan)
+  c.fase += (vel + velTrepa * 1.3) * dt * PASOS_POR_METRO[c.id];   // 👣 las piernas avanzan lo que camina (o trepa): nunca patinan
   c.paso = suave(c.paso, Math.min(1, vel / 1.5), dt, 6);       // 0 = quieto, 1 = caminando (cambia de a poco)
   c.correr = suave(c.correr, persigue ? 1 : 0, dt, 3);         // 0 = paseando, 1 = corriendo
   FABRICAS[c.id][1](c, dt, c.t, c.paso, c.correr);
@@ -411,6 +411,27 @@ export function animarDragon(c, dt, { vel, persigue, mirar = null }) {
     if (c.id === 'yellow' || c.id === 'grey' || c.id === 'red') { o.pupila.position.copy(o.base); continue; }   // 🟡⚫🔴 sus ojos no se mueven
     const k = Math.min(1, Math.hypot(o.mx, o.my)) / Math.max(1e-6, Math.hypot(o.mx, o.my));
     o.pupila.position.set(o.base.x + o.mx * k * o.rango, o.base.y + o.my * k * o.rango, o.base.z);
+  }
+  // 🪜 Trepando por la escalera: cada uno a su manera (se mezcla suave con la animación normal)
+  c.trepa = suave(c.trepa || 0, trepa ? 1 : 0, dt, 6);
+  if (c.trepa > 0.01) {
+    const k = c.trepa, f = c.fase;
+    if (c.id === 'red') {   // estira los brazos hacia arriba, uno y después el otro
+      for (const b of c.brazos) b.hombro.rotation.x = b.hombro.rotation.x * (1 - k) + (-2.75 + Math.sin(f + (b.lado > 0 ? 0 : Math.PI)) * 0.4) * k;
+      for (const p of c.piernas) p.cadera.rotation.x = p.cadera.rotation.x * (1 - k) + Math.sin(f + (p.lado > 0 ? Math.PI : 0)) * 0.45 * k;
+    } else if (c.id === 'grey') {   // se pone vertical, como lagartija en la pared
+      c.cuerpo.rotation.x = -1.35 * k; c.cuerpo.position.y = 0.9 * k;
+    } else if (c.id === 'yellow') {   // aletea rapidísimo (pero no vuela)
+      for (const a of c.alas) a.bis.rotation.y = a.lado * (0.3 + Math.sin(c.t * 22) * 0.6);
+    }
+  } else if (c.id === 'grey') c.cuerpo.rotation.x = 0;
+  // 😴 Yellow durmiendo: ojos cerrados (una rayita), alas quietas y respira despacito
+  if (c.id === 'yellow') {
+    const dormido = !!c.durmiendo;
+    c.sueno = suave(c.sueno || 0, dormido ? 1 : 0, dt, 4);
+    for (const o of c.ojos) { o.blanco.scale.y = 1 - c.sueno * 0.9; o.pupila.visible = c.sueno < 0.5; }
+    if (dormido) { c.bola.scale.setScalar(1 + Math.sin(c.t * 1.5) * 0.03); for (const a of c.alas) a.bis.rotation.y = a.lado * 0.15; }
+    else c.bola.scale.setScalar(1);
   }
   // ⚪ White: persiguiendo, los ojos se vuelven totalmente rojos
   if (c.id === 'white' && c.rojos !== persigue) {
