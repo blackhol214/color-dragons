@@ -1584,9 +1584,11 @@ import * as F from './src/fiesta.js?v=10';   // cambiar ?v= al cambiar estos arc
     letras(g, 'cruza la puerta para empezar', c.width / 2, 124, 28, '#7f9a9c', 'system-ui, sans-serif');
     pantallaLobby.material.map.needsUpdate = true;
   }
-  // Tu avance: la noche que te toca (se guarda en este navegador)
-  const progreso = () => { try { return Math.min(NOCHE_FINAL, Math.max(1, +localStorage.getItem('color-dragons:noche') || 1)); } catch (e) { return 1; } };
-  const guardarProgreso = n => { try { localStorage.setItem('color-dragons:noche', String(n)); } catch (e) {} pintarPantallaLobby(); };
+  // Tu avance: la noche que te toca. Vive solo mientras el juego está abierto: cada vez que entras, empiezas en la noche 1 (aunque hayas guardado)
+  let nocheQueToca = 1;
+  try { localStorage.removeItem('color-dragons:noche'); } catch (e) {}   // (borra el avance viejo que antes sí se guardaba)
+  const progreso = () => Math.min(NOCHE_FINAL, Math.max(1, nocheQueToca));
+  const guardarProgreso = n => { nocheQueToca = n; pintarPantallaLobby(); };
   let enLobby = false;
   function irAlLobby() {
     enLobby = true; noche = null; fiesta = null;
