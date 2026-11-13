@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DRAGONES, VECINOS, ruta, hayLinea, teVe, nuevosDragones, tickDragones, filaDragon, MODOS, CAMA, HAMBRE } from '../src/dragones.js';
+import { REFUGIOS, DRAGONES, VECINOS, ruta, hayLinea, teVe, nuevosDragones, tickDragones, filaDragon, MODOS, CAMA, HAMBRE, enMueble, RADIO } from '../src/dragones.js';
 import { SALAS, salaEn, delLab } from '../src/laboratorio.js';
 
 const def = id => DRAGONES.find(d => d.id === id);
@@ -7,32 +7,40 @@ const dragon = (id, extra = {}) => ({ ...nuevosDragones().find(d => d.id === id)
 const jugador = (x, y, z, extra = {}) => ({ id: 'yo', x, y, z, oculto: 0, ...extra });
 
 describe('el mapa de los dragones', () => {
-  it('cada sala tiene al menos una puerta a otra', () => { for (const s of SALAS.filter(q => q.id !== 'panico' && delLab(q))) expect(VECINOS.get(s.id).length, s.id).toBeGreaterThan(0); });
-  it('desde el Spawn se llega al Center Lab', () => {
-    const r = ruta('spawn', 'centerLab');
+  const salasDragon = () => SALAS.filter(q => delLab(q) && !REFUGIOS.includes(q.id));
+  it('cada sala tiene al menos una puerta a otra', () => { for (const s of salasDragon()) expect(VECINOS.get(s.id).length, s.id).toBeGreaterThan(0); });
+  it('desde el Test Lab se llega al Center Lab', () => {
+    const r = ruta('testLab', 'centerLab');
     expect(r.length).toBeGreaterThan(1);
   });
-  it('todas las salas de un piso se conectan entre sí (menos el refugio)', () => {
-    for (const a of SALAS.filter(delLab)) for (const b of SALAS.filter(delLab)) if (a.y === b.y && a.id !== 'panico' && b.id !== 'panico') expect(ruta(a.id, b.id), `${a.id} → ${b.id}`).not.toBe(null);
+  it('todas las salas de un piso se conectan entre sí (menos los refugios)', () => {
+    for (const a of salasDragon()) for (const b of salasDragon()) if (a.y === b.y) expect(ruta(a.id, b.id), `${a.id} → ${b.id}`).not.toBe(null);
+  });
+  it('🌞 al Spawn tampoco entran: ahí nadie te atrapa', () => {
+    expect(ruta('testLab', 'spawn')).toBe(null);
+    const red = dragon('red', { x: -4, y: 0, z: -24 });   // (aunque esté pegado a ti)
+    const ev = tickDragones([red], [jugador(-4.5, 0, -24)], 0.05, () => 0.5, { plato: false });
+    expect(ev.some(e => e.tipo === 'atrapado')).toBe(false);
   });
   it('😐 al Panic Hole no entran los dragones, ni ven adentro', () => {
     expect(ruta('salon', 'panico')).toBe(null);
     expect(hayLinea(0, { x: -15, z: 9.5 }, { x: -28, z: 9.5 })).toBe(false);   // por la puerta del salón
   });
   it('🪜 del piso principal al subsuelo se va trepando por una escotilla', () => {
-    const r = ruta('spawn', 'greyCove');
+    const r = ruta('centerLab', 'greyCove');
     expect(r.some(p => p.trepar && p.y === -7)).toBe(true);
-    expect(ruta('greyCove', 'spawn').some(p => p.trepar && p.y === 0)).toBe(true);
+    expect(ruta('greyCove', 'centerLab').some(p => p.trepar && p.y === 0)).toBe(true);
   });
   it('una pared tapa la vista; una puerta no', () => {
-    expect(hayLinea(0, { x: -4, z: -24 }, { x: -25, z: -24 })).toBe(true);    // Spawn → Test Lab por la puerta
+    const r = ruta('testLab', 'centerLab');   // los dos puntos de antes y después de la primera puerta se ven
+    expect(hayLinea(0, r[0], r[1])).toBe(true);
     expect(hayLinea(0, { x: -4, z: -24 }, { x: -25, z: -29 })).toBe(false);   // a través de la pared
   });
   it('🌞 ninguno empieza en el Spawn, y paseando nunca se mete ahí', () => {
     const ds = nuevosDragones();
     for (let i = 0; i < 2000; i++) {
       tickDragones(ds, [], 0.05);
-      for (const d of ds) if (!d.trepando) expect(['spawn', 'escaleras']).not.toContain(salaEn(d.x, d.y, d.z).id);
+      for (const d of ds) if (!d.trepando) expect(['spawn', 'escaleras']).not.toContain(salaEn(d.x, d.y, d.z)?.id);   // (justo en el marco de una puerta no está en ninguna sala)
     }
   });
   it('⚪ White empieza en sus mesas y 🟡 Yellow en su cama', () => {
@@ -163,5 +171,27 @@ describe('🪜 trepar por las escaleras', () => {
     const d = { ...nuevosDragones().find(q => q.id === 'white'), x: -34.4, y: -3, z: -25, modo: 'pasear' };
     d.ruta = [{ x: -34.4, z: -25, y: 0, trepar: true, mira: 0 }];
     expect(tickDragones([d], [{ id: 'yo', x: -34.4, y: -3, z: -25, oculto: 0 }], 0.05)).toEqual([]);
+  });
+});
+
+describe('🪑 los dragones chocan con los muebles', () => {
+  it('nunca quedan metidos en un mueble y no se quedan atascados para siempre', () => {
+    let semilla = 7; const azar = () => ((semilla = (semilla * 16807) % 2147483647) / 2147483647);
+    const ds = nuevosDragones(), recorrido = new Map(ds.map(d => [d.id, 0]));
+    for (let i = 0; i < 6000; i++) {
+      const antes = ds.map(d => [d.x, d.z]);
+      tickDragones(ds, [], 0.05, azar, { plato: false });
+      ds.forEach((d, k) => {
+        if (!d.trepando) expect(enMueble(d.x, d.y, d.z, RADIO - 0.05), `${d.id} en (${d.x.toFixed(1)}, ${d.z.toFixed(1)})`).toBe(false);
+        recorrido.set(d.id, recorrido.get(d.id) + Math.hypot(d.x - antes[k][0], d.z - antes[k][1]));
+      });
+    }
+    // en 5 minutos de juego cada uno caminó bastante (Yellow duerme mucho, pero también sale a comer)
+    for (const [id, m] of recorrido) expect(m, id).toBeGreaterThan(20);
+  });
+  it('una mesa lo frena: no la atraviesa', () => {
+    const d = dragon('red', { x: 10, y: 0, z: 18, ruta: [{ x: 10, z: 30 }], modo: 'buscar' });
+    for (let i = 0; i < 40; i++) tickDragones([d], [], 0.05, () => 0.5, { plato: false });
+    expect(d.z).toBeLessThan(24 - 2.94);   // la mesa grande del Center Lab empieza en z ≈ 21
   });
 });

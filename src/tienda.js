@@ -53,6 +53,13 @@ export function comprar(cuenta, id) {
 // Ponerte una caja que ya tienes
 export const ponerCaja = (cuenta, id) => (cuenta.cajas.includes(id) ? { ...cuenta, caja: id } : cuenta);
 
+// 💀 Te atrapó un dragón: pierdes la noche… a menos que pagues 20 monedas para seguir
+export const COSTO_SEGUIR = 20;
+export function pagarParaSeguir(cuenta) {
+  if (cuenta.monedas < COSTO_SEGUIR) return { ok: false, cuenta };
+  return { ok: true, cuenta: { ...cuenta, monedas: cuenta.monedas - COSTO_SEGUIR } };
+}
+
 // Lee la cuenta de un guardado (si algo está raro, lo arregla en vez de romper el juego)
 export function leerCuenta(d) {
   const c = nuevaCuenta();

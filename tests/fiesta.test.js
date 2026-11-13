@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { nuevaFiesta, GREY_FIESTA, globoTocado, enElDescanso, empujar, escotillaLibre, cajasQueTapan, enCuartoCajas, ruido, tickGrey, hayLineaFiesta, rutaFiesta, afuera, GLOBOS, CAMA_GREY, RAMPA, DESCANSO, PUERTA_SALIDA, ESCOTILLA_FIESTA, SOMBRERO_FIESTA } from '../src/fiesta.js';
+import { empezarSubida, RAMPA_CAIDA, ENTRA_GREY, nuevaFiesta, GREY_FIESTA, globoTocado, enElDescanso, empujar, escotillaLibre, cajasQueTapan, enCuartoCajas, ruido, tickGrey, hayLineaFiesta, rutaFiesta, afuera, GLOBOS, CAMA_GREY, RAMPA, DESCANSO, PUERTA_SALIDA, ESCOTILLA_FIESTA, SOMBRERO_FIESTA } from '../src/fiesta.js';
 import { salaEn } from '../src/laboratorio.js';
 
 const correrGrey = (f, segundos, jugador) => { let r = null; for (let t = 0; t < segundos && !r; t += 0.05) r = tickGrey(f, 0.05, jugador); return r; };
@@ -94,5 +94,43 @@ describe('🎈 la fiesta (noche final)', () => {
   it('afuera: pasaste la puerta de la salida', () => {
     expect(afuera({ x: 234, z: PUERTA_SALIDA.z + 3 })).toBe(true);
     expect(afuera({ x: 234, z: PUERTA_SALIDA.z - 3 })).toBe(false);
+  });
+});
+
+describe('🛝 la rampa que cae (fase escape)', () => {
+  it('Grey la rodea: nunca pasa por adentro de la rampa', () => {
+    const f = nuevaFiesta(); f.fase = 'escape';
+    Object.assign(f.grey, { x: ENTRA_GREY.x, z: ENTRA_GREY.z, modo: 'perseguir', ruta: null });
+    const yo = { x: 214.6, y: 0, z: -4.5, oculto: 0 };   // abajo, al otro lado de la rampa, cerca de la puerta
+    let r = null;
+    for (let t = 0; t < 6 && !r; t += 0.05) {
+      r = tickGrey(f, 0.05, yo);
+      const g = f.grey, R = RAMPA_CAIDA;
+      expect(g.x > R.x0 && g.x < R.x1 && g.z > R.z0 && g.z < R.z1, `Grey en (${g.x.toFixed(1)}, ${g.z.toFixed(1)})`).toBe(false);
+    }
+    expect(r).toBe('atrapado');   // igual te alcanza (dando la vuelta)
+  });
+});
+
+describe('🪜 Grey viene por donde siempre (fase escape)', () => {
+  it('sube la escalera, cruza la compuerta, baja por la rampa… y después te persigue', () => {
+    const f = nuevaFiesta(); f.fase = 'escape';
+    empezarSubida(f);
+    const yo = { x: 220, y: 0, z: 10, oculto: 0 };   // ya en el pasillo
+    let maxY = 0, pasoCompuerta = false, abajoAlFinal = false;
+    for (let t = 0; t < 12 && f.grey.modo === 'subir'; t += 0.05) {
+      tickGrey(f, 0.05, yo);
+      maxY = Math.max(maxY, f.grey.y);
+      if (f.grey.x > 204 && f.grey.y > 2.9) pasoCompuerta = true;   // arriba, del lado del cuarto de las cajas
+    }
+    abajoAlFinal = f.grey.y === 0 && salaEn(f.grey.x, 0, f.grey.z).id === 'fBajo';
+    expect(maxY).toBeCloseTo(3);
+    expect(pasoCompuerta).toBe(true);
+    expect(abajoAlFinal).toBe(true);
+    expect(f.grey.modo).toBe('perseguir');
+  });
+  it('desde abajo llega a las ventilaciones (también se mete)', () => {
+    expect(rutaFiesta('fBajo', 'fVent3')).not.toBe(null);
+    expect(rutaFiesta('fPasillo', 'fVentC')).not.toBe(null);
   });
 });

@@ -96,6 +96,16 @@
   .itemTienda .nombre { flex:1; }
   .itemTienda button { border:0; border-radius:10px; padding:8px 12px; font:700 14px/1 system-ui, sans-serif; color:#fff; background:#1f8a3b; cursor:pointer; }
   .itemTienda button:disabled { background:#4a5558; cursor:default; }
+  /* 💀 El susto: un flash rojo que parpadea, y después la pantalla de perder la noche */
+  #sustoFlash { position:fixed; inset:0; z-index:26; pointer-events:none; background:radial-gradient(circle, rgba(120,0,0,.15) 30%, rgba(60,0,0,.85) 100%); animation:flashSusto .5s steps(2) 2; }
+  #sustoFlash[hidden] { display:none; }
+  #sustoNegro { position:fixed; inset:0; z-index:25; pointer-events:none; background:#000; opacity:0; }
+  @keyframes flashSusto { 0% { background-color:rgba(255,0,0,.55); } 50% { background-color:rgba(0,0,0,.2); } 100% { background-color:rgba(255,0,0,.35); } }
+  #perdiste { top:50%; bottom:auto; transform:translate(-50%,-50%); text-align:center; z-index:30; }
+  #perdiste h2 { color:#ff5a4f; font-size:30px; }
+  #perdiste .botones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
+  #perdiste button { border:0; border-radius:12px; padding:12px 16px; font:700 15px/1 system-ui, sans-serif; color:#fff; cursor:pointer; }
+  #pagarBtn { background:#c79a1a; } #pagarBtn:disabled { background:#4a5558; cursor:default; } #lobbyBtn { background:#7a2a24; }
   #dentroCaja { position:fixed; inset:0; z-index:10; pointer-events:none; overflow:hidden; }
   #dentroCaja .rendija { position:absolute; left:50%; top:46%; width:min(62vw, 560px); height:clamp(56px, 11vh, 96px); transform:translate(-50%, -50%); border-radius:999px;
     box-shadow:0 0 0 200vmax rgba(52,37,22,.96), inset 0 0 24px 10px rgba(30,20,10,.85); }
@@ -147,6 +157,9 @@
 <button type="button" id="cajaBtn" hidden>📦 Caja</button>
 <button type="button" id="usarBtn" hidden>✋ Usar</button>
 <p id="aviso" hidden></p>
+<div id="sustoNegro"></div>
+<div id="sustoFlash" hidden></div>
+<div id="perdiste" class="panelLobby" hidden><h2>💀 ¡PERDISTE LA NOCHE!</h2><p id="perdisteTexto" style="margin:0"></p><div class="botones"><button type="button" id="pagarBtn"></button><button type="button" id="lobbyBtn">🏠 Volver al lobby</button></div></div>
 <div id="paleta" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar la paleta">×</button><h2>🎨 Elige tu color</h2><div id="paletaColores"></div></div>
 <div id="tienda" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Salir de la tienda">×</button><h2>🛒 Tienda de cajas</h2><p id="tiendaMonedas" style="margin:0 0 6px"></p><div id="tiendaCajas"></div></div>
 <div id="contador" hidden><b id="contadorNoche">NOCHE 1</b><span id="contadorTexto"></span></div>
@@ -162,14 +175,14 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COMO, textoQueHago, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=11';
-import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=11';
-import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=11';
-import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=11';
-import { crearDragon, animarDragon } from './src/criaturas.js?v=11';
-import { CAJAS, PALETA, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, leerCuenta } from './src/tienda.js?v=12';
-import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=11';
-import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
+import { alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COMO, textoQueHago, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=15';
+import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=15';
+import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=15';
+import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=15';
+import { crearDragon, animarDragon } from './src/criaturas.js?v=15';
+import { CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=15';
+import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=15';
+import * as F from './src/fiesta.js?v=15';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
 (() => {
   // iPhone ignora user-scalable=no: aquí se bloquea el zoom con dos dedos y el doble toque
   for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
@@ -431,7 +444,7 @@ import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos arc
   const focos = {};
   for (const [id, color, k] of [['spawn', 0xe8eee8, 1], ['testLab', 0xd6ece6, 1], ['salon', 0xe6e8ee, 1.1], ['centerLab', 0xe2eaf0, 1.2], ['banos', 0xeef0e6, 0.9],
     ['lockers', 0xe0eadb, 0.9], ['panico', 0xf0d6cf, 0.8], ['greyCove', 0xc9ccd0, 0.9], ['yellowRoom', 0xf0e0a8, 0.9], ['tunelCentro', 0xd8d0b0, 0.6],
-    ['lobby', 0xf2f6f6, 1.4], ['fSalon', 0xf6d8ee, 1.2], ['fSpawn', 0xe8dcf6, 1], ['fRampa', 0xdfe2f6, 1], ['fBloques', 0xe6eadb, 1], ['fPasillo', 0xd8dde8, 0.9], ['fVent2', 0xc8d2d8, 0.5], ['fSalida', 0x9fb4d8, 0.5]]) {
+    ['lobby', 0xf2f6f6, 1.4], ['fSalon', 0xf6d8ee, 1.2], ['fSpawn', 0xe8dcf6, 1], ['fRampa', 0xdfe2f6, 1], ['fBloques', 0xe6eadb, 1], ['fPasillo', 0xd8dde8, 0.9], ['fVent1', 0xc8d2d8, 0.4], ['fVent2', 0xc8d2d8, 0.5], ['fVent3', 0xc8d2d8, 0.5], ['fSalida', 0x9fb4d8, 0.5]]) {
     const s = SALAS.find(q => q.id === id);
     const luz = new THREE.PointLight(color, k * 1.15, 30, 1.3);   // (un poco más fuertes: el techo ahora está más alto)
     luz.position.set((s.x0 + s.x1) / 2, s.y + altoDe(s.y) - 0.6, (s.z0 + s.z1) / 2);
@@ -1027,7 +1040,7 @@ import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos arc
   function usarE() { const u = queUsar(); if (u) u.hacer(); }
   usarBtn.addEventListener('click', e => { usarE(); e.currentTarget.blur(); });
   // 🔧 Para probar: con ?debug en el link, la consola puede ver y mover al jugador (window.cd)
-  if (new URLSearchParams(location.search).has('debug')) window.cd = { ps, camera, salaEn, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; }, get escondido() { return escondido; }, get enCaja() { return enCaja; }, get dragones() { return dragones; }, get cuerpos() { return cuerposDragon; }, get noche() { return noche; }, get fiesta() { return fiesta; }, get red() { return red; } };
+  if (new URLSearchParams(location.search).has('debug')) window.cd = { ps, camera, salaEn, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; }, get escondido() { return escondido; }, get enCaja() { return enCaja; }, get dragones() { return dragones; }, get cuerpos() { return cuerposDragon; }, get noche() { return noche; }, get fiesta() { return fiesta; }, get red() { return red; }, platforms, atrapar: id => atrapado(id), get susto() { return susto; } };
   // La caja puesta: las solapas se cierran, y al caminar se bambolea un poquito
   function moverCaja(caja, puesta, caminando, dt, t) {
     caja.obj.visible = puesta;
@@ -1305,14 +1318,133 @@ import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos arc
     alertas.push({ sp, quien, vida: 2.5 });
   }
   function atrapado(idDragon) {
+    if (susto || !noche) return;
     const def = DRAGONES.find(d => d.id === idDragon);
-    if (escondido) alternarEscondite();
-    enCaja = false;
-    ps.pos.set(spawn.x, spawn.y, spawn.z); ps.vel.set(0, 0, 0);
     // Lo que llevabas se cae y vuelve a su lugar (con amigos, eso lo hace el servidor)
-    const cayeron = noche && red.id === null ? soltar(noche, 'yo') : 0;
+    const cayeron = red.id === null ? soltar(noche, 'yo') : 0;
     if (cayeron) { noche.objetos.forEach((o, i) => { if (mallasObjetos[i]) mallasObjetos[i].visible = o.estado === 'suelto'; }); pintarContador(); }
-    showToast(`🐉 ¡${def ? def.nombre : 'Un dragón'} te atrapó! Vuelves al spawn` + (cayeron ? ` (se te cayeron ${cayeron})` : ''), true, 3000);
+    // 💀 ¡SUSTO! Y después: pagas 20 monedas y sigues (desde el spawn), o pierdes la noche y vuelves al lobby
+    asustar(cuerposDragon.get(idDragon), idDragon, def ? def.nombre : 'Un dragón',
+      () => { ps.pos.set(spawn.x, spawn.y, spawn.z); ps.vel.set(0, 0, 0); showToast('🪙 Pagaste: ¡sigues en la noche! (desde el spawn)'); },
+      perderNoche);
+  }
+  function perderNoche() {
+    if (red.id !== null) red.ignorarNoche = true;   // con amigos: ellos siguen; tú esperas en el lobby (cruzando la puerta vuelves a entrar)
+    irAlLobby();
+    showToast('💀 Perdiste la noche. Cruza la puerta para intentarlo otra vez', true, 3500);
+  }
+
+  // ---------- 💀 Los sustos: la cámara salta a la cara del dragón, grita y tiembla la pantalla ----------
+  let susto = null, audio = null;
+  const sustoFlash = document.getElementById('sustoFlash'), perdisteEl = document.getElementById('perdiste'), pagarBtn = document.getElementById('pagarBtn');
+  // c: el cuerpo del dragón (de criaturas.js) · id: qué dragón es (cada uno asusta a su manera)
+  function asustar(c, id, nombre, alSeguir, alPerder) {
+    if (susto) return;
+    if (escondido) alternarEscondite();
+    enCaja = false; ps.vel.set(0, 0, 0);
+    // El dragón se gira hacia ti: así la cámara (que va delante de su cara) queda de tu lado, donde no hay pared
+    const giro = Math.atan2(ps.pos.x - c.obj.position.x, ps.pos.z - c.obj.position.z);
+    susto = { c, id, nombre, alSeguir, alPerder, t: 0, fase: 'susto', base: c.obj.position.clone(), giroX: c.obj.rotation.x, giro };
+    sustoFlash.hidden = false; sustoFlash.style.animation = 'none'; void sustoFlash.offsetWidth; sustoFlash.style.animation = '';
+    gritar();
+  }
+  function updateSusto(dt) {
+    if (!susto) return;
+    susto.t += dt;
+    if (susto.fase === 'susto' && susto.t > 1.3) {
+      susto.fase = 'elegir';
+      document.getElementById('perdisteTexto').textContent = `¡${susto.nombre} te atrapó! Tienes ${cuenta.monedas} 🪙`;
+      pagarBtn.textContent = `🪙 Pagar ${COSTO_SEGUIR} y seguir`; pagarBtn.disabled = cuenta.monedas < COSTO_SEGUIR;
+      perdisteEl.hidden = false;
+    }
+  }
+  // La cámara del susto: cada dragón tiene su animación (la cámara siempre queda DELANTE de su cabeza, nunca adentro)
+  //   🔴 Red: la cabeza se levanta como tapa (abre la boca enorme) y te come
+  //   ⚫ Grey: se para en 2 patas, abre el hocico y ¡ÑAM!, te muerde
+  //   🟡 Yellow: te embiste de frente y caes al suelo
+  //   ⚪ White: su boca se agiganta y te traga
+  const sustoNegro = document.getElementById('sustoNegro');
+  const enMundo = o => { o.updateWorldMatrix(true, false); return o.getWorldPosition(new THREE.Vector3()); };
+  function camaraSusto() {
+    if (!susto) return false;
+    const { c, id, t } = susto, o = c.obj;
+    o.rotation.order = 'YXZ';   // (primero gira hacia ti y después se para: si no, se pararía torcido)
+    o.rotation.y = susto.giro;
+    const fx = Math.sin(o.rotation.y), fz = Math.cos(o.rotation.y);
+    const k = (a, b) => Math.min(1, Math.max(0, (t - a) / (b - a)));   // va de 0 a 1 entre el segundo a y el segundo b
+    o.position.copy(susto.base); o.rotation.x = susto.giroX;
+    let mira, dist, tiembla = 0, negro = 0, cam = null;
+    if (id === 'red') {
+      c.cabeza.position.y = (0.28 + 0.95 * k(0.15, 0.55)) * c.tamCabeza;   // abre la boca: la cabeza sube como una tapa
+      mira = enMundo(c.mandibula); mira.y += 0.4 * c.tamCabeza * k(0.15, 0.55);
+      dist = 2.4 - 2.2 * k(0.6, 1.1);   // …y la cámara se mete en su boca
+      tiembla = 0.05; negro = k(0.95, 1.15);
+    } else if (id === 'white') {
+      const g = 1 + 5 * k(0.1, 0.7); c.boca.scale.set(g * 0.8, g, 1);      // la boca se agiganta
+      mira = enMundo(c.boca); dist = 2.2 - 2.1 * k(0.65, 1.1);
+      tiembla = 0.04; negro = k(0.95, 1.15);
+    } else if (id === 'grey') {
+      const pararse = k(0, 0.35);
+      o.rotation.x = -1.15 * pararse; o.position.y += 0.6 * pararse;      // se para en 2 patas…
+      c.cabeza.rotation.x = 1.05 * pararse;                                // …y baja la cabeza para mirarte de frente
+      const muerde = t < 0.75 ? k(0.3, 0.7) : 1 - k(0.75, 0.82);          // abre el hocico… ¡ÑAM!
+      c.abajo.rotation.x = 0.9 * muerde; c.arriba.rotation.x = -0.35 * muerde;
+      const lanza = k(0.72, 0.82); o.position.x += fx * 0.5 * lanza; o.position.z += fz * 0.5 * lanza;
+      mira = enMundo(c.cabeza); dist = 2.1;
+      tiembla = t > 0.78 && t < 1.2 ? 0.16 : 0.02; negro = 0.85 * k(1, 1.2);
+    } else {
+      // Yellow: la cámara queda quieta y él viene corriendo de frente
+      const cara0 = enMundo(c.bola);
+      cam = new THREE.Vector3(cara0.x + fx * 6, cara0.y, cara0.z + fz * 6);
+      const embiste = k(0.25, 0.6); o.position.x += fx * 4.6 * embiste; o.position.z += fz * 4.6 * embiste;
+      mira = enMundo(c.bola);
+      const cae = k(0.6, 0.9);   // ¡PUM! te tira al suelo: la cámara cae y queda mirando hacia arriba
+      cam.y = cam.y - (cam.y - o.position.y - 0.3) * cae; mira.y += 1.5 * cae;
+      tiembla = t > 0.58 && t < 1 ? 0.25 : 0; negro = 0.6 * k(0.9, 1.2);
+    }
+    if (!cam) cam = new THREE.Vector3(mira.x + fx * dist, mira.y, mira.z + fz * dist);
+    // Si hay una pared entre su cabeza y la cámara, la cámara se queda de este lado (así nunca lo ves a través de la pared)
+    const dir = cam.clone().sub(mira), largo = dir.length();
+    if (largo > 0.01) {
+      dir.normalize(); camRay.set(mira, dir); camRay.far = largo;
+      const choque = camRay.intersectObjects(bloqueanCamara, false)[0];
+      if (choque) cam.copy(mira).addScaledVector(dir, Math.max(0.35, choque.distance - 0.25));
+    }
+    if (susto.fase !== 'susto') tiembla = 0;
+    camera.position.set(cam.x + (Math.random() - 0.5) * tiembla, cam.y + (Math.random() - 0.5) * tiembla, cam.z + (Math.random() - 0.5) * tiembla);
+    camera.lookAt(mira);
+    sustoNegro.style.opacity = negro;
+    return true;
+  }
+  function terminarSusto() {
+    if (susto) { susto.c.obj.position.copy(susto.base); susto.c.obj.rotation.x = susto.giroX; if (susto.id === 'grey') susto.c.cabeza.rotation.x = 0; }
+    susto = null; perdisteEl.hidden = true; sustoFlash.hidden = true; sustoNegro.style.opacity = 0;
+  }
+  pagarBtn.addEventListener('click', e => {
+    e.currentTarget.blur();
+    if (!susto) return;
+    const r = pagarParaSeguir(cuenta);
+    if (!r.ok) return;
+    cuenta = r.cuenta; autoguardar();
+    const s = susto; terminarSusto(); s.alSeguir();
+  });
+  document.getElementById('lobbyBtn').addEventListener('click', e => { e.currentTarget.blur(); if (!susto) return; const s = susto; terminarSusto(); s.alPerder(); });
+  // El grito: ruido que baja de tono + un gruñido grave (hecho con sonido sintetizado, sin archivos)
+  function gritar() {
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      const a = audio, t0 = a.currentTime, dur = 1.1;
+      const buf = a.createBuffer(1, Math.floor(a.sampleRate * dur), a.sampleRate), datos = buf.getChannelData(0);
+      for (let i = 0; i < datos.length; i++) datos[i] = Math.random() * 2 - 1;
+      const ruido = a.createBufferSource(); ruido.buffer = buf;
+      const filtro = a.createBiquadFilter(); filtro.type = 'bandpass'; filtro.Q.value = 3;
+      filtro.frequency.setValueAtTime(1900, t0); filtro.frequency.exponentialRampToValueAtTime(450, t0 + dur);
+      const g = a.createGain(); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.9, t0 + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      ruido.connect(filtro).connect(g).connect(a.destination); ruido.start(t0);
+      const osc = a.createOscillator(); osc.type = 'sawtooth'; osc.frequency.setValueAtTime(230, t0); osc.frequency.exponentialRampToValueAtTime(55, t0 + dur);
+      const g2 = a.createGain(); g2.gain.setValueAtTime(0.0001, t0); g2.gain.exponentialRampToValueAtTime(0.35, t0 + 0.04); g2.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g2).connect(a.destination); osc.start(t0); osc.stop(t0 + dur);
+    } catch (e) {}
   }
   // Mensajes de los dragones que llegan del servidor
   function mensajeDragones(m) {
@@ -1331,7 +1463,7 @@ import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos arc
     const conServidor = red.id !== null && red.dragones;
     // Jugando solo: el cerebro corre aquí
     // (solo los dragones de esta noche, y solo cuando la noche ya empezó: durante la intro esperan)
-    if (!conServidor && loginEl.hidden && noche && noche.fase === 'jugando') {
+    if (!conServidor && loginEl.hidden && noche && noche.fase === 'jugando' && !susto) {
       const deEstaNoche = dragones.filter(d => activos.has(d.id));
       for (const e of tickDragones(deEstaNoche, [{ id: 'yo', x: ps.pos.x, y: ps.pos.y, z: ps.pos.z, oculto: oculto() ? 1 : 0 }], dt, Math.random, { plato: platoLleno })) {
         if (e.tipo === 'alerta') alertaSobre('yo');
@@ -1566,6 +1698,7 @@ import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos arc
   }
   // Lo que llega del servidor (jugando con amigos)
   function mensajeNoche(m) {
+    if (red.ignorarNoche) return;   // (perdiste la noche: esperas en el lobby)
     if (m.tipo === 'noche') {
       // El servidor manda la foto completa de la noche cada vez que algo cambia
       const q = { n: m.n, fase: m.fase, tiempo: m.tiempo, objetos: m.objetos.map(([x, y, z, e, quien]) => ({ x, y, z, estado: ['suelto', 'llevado', 'entregado'][e], quien })) };
@@ -1733,7 +1866,7 @@ import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos arc
   // Cruzar la puerta del lobby → empieza la noche que te toca
   function revisarPuertaLobby() {
     if (!enLobby || Math.abs(ps.pos.x - PUERTA_LOBBY.x) > PUERTA_LOBBY.ancho / 2 || ps.pos.z > LOBBY.z0 + 1.1) return;
-    enLobby = false;
+    enLobby = false; red.ignorarNoche = false;
     empezarDesdeLobby(progreso());
   }
   function empezarDesdeLobby(n) {
@@ -1823,8 +1956,8 @@ import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos arc
   globoQueCae.scale.y = 1.2; globoQueCae.position.set(F.SOMBRERO_FIESTA.x, 5.5, F.SOMBRERO_FIESTA.z); scene.add(globoQueCae);
   // Puertas que se mueven: la compuerta del cuarto de los bloques, la rampa-escotilla, la puerta por donde entra Grey y la de la salida
   const compuerta = bloque(203.85, 204.15, 3, 6, -11.5, -8.5, lambert(0x5d6266), { camara: true });
+  const solidoCompuerta = platforms[platforms.length - 1];   // (justo después de la compuerta: si no, agarraría la pared de arriba y la compuerta nunca se abriría)
   bloque(203.8, 204.2, 6, 9, -11.5, -8.5, lambert(0x8a8f86), { camara: true });   // la pared de arriba de la compuerta (así no queda un hueco para mirar)
-  const solidoCompuerta = platforms[platforms.length - 1];
   // 📦 La escotilla del piso del cuarto de las cajas: una tapa (sólida) con bisagra al oeste. Cuando Grey la abre,
   // cae rápido hacia abajo y queda como rampa (de 3 m de alto a 0) hasta el cuarto de abajo
   const EF = F.ESCOTILLA_FIESTA, largoTapa = Math.hypot(EF.x1 - EF.x0, 3);
@@ -1847,24 +1980,42 @@ import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos arc
   const greyFiesta = crearDragon('grey'); scene.add(greyFiesta.obj); greyFiesta.obj.visible = false;
   // 🎩 Hat, el sombrero misterioso (dibujo de Mathias): un cuerpo oscuro y peludo, sombrero de copa, un ojo grande,
   // plumas atrás y patitas flacas. Solo aparece al final
+  // 🎩 Hat (diseño de Mathias): un huevo negro, con su sombrero de copa y brazos largos sin manos
   const hat = (() => {
-    const g = new THREE.Group(), negro = lam2(0x141216), pluma = lam2(0x2a2430);
-    const cuerpo = new THREE.Mesh(new THREE.SphereGeometry(1.2, 20, 16), negro); cuerpo.scale.set(1, 1.1, 0.9); cuerpo.position.y = 2.1; g.add(cuerpo);
-    for (let i = 0; i < 40; i++) {   // los pelitos (rayones del dibujo)
-      const a = Math.random() * Math.PI * 2, b = Math.random() * Math.PI - Math.PI / 2;
-      const p = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.4, 4), negro);
-      p.position.set(Math.cos(a) * Math.cos(b) * 1.15, 2.1 + Math.sin(b) * 1.25, Math.sin(a) * Math.cos(b) * 1.05);
-      p.lookAt(p.position.x * 3, (p.position.y - 2.1) * 3 + 2.1, p.position.z * 3); p.rotateX(Math.PI / 2); g.add(p);
+    const g = new THREE.Group(), negro = lam2(0x141216);
+    const huevo = new THREE.Mesh(new THREE.SphereGeometry(1, 28, 20), new THREE.MeshPhongMaterial({ color: 0x141216, shininess: 60, specular: 0x333340 }));
+    const P = -0.12;   // (está sentado en el suelo: el huevo apoyado en el piso)
+    huevo.scale.set(0.95, 1.35, 0.95); huevo.position.y = 1.5 + P; g.add(huevo);
+    // el huevo es más angosto arriba: una media esfera encima, más finita
+    const punta = new THREE.Mesh(new THREE.SphereGeometry(1, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2), huevo.material);
+    punta.scale.set(0.95 * 0.86, 1.35 * 0.95, 0.95 * 0.86); punta.position.y = 1.5 + P; g.add(punta);
+    // las piernas: gruesas, estiradas hacia adelante (sentado), con los pies para arriba
+    for (const lado of [-1, 1]) {
+      const pierna = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.17, 1.1, 10), negro); pierna.rotation.x = Math.PI / 2; pierna.position.set(lado * 0.4, 0.17, 0.85); g.add(pierna);
+      const pie = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 8), negro); pie.scale.set(1, 1.5, 0.5); pie.position.set(lado * 0.4, 0.3, 1.42); g.add(pie);
     }
-    const ala = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 0.06, 24), negro); ala.position.y = 3.35; g.add(ala);
-    const copa = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.58, 1.1, 24), negro); copa.position.y = 3.95; g.add(copa);
-    const cinta = new THREE.Mesh(new THREE.CylinderGeometry(0.59, 0.59, 0.14, 24), lam2(0x5a1820)); cinta.position.y = 3.5; g.add(cinta);
-    const ojoB = new THREE.Mesh(new THREE.SphereGeometry(0.42, 18, 14), lam2(0xece6d6)); ojoB.position.set(-0.85, 3.1, 0.55); g.add(ojoB);
-    const pup = new THREE.Mesh(new THREE.SphereGeometry(0.2, 14, 10), new THREE.MeshBasicMaterial({ color: 0x8a1018 })); pup.position.set(-0.85, 3.1, 0.93); pup.scale.z = 0.4; g.add(pup);
-    const plumas = new THREE.Group(); plumas.position.set(0.6, 2, -0.8); g.add(plumas);
-    for (let i = 0; i < 5; i++) { const p = new THREE.Mesh(new THREE.ConeGeometry(0.22, 1.6, 6), pluma); p.scale.z = 0.3; p.rotation.z = -0.9 + i * 0.35; p.rotation.x = -0.6; p.position.y = 0.4; plumas.add(p); }
-    for (const sx of [-0.4, 0.4]) { const pata = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.1, 6), negro); pata.position.set(sx, 0.55, 0); g.add(pata); const pie = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.06, 0.4), negro); pie.position.set(sx, 0.03, 0.1); g.add(pie); }
+    // el sombrero de copa (un poco ladeado)
+    const sombrero = new THREE.Group(); sombrero.position.set(0, 2.72 + P, 0); sombrero.rotation.z = 0.12; g.add(sombrero);
+    const ala = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.06, 28), negro); sombrero.add(ala);
+    const copa = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.5, 0.95, 28), negro); copa.position.y = 0.5; sombrero.add(copa);
+    const cinta = new THREE.Mesh(new THREE.CylinderGeometry(0.51, 0.51, 0.13, 28), lam2(0x5a1820)); cinta.position.y = 0.12; sombrero.add(cinta);
+    // (sin ojos: así es más misterioso)
+    const pup = new THREE.Object3D();
+    // los brazos: largos, delgados y sin manos (cuelgan casi hasta el piso y se mecen)
+    const brazos = [];
+    for (const lado of [-1, 1]) {
+      const hombro = new THREE.Group(); hombro.position.set(lado * 0.86, 1.75 + P, 0); g.add(hombro);
+      const curva = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, 0), new THREE.Vector3(lado * 0.35, -0.5, 0.1), new THREE.Vector3(lado * 0.45, -1.1, 0.15), new THREE.Vector3(lado * 0.3, -1.65, 0.1)]);
+      const brazo = new THREE.Mesh(new THREE.TubeGeometry(curva, 20, 0.15, 10), negro); hombro.add(brazo);
+      const punta = new THREE.Mesh(new THREE.SphereGeometry(0.15, 10, 8), negro); punta.position.copy(curva.getPoint(1)); hombro.add(punta);   // (termina redondito: sin mano)
+      brazos.push(hombro);
+    }
+    const plumas = { rotation: {} };   // (ya no tiene plumas; esto es para que el resto del código no se rompa)
     g.position.set(181, 0, -3.5); g.visible = false; scene.add(g);
+    g.userData.brazos = brazos;
+    // 🟡 Yellow, sentado al otro lado de Hat (mirándolo)
+    const amarillo = crearDragon('yellow'); amarillo.obj.position.set(-2.1, 0, 0.5); amarillo.obj.rotation.y = 1.9; g.add(amarillo.obj);
+    g.userData.amarillo = amarillo;
     return { g, pup, plumas };
   })();
   function lam2(color) { return new THREE.MeshLambertMaterial({ color }); }
@@ -1890,7 +2041,6 @@ import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos arc
   let cayendo = -1, bajandoRampa = -1, compuertaCerrada = false;
   const camaraFinal = new THREE.CatmullRomCurve3([[163, 3, 6], [166, 3.5, -10], [175, 4, -6], [186, 4.5, 0], [192, 4, -9], [199, 4, 4], [199, 6, -10], [210, 6.5, -8], [164, 2.8, 6]].map(p => new THREE.Vector3(...p)));
   const bonk = () => showToast('💥 ¡BONK!', true, 1200);
-  function reiniciarFinal(quien = 'Grey') { showToast(`🐉 ¡${quien} te atrapó! Vuelves al inicio de la fiesta`, true, 3000); empezarFinal(true); }
   // Cada cuadro de la noche final
   function updateFiesta(dt) {
     if (!fiesta) return false;
@@ -1906,7 +2056,7 @@ import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos arc
     f.cajas.forEach((b, i) => { mallasCajas[i].m.position.set(b.x, 3 + F.CAJA_FIESTA / 2, b.z); mallasCajas[i].p.x = b.x; mallasCajas[i].p.z = b.z; });
     // Grey
     const g = f.grey, cg = greyFiesta;
-    cg.obj.position.set(g.x, 0, g.z); cg.obj.rotation.y = acercarAngulo(cg.obj.rotation.y, g.rot, Math.min(1, dt * 10));
+    cg.obj.position.set(g.x, g.y || 0, g.z); cg.obj.rotation.y = acercarAngulo(cg.obj.rotation.y, g.rot, Math.min(1, dt * 10));
     cg.durmiendo = g.modo === 'dormir';
     animarDragon(cg, dt, { vel: g.vel, persigue: g.modo === 'perseguir', mirar: g.modo === 'perseguir' ? miraA.set(ps.pos.x, ps.pos.y + 1, ps.pos.z) : null });
     if (g.modo === 'dormir') cg.abajo.rotation.x = 0;
@@ -1921,7 +2071,7 @@ import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos arc
     if (['fiesta', 'bloques', 'escape'].includes(f.fase)) {
       const i = F.globoTocado(f, ps.pos);
       if (i >= 0) { f.globos[i].tocado = 3; F.ruido(f, F.GLOBOS[i].x, F.GLOBOS[i].z); }   // (el globo tiembla: se nota sin letrero)
-      if (F.tickGrey(f, dt, { x: ps.pos.x, y: ps.pos.y, z: ps.pos.z, oculto: oculto() }) === 'atrapado') { reiniciarFinal(); return false; }
+      if (!susto && F.tickGrey(f, dt, { x: ps.pos.x, y: ps.pos.y, z: ps.pos.z, oculto: oculto() }) === 'atrapado') { asustar(greyFiesta, 'grey', 'Grey', () => empezarFinal(true), perderNoche); return false; }
     }
     if (f.fase === 'fiesta' && F.enElDescanso(ps.pos)) {
       f.fase = 'bloques'; cayendo = 0;
@@ -1939,36 +2089,45 @@ import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos arc
       f.fase = 'escape'; bajandoRampa = 0;
       solidoTapa.top = -1000; solidoTapa.bottom = -1001;
       for (const e of escalonesBajada) platforms.push(e);
-      g.x = F.ENTRA_GREY.x; g.z = F.ENTRA_GREY.z; g.modo = 'perseguir'; g.ruta = null;
-      showToast('💥 ¡Grey abrió la escotilla! ¡Baja, sal al pasillo y corre por las ventilaciones!', true, 4000);
+      // Grey viene por donde siempre: sube la escalera, cruza la compuerta (que se abre para él) y baja por la rampa
+      F.empezarSubida(f); compuertaCerrada = false; solidoCompuerta.top = -1000; solidoCompuerta.bottom = -1001;
+      showToast('💥 ¡La escotilla cayó como rampa! Grey viene subiendo la escalera… ¡Baja y escapa por las ventilaciones!', true, 4500);
     }
     if (f.fase === 'escape' && F.afuera(ps.pos)) {
       f.fase = 'choque'; f.tiempo = 0;
       solidoSalida.top = 2.8; solidoSalida.bottom = 0;
-      g.x = 234; g.z = 46; g.modo = 'cutscene';
+      g.x = 234; g.y = 0; g.z = 43; g.modo = 'cutscene';
     }
     if (f.fase === 'choque') {
       // 🎬 Grey corre contra la puerta cerrada, se estrella y se devuelve
       const k = f.tiempo;
-      if (k < 1.3) { g.z = 46 + k * 5.5; g.vel = 11; g.rot = 0; }
+      if (k < 1.3) { g.z = 43 + k * 7.8; g.vel = 11; g.rot = 0; }
       else if (k < 1.4) { if (!f.bonk) { f.bonk = true; bonk(); } g.vel = 0; }
-      else { g.z = Math.max(46, 53.15 - (k - 1.4) * 3); g.rot = Math.PI; g.vel = 3; }
+      else { g.z = Math.max(44, 53.15 - (k - 1.4) * 3); g.rot = Math.PI; g.vel = 3; }
       puertaSalida.position.x = 234 + (k > 1.3 && k < 1.8 ? Math.sin(k * 80) * 0.08 : 0);
-      camera.position.set(239, 6, 62); camera.lookAt(234, 1.5, 51);
-      if (k >= F.DURACION.choque) { f.fase = 'hat'; f.tiempo = 0; hat.g.visible = true; greyFiesta.obj.visible = false; }
+      // 📹 Vista de lado, como una cámara de seguridad metida en la ventilación final
+      camera.position.set(232.5, 2.3, 45.5); camera.lookAt(235.3, 0.8, 53.6);
+      if (k >= F.DURACION.choque) {
+        f.fase = 'hat'; f.tiempo = 0; hat.g.visible = true;
+        // Grey se sienta al lado de Hat (mirándolo), y Hat lo acaricia mientras habla
+        g.x = 183.1; g.y = 0; g.z = -2.7; g.rot = -1.75; g.vel = 0; g.modo = 'cutscene';
+      }
       return true;
     }
     if (f.fase === 'hat') {
       // 🎩 Hat aparece completo y habla
       introEl.hidden = false; introTexto.textContent = F.MENSAJE_FINAL.slice(0, Math.floor(f.tiempo * 9));
-      hat.g.position.y = Math.sin(t * 1.5) * 0.06; hat.plumas.rotation.y = Math.sin(t * 1.2) * 0.3;
-      hat.pup.position.x = -0.85 + Math.sin(t * 0.8) * 0.12;
-      camera.position.set(181, 3.4, 4.3); camera.lookAt(181, 2.6, -3);
+      animarDragon(hat.g.userData.amarillo, dt, { vel: 0 });
+      const [izq, der] = hat.g.userData.brazos;
+      izq.rotation.x = Math.sin(t * 1.3) * 0.15; izq.rotation.z = -0.05 - Math.sin(t * 0.9) * 0.05;   // el izquierdo se mece
+      // 🤚 el derecho acaricia la cabeza de Grey (adelante y atrás, despacito)
+      der.rotation.z = 0.42; der.rotation.y = -0.3; der.rotation.x = 0.25 + Math.sin(t * 2.6) * 0.2;
+      camera.position.set(181, 2.4, 3); camera.lookAt(181, 0.9, -3.2);
       if (f.tiempo >= F.DURACION.hat) { f.fase = 'fin'; f.tiempo = 0; introEl.hidden = true; escapasteEl.hidden = false; cuenta = ganarNoche(cuenta); autoguardar(); }   // 🪙 la final también da monedas
       return true;
     }
     if (f.fase === 'fin') {
-      camera.position.set(181, 3.4, 4.3); camera.lookAt(181, 2.6, -3);
+      camera.position.set(181, 2.4, 3); camera.lookAt(181, 0.9, -3.2);
       if (f.tiempo >= F.DURACION.fin) { guardarProgreso(1); irAlLobby(); }   // (después de escapar, la historia vuelve a empezar)
       return true;
     }
@@ -2028,7 +2187,7 @@ import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos arc
       if (firstPerson) fpPitch = Math.min(1.3, Math.max(-1.3, fpPitch - camJoy.y * 1.6 * dt));
       else camPitch = Math.min(1.2, Math.max(0.1, camPitch + camJoy.y * 1.2 * dt));
     }
-    const busy = !loginEl.hidden || !!escondido || !!(fiesta && ['intro', 'choque', 'hat', 'fin'].includes(fiesta.fase)) || !!(noche && noche.fase === 'intro');
+    const busy = !loginEl.hidden || !!escondido || !!susto || !!(fiesta && ['intro', 'choque', 'hat', 'fin'].includes(fiesta.fase)) || !!(noche && noche.fase === 'intro');
     if (busy) fx = fz = 0; // eligiendo usuario (o metido en el armario) no te mueves
     const len = Math.hypot(fx, fz);
     let moving = false;
@@ -2074,6 +2233,7 @@ import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos arc
     const fiestaCamara = updateFiesta(dt);
     revisarPuertaLobby();
     revisarTienda(dt);
+    updateSusto(dt);
     updatePuertas(dt, [ps.pos, ...[...red.otros.values()].map(f => f.obj.position), ...[...cuerposDragon.values()].map(c => c.obj.position)]);
 
     // pequeño rebote al caminar
@@ -2084,7 +2244,9 @@ import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos arc
     sombra.position.set(ps.pos.x, (ps.floorY ?? 0) + 0.02, ps.pos.z); sombra.scale.setScalar(Math.max(0.4, 1 - alturaSombra * 0.08));
 
     const p = player.position;
-    if (fiestaCamara) {
+    if (camaraSusto()) {
+      // 💀 (el susto maneja la cámara)
+    } else if (fiestaCamara) {
       // 🎬 (las cutscenes de la noche final manejan la cámara)
     } else if (camaraIntro()) {
       // 🎥 (la intro de la noche maneja la cámara)

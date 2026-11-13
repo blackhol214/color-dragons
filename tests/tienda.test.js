@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CAJAS, PALETA, COLOR_INICIAL, MONEDAS_POR_NOCHE, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, leerCuenta } from '../src/tienda.js';
+import { COSTO_SEGUIR, pagarParaSeguir, CAJAS, PALETA, COLOR_INICIAL, MONEDAS_POR_NOCHE, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, leerCuenta } from '../src/tienda.js';
 
 describe('🪙 monedas', () => {
   it('empiezas con 0 monedas, verde y con la caja de cartón', () => {
@@ -59,4 +59,10 @@ describe('💾 leer la cuenta guardada', () => {
     expect(leerCuenta({ monedas: -5, color: 'rojo', cajas: ['inventada'], caja: 'espacial' })).toEqual(nuevaCuenta());
     expect(leerCuenta(null)).toEqual(nuevaCuenta());
   });
+});
+
+describe('💀 pagar para seguir en la noche', () => {
+  it('cuesta 20', () => expect(COSTO_SEGUIR).toBe(20));
+  it('con 25 pagas y te quedan 5', () => expect(pagarParaSeguir({ ...nuevaCuenta(), monedas: 25 })).toMatchObject({ ok: true, cuenta: { monedas: 5 } }));
+  it('con 19 no puedes (y no te quita nada)', () => expect(pagarParaSeguir({ ...nuevaCuenta(), monedas: 19 })).toMatchObject({ ok: false, cuenta: { monedas: 19 } }));
 });

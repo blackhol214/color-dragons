@@ -10,7 +10,7 @@
 //   6. 'hat'      → aparece el sombrero completo y habla
 //   7. 'fin'      → "ESCAPASTE" y vuelves al lobby
 
-import { SALAS, tramosDePared, salaEn } from './laboratorio.js?v=11';
+import { SALAS, tramosDePared, salaEn } from './laboratorio.js?v=15';
 
 export const MENSAJE_INICIO = "Now this is the final night. I've decided to invite you to the goodbye celebration.";
 export const MENSAJE_FINAL = "I'm still not done with you. Things are going to get a lot more EPIC.";
@@ -43,7 +43,7 @@ export const nuevaFiesta = () => ({
   fase: 'intro', tiempo: 0,
   globos: GLOBOS.map(() => ({ tocado: 0 })),
   cajas: CAJAS.map(c => ({ ...c })),
-  grey: { x: CAMA_GREY.x, z: CAMA_GREY.z, rot: 0, modo: 'dormir', meta: null, espera: 0, vel: 0 },
+  grey: { x: CAMA_GREY.x, y: 0, z: CAMA_GREY.z, rot: 0, modo: 'dormir', meta: null, espera: 0, vel: 0 },
 });
 
 // ¿Tocaste un globo? Devuelve su número (o -1). Un globo tocado tarda 3 s en poder volver a sonar
@@ -103,19 +103,65 @@ for (const q of FS) { const p = q.puertas;
 const cruza = (ax, az, bx, bz, cx, cz, dx, dz) => { const l = (px, pz, qx, qz, rx, rz) => (qx - px) * (rz - pz) - (qz - pz) * (rx - px); return ((l(cx, cz, dx, dz, ax, az) > 0) !== (l(cx, cz, dx, dz, bx, bz) > 0)) && ((l(ax, az, bx, bz, cx, cz) > 0) !== (l(ax, az, bx, bz, dx, dz) > 0)); };
 export const hayLineaFiesta = (a, b) => !MUROS.some(w => cruza(a.x, a.z, b.x, b.z, w[0], w[1], w[2], w[3]));
 
-// Camina hacia un punto, pasando por las puertas. Devuelve true cuando llegó
-function caminar(g, meta, vel, dt) {
+// 🛝 Cuando la escotilla cae como rampa (fase 'escape'), ocupa este pedazo del cuarto de abajo: Grey la rodea, no la atraviesa
+export const RAMPA_CAIDA = { x0: ESCOTILLA_FIESTA.x0, x1: ESCOTILLA_FIESTA.x1 - 0.5, z0: ESCOTILLA_FIESTA.z0, z1: ESCOTILLA_FIESTA.z1 };
+const MARGEN = 0.7;
+// ¿El camino de a hasta b pasa por adentro del rectángulo r (agrandado un poco)?
+export function cruzaRect(a, b, r, m = MARGEN) {
+  const x0 = r.x0 - m, x1 = r.x1 + m, z0 = r.z0 - m, z1 = r.z1 + m;
+  for (let i = 1; i < 20; i++) { const t = i / 20, x = a.x + (b.x - a.x) * t, z = a.z + (b.z - a.z) * t; if (x > x0 && x < x1 && z > z0 && z < z1) return true; }
+  return false;
+}
+// La esquina por donde conviene rodearlo (que se vea desde donde está y que haga el camino más corto)
+export function esquinaParaRodear(a, b, r) {
+  const m = MARGEN + 0.15, esquinas = [[r.x0 - m, r.z0 - m], [r.x1 + m, r.z0 - m], [r.x0 - m, r.z1 + m], [r.x1 + m, r.z1 + m]].map(([x, z]) => ({ x, z, rodeo: true }));
+  const libres = esquinas.filter(c => Math.hypot(c.x - a.x, c.z - a.z) > 0.3 && !cruzaRect(a, c, r));   // (no la esquina donde ya está)
+  const lista = libres.length ? libres : esquinas;
+  return lista.reduce((mejor, c) => (Math.hypot(c.x - a.x, c.z - a.z) + Math.hypot(b.x - c.x, b.z - c.z) < Math.hypot(mejor.x - a.x, mejor.z - a.z) + Math.hypot(b.x - mejor.x, b.z - mejor.z) ? c : mejor));
+}
+// Camina hacia un punto, pasando por las puertas (y rodeando los obstáculos). Devuelve true cuando llegó
+function caminar(g, meta, vel, dt, obstaculos = []) {
   if (!g.ruta || g.rutaPara !== meta) {
     const a = salaEn(g.x, 0, g.z), b = salaEn(meta.x, 0, meta.z), r = a && b ? rutaFiesta(a.id, b.id) : null;
     g.ruta = r ? [...r, { x: meta.x, z: meta.z }] : []; g.rutaPara = meta;   // (si no hay camino, se queda quieto: nunca atraviesa una pared)
   }
-  const p = g.ruta[0];
+  let p = g.ruta[0];
   if (!p) { g.vel = 0; return !salaEn(meta.x, 0, meta.z) || Math.hypot(meta.x - g.x, meta.z - g.z) < 0.4; }
+  if (!p.rodeo) { const o = obstaculos.find(r => cruzaRect(g, p, r)); if (o) { p = esquinaParaRodear(g, p, o); g.ruta.unshift(p); } }
   const dx = p.x - g.x, dz = p.z - g.z, d = Math.hypot(dx, dz), paso = Math.min(d, vel * dt);
   if (d > 0.01) { g.x += dx / d * paso; g.z += dz / d * paso; g.rot = Math.atan2(dx, dz); }
   g.vel = paso / dt;
   if (d - paso < 0.3) g.ruta.shift();
   return g.ruta.length === 0;
+}
+// 🪜 La escotilla cayó como rampa: Grey viene "por donde siempre": hasta la rampa (por las puertas), sube la escalera,
+// cruza el descanso y la compuerta, pasa por el cuarto de las cajas y baja por la rampa de la escotilla. Ahí te persigue
+export function caminoDeSubida(g) {
+  const desde = salaEn(g.x, 0, g.z);
+  const hastaRampa = desde ? rutaFiesta(desde.id, 'fRampa') || [] : [];
+  const xEsc = (RAMPA.x0 + RAMPA.x1) / 2, E2 = ESCOTILLA_FIESTA;
+  return [
+    ...hastaRampa.map(p => ({ ...p, y: 0 })),
+    { x: xEsc, y: 0, z: RAMPA.zAbajo + 0.5 },                    // al pie de la escalera
+    { x: xEsc, y: RAMPA.alto, z: RAMPA.zArriba - 1.5 },          // arriba (el descanso)
+    { x: 203, y: RAMPA.alto, z: -10 }, { x: 205.5, y: RAMPA.alto, z: -10 },   // por la compuerta
+    { x: E2.x0 - 0.3, y: RAMPA.alto, z: (E2.z0 + E2.z1) / 2 },   // al borde de la escotilla…
+    { x: E2.x1 + 0.3, y: 0, z: (E2.z0 + E2.z1) / 2 },            // …y baja por la rampa
+  ];
+}
+export function empezarSubida(fiesta) {
+  const g = fiesta.grey;
+  g.modo = 'subir'; g.camino = caminoDeSubida(g); g.ruta = null; g.y = 0;
+}
+// Avanza por un camino con alturas (subiendo o bajando de a poco). Devuelve true al terminar
+function seguirCamino(g, vel, dt) {
+  const p = g.camino[0];
+  if (!p) return true;
+  const dx = p.x - g.x, dz = p.z - g.z, d = Math.hypot(dx, dz), paso = Math.min(d, vel * dt);
+  if (d > 0.01) { const k = paso / d; g.x += dx * k; g.z += dz * k; g.y += (p.y - g.y) * k; g.rot = Math.atan2(dx, dz); }
+  g.vel = paso / dt;
+  if (d - paso < 0.2) { g.y = p.y; g.camino.shift(); }
+  return g.camino.length === 0;
 }
 // Un sonido en (x, z): si Grey duerme, se despierta y va a ver
 export function ruido(fiesta, x, z) {
@@ -124,18 +170,24 @@ export function ruido(fiesta, x, z) {
 }
 // Un cuadro de Grey. Devuelve 'atrapado' si te atrapó
 export function tickGrey(fiesta, dt, jugador) {
-  const g = fiesta.grey;
+  const g = fiesta.grey, obst = fiesta.fase === 'escape' ? [RAMPA_CAIDA] : [];
   g.vel = 0;
   const lejos = Math.hypot(jugador.x - g.x, jugador.z - g.z), teVe = jugador.y < 1.5 && !jugador.oculto && hayLineaFiesta(g, jugador);
   // Despierto, si te ve cerca (sin pared en medio, y estás abajo) te persigue
   if (['oir', 'mirar', 'volver', 'guardia'].includes(g.modo) && lejos < GREY_FIESTA.ve && teVe) { g.modo = 'perseguir'; g.ruta = null; }
+  if (g.modo === 'subir') {
+    if (seguirCamino(g, GREY_FIESTA.corre, dt)) { g.modo = 'perseguir'; g.ruta = null; g.y = 0; }
+    // (si lo alcanzas en el camino —en la escalera o arriba— también te atrapa)
+    if (lejos < GREY_FIESTA.atrapa && Math.abs(jugador.y - g.y) < 1.2 && !jugador.oculto) return 'atrapado';
+    return null;
+  }
   if (g.modo === 'oir' && caminar(g, g.meta, GREY_FIESTA.camina, dt)) { g.modo = 'mirar'; g.espera = 3; }
   else if (g.modo === 'mirar' && (g.espera -= dt) <= 0) { g.modo = fiesta.fase === 'fiesta' ? 'volver' : 'guardia'; g.ruta = null; }
   else if (g.modo === 'volver' && caminar(g, CAMA_GREY, GREY_FIESTA.camina, dt)) { g.modo = 'dormir'; g.rot = 0; }
   else if (g.modo === 'perseguir') {
     // Cada ratito vuelve a calcular el camino hasta donde estás (por las puertas)
     if ((g.recalcular = (g.recalcular || 0) - dt) <= 0 || !g.objetivo) { g.recalcular = 0.4; g.objetivo = { x: jugador.x, z: jugador.z }; g.ruta = null; }
-    caminar(g, g.objetivo, fiesta.fase === 'escape' ? GREY_FIESTA.corre : GREY_FIESTA.correFiesta, dt);
+    caminar(g, g.objetivo, fiesta.fase === 'escape' ? GREY_FIESTA.corre : GREY_FIESTA.correFiesta, dt, obst);
     // Si te pierde de vista un rato, se rinde: en la fiesta vuelve a dormir; después, se queda de guardia
     g.sinVerte = teVe ? 0 : (g.sinVerte || 0) + dt;
     if (fiesta.fase !== 'escape' && g.sinVerte > GREY_FIESTA.rendirse) { g.modo = fiesta.fase === 'fiesta' ? 'volver' : 'guardia'; g.ruta = null; g.sinVerte = 0; }

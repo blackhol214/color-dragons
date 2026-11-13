@@ -6,7 +6,9 @@
 //   perseguir → te vio: corre derecho hacia ti
 //   buscar    → te perdió de vista: va a donde te vio por última vez
 //   caja      → te vio meterte en tu caja: la sigue aunque te muevas (y sobre tu caja sale un "!")
-import { SALAS, ESCOTILLAS, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, delLab } from './laboratorio.js?v=11';
+import { SALAS, ESCOTILLAS, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, delLab } from './laboratorio.js?v=15';
+import { MUEBLES } from './muebles.js?v=15';
+import { collideWalls } from './logic.js?v=15';
 
 export const MODOS = ['pasear', 'perseguir', 'buscar', 'caja', 'dormir', 'comer'];
 // 🟡 Yellow es dormilón: duerme en su cama y cada 30–40 s se despierta con hambre. Si su plato tiene comida, come y
@@ -17,7 +19,7 @@ export const HAMBRE = { min: 30, max: 40, buscando: 40, comiendo: 4 };
 // camina / corre: metros por segundo (tú corres a 12) · vista: hasta dónde ve · piso: en qué piso vive
 // ciego: no ve (nunca corre), camina lento y a veces se para a tantear con los brazos. Si te choca, te lleva… ¡aunque estés en tu caja!
 export const DRAGONES = [
-  { id: 'red', nombre: 'Red', piso: 0, casa: 'centerLab', camina: 1.7, corre: 1.7, vista: 0, ciego: true, alcance: 2 },   // mide 4 m (el doble que tú): sus brazos llegan más lejos
+  { id: 'red', nombre: 'Red', piso: 0, casa: 'centerLab', inicio: { x: 10, z: 18 }, camina: 1.7, corre: 1.7, vista: 0, ciego: true, alcance: 2 },   // mide 4 m (el doble que tú): sus brazos llegan más lejos
   { id: 'white', nombre: 'White', piso: -7, casa: 'greyCove', inicio: { x: -44.2, z: -24.2 }, camina: 3, corre: 8.5, vista: 20 },   // aparece en sus mesas
   { id: 'grey', nombre: 'Grey', piso: -7, casa: 'greyCove', camina: 4.5, corre: 12.5, vista: 22 },   // ¡el rápido!
   { id: 'yellow', nombre: 'Yellow', piso: -7, casa: 'yellowRoom', inicio: { x: 47.4, z: 6 }, camina: 2.4, corre: 7, vista: 15, campo: 0.6, dormilon: true },   // ve poquito: solo lo que tiene justo enfrente   // aparece en su cama
@@ -27,8 +29,9 @@ export const CAMPO_VISION = 1.2;      // radianes a cada lado de hacia donde mir
 export const GIRO = 5;                // qué tan rápido gira (radianes por segundo)
 
 const salaPorId = id => SALAS.find(s => s.id === id);
-// 😐 El Panic Hole es el refugio: sus puertas de metal no dejan pasar a los dragones (ni verte a través)
-export const REFUGIOS = ['panico'];
+// 😐 Los refugios: el Panic Hole (sus puertas de metal no dejan pasar a los dragones, ni verte a través) y 🌞 el Spawn
+// (ahí apareces: ningún dragón entra ni te atrapa adentro, así nadie te "remata" al volver)
+export const REFUGIOS = ['panico', 'spawn'];
 // 🌞 Al Spawn (y a sus escaleras) no van a pasear: así al empezar (o al volver después de que te atrapen) tienes tiempo
 export const LEJOS_DEL_SPAWN = ['spawn', 'escaleras'];
 
@@ -129,7 +132,21 @@ const salaDe = d => salaEn(d.x, d.y, d.z);
 // Un punto al azar dentro de una sala (lejos de las paredes)
 function puntoEn(s, azar) {
   const m = Math.min(1.5, (s.x1 - s.x0) / 3, (s.z1 - s.z0) / 3);
-  return { x: s.x0 + m + azar() * (s.x1 - s.x0 - 2 * m), z: s.z0 + m + azar() * (s.z1 - s.z0 - 2 * m) };
+  let p;
+  for (let i = 0; i < 12; i++) {   // (si cae encima de un mueble, prueba otro punto)
+    p = { x: s.x0 + m + azar() * (s.x1 - s.x0 - 2 * m), z: s.z0 + m + azar() * (s.z1 - s.z0 - 2 * m) };
+    if (!enMueble(p.x, s.y, p.z, RADIO + 0.3)) break;
+  }
+  return p;
+}
+// 🪑 Los dragones chocan con los muebles (y resbalan por el borde, como tú)
+export const RADIO = 0.5;
+export const enMueble = (x, y, z, margen = 0) => MUEBLES.some(m => y < m.top && y + 2 > m.bottom && Math.abs(x - m.x) < m.hw + margen && Math.abs(z - m.z) < m.hd + margen);
+export function chocarMuebles(d, antesX, antesZ) {
+  const st = { pos: { x: d.x, y: d.y, z: d.z }, vel: { x: 0, z: 0 }, onGround: false, prevX: antesX, prevZ: antesZ };
+  const choco = collideWalls(st, MUEBLES, { PR: RADIO, H: 2, STEP_UP: 0 });
+  d.x = st.pos.x; d.z = st.pos.z;
+  return choco;
 }
 // Arma la ruta hasta un punto: las puertas del camino y, al final, el punto
 function irA(d, punto, piso = pisoDe(d.y)) {
@@ -159,8 +176,13 @@ function avanzar(d, vel, dt) {
   d.rot += Math.sign(dif) * Math.min(Math.abs(dif), GIRO * dt);
   // Si tiene que girar mucho, primero frena (así no camina de costado)
   const paso = Math.min(dist, vel * dt * Math.max(0.25, Math.cos(dif)));
-  if (dist > 0.01) { d.x += dx / dist * paso; d.z += dz / dist * paso; }
-  d.vel = paso / dt;
+  const antesX = d.x, antesZ = d.z;
+  if (dist > 0.01) { d.x += dx / dist * paso; d.z += dz / dist * paso; chocarMuebles(d, antesX, antesZ); }
+  const avanzo = Math.hypot(d.x - antesX, d.z - antesZ);
+  d.vel = avanzo / dt;
+  // ¿Atascado contra un mueble? Si casi no avanza durante 1 segundo, se salta ese punto del camino
+  if (paso > 0.01 && avanzo < paso * 0.3) { d.atascado = (d.atascado || 0) + dt; if (d.atascado > 1) { d.atascado = 0; d.ruta.shift(); return d.ruta.length === 0; } }
+  else d.atascado = 0;
   if (dist < 0.35) d.ruta.shift();
   return d.ruta.length === 0;
 }
@@ -258,6 +280,8 @@ export function tickDragones(dragones, jugadores, dt, azar = Math.random, mundo 
     }
     // ¿Atrapó a alguien?
     for (const j of jugadores) {
+      const sj = salaEn(j.x, j.y, j.z);
+      if (sj && REFUGIOS.includes(sj.id)) continue;   // en un refugio nadie te atrapa
       if ((!j.oculto || def.ciego) && Math.abs(j.y - d.y) < 2.5 && Math.hypot(j.x - d.x, j.z - d.z) < (def.alcance || ATRAPA)) {
         eventos.push({ tipo: 'atrapado', dragon: d.id, jugador: j.id });
         d.modo = 'pasear'; d.objetivo = null; d.ruta = []; d.espera = 2.5;
