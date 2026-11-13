@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { colorDeNombre, COLORES_JUGADOR, alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COLORES, siguienteColorGuia, textoQueHago } from '../src/logic.js';
+import { alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COLORES, siguienteColorGuia, textoQueHago } from '../src/logic.js';
 
 const OPTS = { PR: 0.45, H: 2, STEP_UP: 0.45 };
 const cuerpo = (x, z) => ({ pos: { x, y: 0, z }, vel: { x: 0, z: 0 }, onGround: true });
@@ -41,6 +41,11 @@ describe('guardado', () => {
   it('guarda y lee la posición', () => {
     expect(parseSave(serializeSave({ pos: { x: 1, y: 2, z: 3 } })).pos).toEqual({ x: 1, y: 2, z: 3 });
   });
+  it('guarda también tu cuenta (monedas, color, cajas)', () => {
+    const cuenta = { monedas: 25, color: 0x3d8bff, cajas: ['carton'], caja: 'carton' };
+    expect(parseSave(serializeSave({ pos: { x: 0, y: 0, z: 0 }, cuenta })).cuenta).toEqual(cuenta);
+  });
+  it('un guardado viejo (sin cuenta) se lee igual', () => expect(parseSave('{"v":1,"pos":{"x":1,"y":2,"z":3}}').cuenta).toBe(null));
   it('un guardado roto no rompe el juego', () => {
     expect(parseSave('{no es json')).toBe(null);
     expect(parseSave('{"pos":{"x":"hola"}}').pos).toBe(null);
@@ -52,14 +57,8 @@ describe('bot guía', () => {
   it('siempre tiene algo que decir', () => expect(textoQueHago('lugar-raro')).toBe(textoQueHago('mundo')));
 });
 
-describe('🎨 cada jugador con su color', () => {
-  it('el mismo nombre da siempre el mismo color (sin importar mayúsculas)', () => expect(colorDeNombre('Mathias')).toBe(colorDeNombre('  mathias ')));
-  it('los colores salen de la lista', () => { for (const n of ['Ana', 'Beto', 'Coco', 'Dani']) expect(COLORES_JUGADOR).toContain(colorDeNombre(n)); });
-  it('nombres distintos suelen tener colores distintos', () => {
-    const colores = new Set(['Ana', 'Beto', 'Coco', 'Dani', 'Eli', 'Fer'].map(colorDeNombre));
-    expect(colores.size).toBeGreaterThan(2);
-  });
-  it('aparecer al lado: cerca, pero no encima', () => {
+describe('aparecer al lado', () => {
+  it('cerca, pero no encima', () => {
     for (let i = 0; i < 50; i++) { const p = alLado({ x: 0, y: 0, z: 0 }), d = Math.hypot(p.x, p.z); expect(d).toBeGreaterThanOrEqual(0.8); expect(d).toBeLessThanOrEqual(2.2); }
   });
 });

@@ -59,26 +59,20 @@ export const rumboDeMovimiento = (vx, vz, rot, umbral = 0.5) => (Math.hypot(vx, 
 // Por ahora solo se guarda dónde estás. Cuando haya más cosas (dragones, colores…), se agregan aquí.
 export const normalizeName = name => String(name).trim().replace(/\s+/g, ' ').toLowerCase();
 export const saveKey = name => `color-dragons:partida:${normalizeName(name)}`;
-// 🎨 Cada jugador tiene su color (sale de su nombre: el mismo nombre, siempre el mismo color). Así tus amigos no son todos verdes
-export const COLORES_JUGADOR = [0x2fae4e, 0x3d8bff, 0xe8b23a, 0xd9534f, 0x9b6bff, 0x2ec4b6, 0xff7f50, 0xe85da8];
-export function colorDeNombre(nombre) {
-  let h = 0;
-  for (const c of normalizeName(nombre)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return COLORES_JUGADOR[h % COLORES_JUGADOR.length];
-}
 // Un lugar al lado de un punto (para que dos jugadores no aparezcan uno adentro del otro)
 export function alLado(p, azar = Math.random) {
   const a = azar() * Math.PI * 2, r = 0.8 + azar() * 1.4;
   return { x: p.x + Math.cos(a) * r, y: p.y, z: p.z + Math.sin(a) * r };
 }
-export const serializeSave = ({ pos }) => JSON.stringify({ v: 1, pos: { x: pos.x, y: pos.y, z: pos.z } });
+// Se guarda dónde estás y tu cuenta (monedas, color y cajas: ver src/tienda.js)
+export const serializeSave = ({ pos, cuenta = null }) => JSON.stringify({ v: 2, pos: { x: pos.x, y: pos.y, z: pos.z }, cuenta });
 // Lee un guardado. Si está roto o es raro, devuelve null (y el juego empieza de cero)
 export function parseSave(text) {
   let d;
   try { d = JSON.parse(text); } catch (e) { return null; }
   if (!d || typeof d !== 'object') return null;
   const p = d.pos, ok = p && [p.x, p.y, p.z].every(n => typeof n === 'number' && Number.isFinite(n));
-  return { pos: ok ? { x: p.x, y: p.y, z: p.z } : null };
+  return { pos: ok ? { x: p.x, y: p.y, z: p.z } : null, cuenta: d.cuenta && typeof d.cuenta === 'object' ? d.cuenta : null };
 }
 
 // ---------- 🤖 El bot guía: un cubito que te sigue y te explica el juego ----------

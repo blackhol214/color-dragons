@@ -83,6 +83,19 @@
   kbd { font:700 12px ui-monospace, Menlo, monospace; background:#fff; color:#16301f; border-radius:4px; padding:0 5px; }
   #usarBtn { position:fixed; right:16px; bottom:calc(320px + env(safe-area-inset-bottom,0px)); z-index:15; display:none; border:2px solid rgba(255,255,255,.75); border-radius:14px; padding:10px 14px; font:700 15px/1.1 system-ui, sans-serif; color:#fff; background:rgba(22,48,31,.85); touch-action:manipulation; }
   #cajaBtn { position:fixed; right:16px; bottom:calc(270px + env(safe-area-inset-bottom,0px)); z-index:15; display:none; border:2px solid rgba(255,255,255,.75); border-radius:14px; padding:10px 14px; font:700 15px/1.1 system-ui, sans-serif; color:#fff; background:rgba(122,92,58,.92); touch-action:manipulation; }
+  /* 🎨 La paleta del balde de pintura y 🛒 la tienda de cajas */
+  .panelLobby { position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); z-index:20; width:min(92vw, 420px); box-sizing:border-box; padding:14px 16px 16px; border-radius:18px; background:rgba(16,24,26,.94); color:#fff; font:600 15px/1.3 system-ui, sans-serif; box-shadow:0 10px 30px rgba(0,0,0,.45); }
+  .panelLobby[hidden] { display:none; }
+  .panelLobby h2 { margin:0 0 10px; font:400 22px/1 "ADLaM Display", Impact, sans-serif; letter-spacing:.03em; }
+  .panelLobby .cerrar { position:absolute; right:10px; top:8px; border:0; background:none; color:#fff; font-size:24px; cursor:pointer; }
+  #paletaColores { display:grid; grid-template-columns:repeat(6, 1fr); gap:6px; max-height:52vh; overflow:auto; }
+  #paletaColores button { aspect-ratio:1; border-radius:12px; border:3px solid rgba(255,255,255,.25); cursor:pointer; }
+  #paletaColores button.puesto { border-color:#fff; box-shadow:0 0 0 2px #000 inset; }
+  .itemTienda { display:flex; align-items:center; gap:12px; padding:8px 0; border-top:1px solid rgba(255,255,255,.12); }
+  .itemTienda .muestra { width:46px; height:46px; border-radius:8px; flex:none; }
+  .itemTienda .nombre { flex:1; }
+  .itemTienda button { border:0; border-radius:10px; padding:8px 12px; font:700 14px/1 system-ui, sans-serif; color:#fff; background:#1f8a3b; cursor:pointer; }
+  .itemTienda button:disabled { background:#4a5558; cursor:default; }
   #dentroCaja { position:fixed; inset:0; z-index:10; pointer-events:none; overflow:hidden; }
   #dentroCaja .rendija { position:absolute; left:50%; top:46%; width:min(62vw, 560px); height:clamp(56px, 11vh, 96px); transform:translate(-50%, -50%); border-radius:999px;
     box-shadow:0 0 0 200vmax rgba(52,37,22,.96), inset 0 0 24px 10px rgba(30,20,10,.85); }
@@ -134,6 +147,8 @@
 <button type="button" id="cajaBtn" hidden>📦 Caja</button>
 <button type="button" id="usarBtn" hidden>✋ Usar</button>
 <p id="aviso" hidden></p>
+<div id="paleta" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar la paleta">×</button><h2>🎨 Elige tu color</h2><div id="paletaColores"></div></div>
+<div id="tienda" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Salir de la tienda">×</button><h2>🛒 Tienda de cajas</h2><p id="tiendaMonedas" style="margin:0 0 6px"></p><div id="tiendaCajas"></div></div>
 <div id="contador" hidden><b id="contadorNoche">NOCHE 1</b><span id="contadorTexto"></span></div>
 <div id="intro" hidden><div class="intro-caja"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="16" y="8" width="32" height="34" rx="3" fill="#0a0a0c"/><rect x="16" y="32" width="32" height="5" fill="#2a2a30"/><ellipse cx="32" cy="44" rx="28" ry="6" fill="#0a0a0c"/></svg><p id="introTexto"></p></div></div>
 <p id="cartelNoche" hidden></p>
@@ -147,13 +162,14 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { colorDeNombre, alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COMO, textoQueHago, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=10';
-import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=10';
-import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=10';
-import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=10';
-import { crearDragon, animarDragon } from './src/criaturas.js?v=10';
-import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=10';
-import * as F from './src/fiesta.js?v=10';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
+import { alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COMO, textoQueHago, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=11';
+import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=11';
+import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=11';
+import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=11';
+import { crearDragon, animarDragon } from './src/criaturas.js?v=11';
+import { CAJAS, PALETA, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, leerCuenta } from './src/tienda.js?v=12';
+import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=11';
+import * as F from './src/fiesta.js?v=11';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
 (() => {
   // iPhone ignora user-scalable=no: aquí se bloquea el zoom con dos dedos y el doble toque
   for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
@@ -560,7 +576,29 @@ import * as F from './src/fiesta.js?v=10';   // cambiar ?v= al cambiar estos arc
       g.add(giro); solapas.push(bisagra);
     }
     g.visible = false;
-    return { obj: g, solapas };
+    return { obj: g, solapas, cuerpo };
+  }
+  // 🌌 La caja espacial: negra con estrellitas (una textura dibujada en un canvas)
+  const texEspacio = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+    g.fillStyle = '#05050a'; g.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 70; i++) {
+      const x = Math.random() * 256, y = Math.random() * 256, r = Math.random() < 0.15 ? 2.6 : 0.6 + Math.random() * 1.2;
+      g.fillStyle = ['#ffffff', '#fff6c8', '#cfe3ff'][i % 3]; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    }
+    // y unas estrellas grandes de 4 puntas
+    g.fillStyle = '#fff8d8';
+    for (const [x, y, r] of [[60, 70, 10], [190, 150, 13], [110, 210, 8]]) {
+      g.beginPath(); for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4, rr = k % 2 ? r * 0.25 : r; g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } g.fill();
+    }
+    return new THREE.CanvasTexture(c);
+  })();
+  const ESPACIAL = new THREE.MeshLambertMaterial({ map: texEspacio, emissive: 0x111122 });
+  // Viste una caja con el estilo que compraste
+  function vestirCaja(caja, id) {
+    const espacial = id === 'espacial';
+    caja.cuerpo.material = espacial ? ESPACIAL : [CARTON_LADO, CARTON_LADO, CARTON_ARRIBA, CARTON_ARRIBA, CARTON_LADO, CARTON_LADO];
+    for (const s of caja.solapas) s.children[0].material = espacial ? ESPACIAL : CARTON_ARRIBA;
   }
   // El armario de Yellow: hueco por dentro (oscuro), con una puerta que empieza abierta. E la cierra y la abre
   function armario(e) {
@@ -981,6 +1019,7 @@ import * as F from './src/fiesta.js?v=10';   // cambiar ?v= al cambiar estos arc
     const iObj = noche ? objetoCerca(noche, ps.pos) : -1;
     if (iObj >= 0) return { texto: `agarrar ${OBJETOS[nocheDe(noche.n).objeto].emoji}`, hacer: () => agarrar(iObj) };
     if (cercaComedero() && !platoLleno) return { texto: 'servirle comida a Yellow', hacer: () => { if (red.id !== null) enviar({ tipo: 'alimentar' }); else servirComida(); } };
+    if (enLobby && Math.hypot(ps.pos.x - BALDE.x, ps.pos.z - BALDE.z) < 2) return { texto: 'pintarte 🎨', hacer: abrirPaleta };
     const a = esconditeCerca(ps.pos.x, ps.pos.y, ps.pos.z, escondites, 2.4);
     if (a) return { texto: a.abierto ? 'cerrar el armario' : 'abrir el armario', hacer: () => { a.abierto = !a.abierto; } };
     return null;
@@ -1022,15 +1061,18 @@ import * as F from './src/fiesta.js?v=10';   // cambiar ?v= al cambiar estos arc
   const loginName = document.getElementById('loginName'), loginError = document.getElementById('loginError');
   const savedEl = document.getElementById('saved');
   let userName = null, savedTimer = null, loadedLocal = false;
+  // 🪙 Tu cuenta: monedas (secretas), tu color y tus cajas. Se guarda con tu nombre en este navegador
+  let cuenta = nuevaCuenta();
+  function usarCuenta() { body.material.color.setHex(cuenta.color); vestirCaja(miCaja, cuenta.caja); }
   loginName.focus();
   loginForm.addEventListener('submit', e => {
     e.preventDefault();
     const name = loginName.value.trim().replace(/\s+/g, ' ');
     if (!name) { loginError.hidden = false; loginName.focus(); return; }
     userName = name;
-    body.material.color.setHex(colorDeNombre(name));   // 🎨 tu color (tus amigos te ven de este color)
     loginEl.hidden = true; loginName.blur();
     const loaded = loadGame(name);
+    usarCuenta();   // 🎨 tu color (tus amigos te ven de este color) y tu caja
     loadedLocal = loaded;
     ps.pos.set(spawn.x, spawn.y, spawn.z); ps.vel.set(0, 0, 0); camYaw = Math.PI;   // 🌞 siempre empiezas en el Spawn
     showToast(loaded ? `¡Hola de nuevo, ${name}!` : `Hola, ${name}. Bienvenido al laboratorio`);
@@ -1041,10 +1083,12 @@ import * as F from './src/fiesta.js?v=10';   // cambiar ?v= al cambiar estos arc
   });
   const saveBtn = document.getElementById('saveBtn');
   saveBtn.addEventListener('click', () => { saveGame(); saveBtn.blur(); }); // blur: que Espacio siga siendo saltar
+  // Autoguardado (sin cartel): cuando compras, te pintas o ganas monedas
+  function autoguardar() { if (userName) try { localStorage.setItem(saveKey(userName), serializeSave({ pos: ps.pos, cuenta })); } catch (e) {} }
   function saveGame() {
     if (!userName) return;
     try {
-      localStorage.setItem(saveKey(userName), serializeSave({ pos: ps.pos }));
+      localStorage.setItem(saveKey(userName), serializeSave({ pos: ps.pos, cuenta }));
     } catch (e) {
       showToast('No se pudo guardar: este navegador no deja guardar datos', true);
       return;
@@ -1056,6 +1100,7 @@ import * as F from './src/fiesta.js?v=10';   // cambiar ?v= al cambiar estos arc
     let raw = null;
     try { raw = localStorage.getItem(saveKey(name)); } catch (e) { return false; }
     const data = raw && parseSave(raw);
+    cuenta = leerCuenta(data && data.cuenta);
     if (!data) return false;
     // Si el guardado quedó fuera del mapa, vuelves a donde apareces
     return true;
@@ -1517,7 +1562,7 @@ import * as F from './src/fiesta.js?v=10';   // cambiar ?v= al cambiar estos arc
   }
   function cambioDeFase() {
     pintarContador();
-    if (noche.fase === 'ganada') { cartelEl.textContent = `¡NOCHE ${noche.n} COMPLETADA!`; cartelEl.hidden = false; }
+    if (noche.fase === 'ganada') { cartelEl.textContent = `¡NOCHE ${noche.n} COMPLETADA!`; cartelEl.hidden = false; cuenta = ganarNoche(cuenta); autoguardar(); }   // 🪙 +10 monedas, en secreto
   }
   // Lo que llega del servidor (jugando con amigos)
   function mensajeNoche(m) {
@@ -1558,7 +1603,7 @@ import * as F from './src/fiesta.js?v=10';   // cambiar ?v= al cambiar estos arc
     for (let i = 0; i < 5; i++) { silla(103 + i * 0.9, 11.8); silla(118 + i * 0.9, 11.8); }
     // Tanques de muestras (vacíos y con líquido) como decoración, y plantas en tubos de vidrio
     tanque(103, 3, 0, 0x7fa0a8); tanque(123, 3, 0, 0x9a8fb0);
-    for (const [x, z] of [[101.2, -12.5], [124.8, -12.5], [101.2, 12.5]]) {
+    for (const [x, z] of [[124.8, -12.5], [101.2, 12.5]]) {
       bloque(x - 0.35, x + 0.35, 0, 0.5, z - 0.35, z + 0.35, METAL, { solido: true });
       bloque(x - 0.3, x + 0.3, 0.5, 1.9, z - 0.3, z + 0.3, VIDRIO, { solido: false });
       const hoja = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), lambert(0x5f8a5a)); hoja.scale.y = 1.6; hoja.position.set(x, 1.2, z); scene.add(hoja);
@@ -1589,7 +1634,7 @@ import * as F from './src/fiesta.js?v=10';   // cambiar ?v= al cambiar estos arc
   try { localStorage.removeItem('color-dragons:noche'); } catch (e) {}   // (borra el avance viejo que antes sí se guardaba)
   const progreso = () => Math.min(NOCHE_FINAL, Math.max(1, nocheQueToca));
   const guardarProgreso = n => { nocheQueToca = n; pintarPantallaLobby(); };
-  let enLobby = false;
+  let enLobby = false, tiendaMuestra = null;
   function irAlLobby() {
     enLobby = true; noche = null; fiesta = null;
     for (const c of cuerposDragon.values()) c.obj.visible = false;
@@ -1599,6 +1644,91 @@ import * as F from './src/fiesta.js?v=10';   // cambiar ?v= al cambiar estos arc
     if (escondido) alternarEscondite();
     enCaja = false; ps.pos.copy(alLado(LOBBY_SPAWN)); ps.vel.set(0, 0, 0); camYaw = 0;   // (al lado del punto: así tus amigos no aparecen adentro tuyo)
     pintarPantallaLobby();
+  }
+  // ---------- 🎨 El balde de pintura (en la esquina del lobby): E abre la paleta ----------
+  const BALDE = { x: 124.4, z: 12.9 };
+  (() => {
+    const g = new THREE.Group(); g.position.set(BALDE.x, 0, BALDE.z); scene.add(g);
+    const balde = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.34, 0.6, 20, 1, true), new THREE.MeshLambertMaterial({ color: 0xb9c2c4, side: THREE.DoubleSide })); balde.position.y = 0.3; g.add(balde);
+    const fondo = new THREE.Mesh(new THREE.CircleGeometry(0.34, 20), lambert(0x8a9395)); fondo.rotation.x = -Math.PI / 2; fondo.position.y = 0.02; g.add(fondo);
+    const pintura = new THREE.Mesh(new THREE.CircleGeometry(0.4, 20), lambert(0xe85da8)); pintura.rotation.x = -Math.PI / 2; pintura.position.y = 0.5; g.add(pintura);
+    const asa = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.02, 6, 20, Math.PI), METAL_OSCURO); asa.position.y = 0.6; asa.rotation.y = 0.5; g.add(asa);
+    // chorreones de colores por los lados
+    PALETA.slice(1, 6).forEach((c, i) => { const ch = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.25 + (i % 3) * 0.08, 0.02), lambert(c)); const a = i * 1.25; ch.position.set(Math.sin(a) * 0.4, 0.45, Math.cos(a) * 0.4); ch.rotation.y = a; g.add(ch); });
+    // una mancha de pintura en el piso
+    const mancha = new THREE.Mesh(new THREE.CircleGeometry(0.7, 16), lambert(0x3d8bff)); mancha.rotation.x = -Math.PI / 2; mancha.position.set(-0.6, 0.012, -0.3); mancha.scale.set(1, 0.6, 1); g.add(mancha);
+    g.userData.pintura = pintura;
+  })();
+  const paletaEl = document.getElementById('paleta'), paletaColores = document.getElementById('paletaColores');
+  function abrirPaleta() {
+    paletaColores.innerHTML = '';
+    for (const c of PALETA) {
+      const b = document.createElement('button'); b.type = 'button';
+      b.style.background = '#' + c.toString(16).padStart(6, '0'); b.setAttribute('aria-label', 'Color ' + b.style.background);
+      b.classList.toggle('puesto', c === cuenta.color);
+      b.addEventListener('click', () => { cuenta = pintar(cuenta, c); usarCuenta(); autoguardar(); abrirPaleta(); b.blur(); });
+      paletaColores.appendChild(b);
+    }
+    paletaEl.hidden = false; tiendaEl.hidden = true;   // (una sola ventana a la vez)
+  }
+  paletaEl.querySelector('.cerrar').addEventListener('click', e => { paletaEl.hidden = true; e.currentTarget.blur(); });
+
+  // ---------- 🛒 La tienda de cajas (en el rincón del lobby). Si no te alcanza, ¡te echan volando! ----------
+  const TIENDA = { x0: LOBBY.x0, x1: 105, z0: LOBBY.z0, z1: -8 };
+  (() => {
+    const madera = lambert(0x7a5634), rojo = lambert(0xb5443a);
+    bloque(100.2, 101.4, 0, 1.1, -13.6, -8.6, madera);                               // el mostrador, contra la pared
+    bloque(100.1, 101.5, 1.1, 1.18, -13.7, -8.5, rojo, { solido: false });
+    // un tapete en el piso que marca la entrada de la tienda
+    const tapete = new THREE.Mesh(new THREE.PlaneGeometry(TIENDA.x1 - TIENDA.x0, TIENDA.z1 - TIENDA.z0), lambert(0x4a3b5c));
+    tapete.rotation.x = -Math.PI / 2; tapete.position.set((TIENDA.x0 + TIENDA.x1) / 2, 0.011, (TIENDA.z0 + TIENDA.z1) / 2); scene.add(tapete);
+    const letrero = cartel(512, 128, 4.2, 1.05, (g, w, h) => {
+      g.fillStyle = '#3a2a4a'; g.fillRect(0, 0, w, h);
+      letras(g, 'TIENDA DE CAJAS', w / 2, 62, 50, '#ffd76a'); letras(g, '📦 🌌', w / 2, 108, 30, '#ffffff', 'system-ui, sans-serif');
+    });
+    enPared(letrero, 102.6, 3.6, LOBBY.z0 + 0.32, 's');
+    // La caja espacial de muestra, encima del mostrador (girando)
+    const muestra = cajaCarton(); muestra.obj.visible = true; vestirCaja(muestra, 'espacial'); muestra.obj.scale.setScalar(0.5); muestra.obj.position.set(100.8, 1.18, -11); scene.add(muestra.obj);
+    tiendaMuestra = muestra.obj;
+  })();
+  const tiendaEl = document.getElementById('tienda');
+  let enTienda = false;
+  const dentroTienda = () => enLobby && ps.pos.x < TIENDA.x1 && ps.pos.z < TIENDA.z1 && ps.pos.y < 1;
+  function pintarTienda() {
+    document.getElementById('tiendaMonedas').textContent = `Tienes ${cuenta.monedas} 🪙`;
+    const lista = document.getElementById('tiendaCajas'); lista.innerHTML = '';
+    for (const c of CAJAS) {
+      const tengo = cuenta.cajas.includes(c.id), puesta = cuenta.caja === c.id;
+      const fila = document.createElement('div'); fila.className = 'itemTienda';
+      const m = document.createElement('div'); m.className = 'muestra';
+      m.style.background = c.id === 'espacial' ? 'radial-gradient(circle at 30% 30%, #fff 0 2px, transparent 3px), radial-gradient(circle at 70% 60%, #fff6c8 0 3px, transparent 4px), radial-gradient(circle at 45% 80%, #cfe3ff 0 1.5px, transparent 2.5px), #05050a' : '#b58a55';
+      const n = document.createElement('div'); n.className = 'nombre'; n.textContent = c.nombre + (c.precio ? ` · ${c.precio} 🪙` : '');
+      const b = document.createElement('button'); b.type = 'button';
+      b.textContent = puesta ? 'Puesta ✓' : tengo ? 'Ponértela' : 'Comprar'; b.disabled = puesta;
+      b.addEventListener('click', () => {
+        if (tengo) cuenta = ponerCaja(cuenta, c.id);
+        else { const r = comprar(cuenta, c.id); if (!r.ok) { showToast('No te alcanza 🪙', true); return; } cuenta = r.cuenta; showToast(`¡Compraste la ${c.nombre}! B para ponértela 📦`); }
+        usarCuenta(); autoguardar(); pintarTienda(); b.blur();
+      });
+      fila.append(m, n, b); lista.appendChild(fila);
+    }
+  }
+  tiendaEl.querySelector('.cerrar').addEventListener('click', e => { tiendaEl.hidden = true; e.currentTarget.blur(); });
+  // Cada cuadro: ¿entraste a la tienda? Si te alcanza, se abre; si no, el tendero te lanza afuera
+  function revisarTienda(dt) {
+    if (tiendaMuestra) tiendaMuestra.rotation.y += dt;
+    const dentro = dentroTienda();
+    if (dentro && !enTienda) {
+      if (puedeEntrar(cuenta)) { pintarTienda(); tiendaEl.hidden = false; paletaEl.hidden = true; }   // (una sola ventana a la vez)
+      else {
+        ps.vel.x = 15; ps.vel.z = 11; ps.vel.y = 9; ps.onGround = false;   // ¡FUERA! (sales volando unos metros)
+        showToast('🛒 ¡Fuera de mi tienda! No tienes suficientes monedas', true, 2600);
+      }
+    }
+    if (!dentro && enTienda) tiendaEl.hidden = true;
+    enTienda = dentro;
+    // La paleta se cierra si te alejas del balde (o sales del lobby)
+    if (!paletaEl.hidden && (!enLobby || Math.hypot(ps.pos.x - BALDE.x, ps.pos.z - BALDE.z) > 3)) paletaEl.hidden = true;
   }
   // Cruzar la puerta del lobby → empieza la noche que te toca
   function revisarPuertaLobby() {
@@ -1834,7 +1964,7 @@ import * as F from './src/fiesta.js?v=10';   // cambiar ?v= al cambiar estos arc
       hat.g.position.y = Math.sin(t * 1.5) * 0.06; hat.plumas.rotation.y = Math.sin(t * 1.2) * 0.3;
       hat.pup.position.x = -0.85 + Math.sin(t * 0.8) * 0.12;
       camera.position.set(181, 3.4, 4.3); camera.lookAt(181, 2.6, -3);
-      if (f.tiempo >= F.DURACION.hat) { f.fase = 'fin'; f.tiempo = 0; introEl.hidden = true; escapasteEl.hidden = false; }
+      if (f.tiempo >= F.DURACION.hat) { f.fase = 'fin'; f.tiempo = 0; introEl.hidden = true; escapasteEl.hidden = false; cuenta = ganarNoche(cuenta); autoguardar(); }   // 🪙 la final también da monedas
       return true;
     }
     if (f.fase === 'fin') {
@@ -1943,6 +2073,7 @@ import * as F from './src/fiesta.js?v=10';   // cambiar ?v= al cambiar estos arc
     updateNoches(dt);
     const fiestaCamara = updateFiesta(dt);
     revisarPuertaLobby();
+    revisarTienda(dt);
     updatePuertas(dt, [ps.pos, ...[...red.otros.values()].map(f => f.obj.position), ...[...cuerposDragon.values()].map(c => c.obj.position)]);
 
     // pequeño rebote al caminar

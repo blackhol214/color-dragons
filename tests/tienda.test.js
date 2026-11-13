@@ -1,0 +1,62 @@
+import { describe, it, expect } from 'vitest';
+import { CAJAS, PALETA, COLOR_INICIAL, MONEDAS_POR_NOCHE, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, leerCuenta } from '../src/tienda.js';
+
+describe('🪙 monedas', () => {
+  it('empiezas con 0 monedas, verde y con la caja de cartón', () => {
+    expect(nuevaCuenta()).toEqual({ monedas: 0, color: COLOR_INICIAL, cajas: ['carton'], caja: 'carton' });
+  });
+  it('cada noche ganada da 10', () => {
+    let c = nuevaCuenta();
+    for (let i = 0; i < 5; i++) c = ganarNoche(c);
+    expect(MONEDAS_POR_NOCHE).toBe(10);
+    expect(c.monedas).toBe(50);
+  });
+});
+
+describe('🎨 balde de pintura', () => {
+  it('pinta con un color de la paleta', () => expect(pintar(nuevaCuenta(), PALETA[3]).color).toBe(PALETA[3]));
+  it('un color que no está en la paleta no hace nada', () => expect(pintar(nuevaCuenta(), 0x123456).color).toBe(COLOR_INICIAL));
+});
+
+describe('🛒 tienda de cajas', () => {
+  it('la caja espacial vale 15', () => expect(CAJAS.find(c => c.id === 'espacial').precio).toBe(15));
+  it('con 10 monedas te echan; con 20 te dejan entrar', () => {
+    expect(puedeEntrar({ ...nuevaCuenta(), monedas: 10 })).toBe(false);
+    expect(puedeEntrar({ ...nuevaCuenta(), monedas: 20 })).toBe(true);
+  });
+  it('comprar descuenta las monedas y te pone la caja', () => {
+    const r = comprar({ ...nuevaCuenta(), monedas: 20 }, 'espacial');
+    expect(r.ok).toBe(true);
+    expect(r.cuenta.monedas).toBe(5);
+    expect(r.cuenta.cajas).toContain('espacial');
+    expect(r.cuenta.caja).toBe('espacial');
+  });
+  it('sin monedas suficientes no se compra (y no te quita nada)', () => {
+    const r = comprar({ ...nuevaCuenta(), monedas: 14 }, 'espacial');
+    expect(r).toMatchObject({ ok: false, motivo: 'no-alcanza' });
+    expect(r.cuenta.monedas).toBe(14);
+  });
+  it('no se compra dos veces la misma caja', () => {
+    const una = comprar({ ...nuevaCuenta(), monedas: 40 }, 'espacial').cuenta;
+    expect(comprar(una, 'espacial')).toMatchObject({ ok: false, motivo: 'ya-la-tienes' });
+  });
+  it('si ya tienes todas las cajas, entras a elegir aunque tengas 0', () => {
+    const todas = { ...nuevaCuenta(), cajas: ['carton', 'espacial'] };
+    expect(puedeEntrar(todas)).toBe(true);
+  });
+  it('solo te puedes poner cajas que tienes', () => {
+    expect(ponerCaja(nuevaCuenta(), 'espacial').caja).toBe('carton');
+    expect(ponerCaja({ ...nuevaCuenta(), cajas: ['carton', 'espacial'] }, 'espacial').caja).toBe('espacial');
+  });
+});
+
+describe('💾 leer la cuenta guardada', () => {
+  it('un guardado bueno se lee igual', () => {
+    const c = { monedas: 35, color: PALETA[2], cajas: ['carton', 'espacial'], caja: 'espacial' };
+    expect(leerCuenta(c)).toEqual(c);
+  });
+  it('un guardado raro no rompe nada', () => {
+    expect(leerCuenta({ monedas: -5, color: 'rojo', cajas: ['inventada'], caja: 'espacial' })).toEqual(nuevaCuenta());
+    expect(leerCuenta(null)).toEqual(nuevaCuenta());
+  });
+});
