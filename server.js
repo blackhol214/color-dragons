@@ -67,7 +67,7 @@ const servidor = Bun.serve({
 
       if (m.tipo === 'hola' && !yo) {
         if ([...conectados.values()].some(j => j.nombre.toLowerCase() === m.nombre.toLowerCase())) {
-          ws.send(JSON.stringify({ tipo: 'error', texto: `Ya hay alguien jugando como "${m.nombre}". Usa otro nombre.` }));
+          ws.send(JSON.stringify({ tipo: 'error', codigo: 'nombreUsado', nombre: m.nombre, texto: `Ya hay alguien jugando como "${m.nombre}". Usa otro nombre.` }));   // (codigo: así cada uno lo lee en su idioma)
           ws.close();
           return;
         }
@@ -114,7 +114,7 @@ const servidor = Bun.serve({
       if (m.tipo === 'pos') {
         yo.x = dentro(m.x, BORDE); yo.y = dentro(m.y, 200); yo.z = dentro(m.z, BORDE); yo.rot = m.rot; yo.oculto = m.oculto;
         if (m.color !== null) yo.color = m.color;
-        ws.publish('juego', JSON.stringify({ tipo: 'pos', id: yo.id, x: yo.x, y: yo.y, z: yo.z, rot: yo.rot, color: yo.color, oculto: yo.oculto, t: m.t }));   // t: su hora, para dibujarlo suave
+        ws.publish('juego', JSON.stringify({ tipo: 'pos', id: yo.id, x: yo.x, y: yo.y, z: yo.z, rot: yo.rot, color: yo.color, oculto: yo.oculto, camino: m.camino, t: m.t }));   // t: su hora, para dibujarlo suave
       }
     },
     close(ws) {

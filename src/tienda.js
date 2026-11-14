@@ -31,7 +31,15 @@ export const PALETA = [
 ];
 export const COLOR_INICIAL = PALETA[0];   // todos empiezan verdes (después cada uno se pinta en el balde)
 
-export const nuevaCuenta = () => ({ monedas: 0, color: COLOR_INICIAL, cajas: ['carton'], caja: 'carton' });
+// ✨ Los caminos (trails): una estela que dejas al caminar, para verte fachero. Ninguno viene gratis
+export const CAMINOS = [
+  { id: 'amarillo', precio: 10 },    // una línea amarilla en el piso
+  { id: 'fuego', precio: 25 },       // llamitas que suben
+  { id: 'electrico', precio: 25 },   // rayos
+];
+export const caminoDe = id => CAMINOS.find(c => c.id === id) || null;
+
+export const nuevaCuenta = () => ({ monedas: 0, color: COLOR_INICIAL, cajas: ['carton'], caja: 'carton', caminos: [], camino: null });
 
 // Ganaste una noche: monedas en secreto
 export const ganarNoche = cuenta => ({ ...cuenta, monedas: cuenta.monedas + MONEDAS_POR_NOCHE });
@@ -53,6 +61,21 @@ export function comprar(cuenta, id) {
   return { ok: true, cuenta: { ...cuenta, monedas: cuenta.monedas - c.precio, cajas: [...cuenta.cajas, id], caja: id } };
 }
 
+// La tienda de caminos: te deja entrar si te alcanza para alguno que no tienes (o si ya los tienes todos)
+export function puedeEntrarCaminos(cuenta) {
+  const faltan = CAMINOS.filter(c => !cuenta.caminos.includes(c.id));
+  return faltan.length === 0 || faltan.some(c => c.precio <= cuenta.monedas);
+}
+export function comprarCamino(cuenta, id) {
+  const c = caminoDe(id);
+  if (!c) return { ok: false, motivo: 'no-existe', cuenta };
+  if (cuenta.caminos.includes(id)) return { ok: false, motivo: 'ya-lo-tienes', cuenta };
+  if (cuenta.monedas < c.precio) return { ok: false, motivo: 'no-alcanza', cuenta };
+  return { ok: true, cuenta: { ...cuenta, monedas: cuenta.monedas - c.precio, caminos: [...cuenta.caminos, id], camino: id } };
+}
+// Ponerte un camino que tienes (o quitártelo: null)
+export const ponerCamino = (cuenta, id) => (id === null || cuenta.caminos.includes(id) ? { ...cuenta, camino: id } : cuenta);
+
 // Ponerte una caja que ya tienes
 export const ponerCaja = (cuenta, id) => (cuenta.cajas.includes(id) ? { ...cuenta, caja: id } : cuenta);
 
@@ -71,5 +94,7 @@ export function leerCuenta(d) {
   if (PALETA.includes(d.color)) c.color = d.color;
   if (Array.isArray(d.cajas)) c.cajas = ['carton', ...new Set(d.cajas.filter(id => id !== 'carton' && cajaDe(id)))];
   if (c.cajas.includes(d.caja)) c.caja = d.caja;
+  if (Array.isArray(d.caminos)) c.caminos = [...new Set(d.caminos.filter(id => caminoDe(id)))];
+  if (c.caminos.includes(d.camino)) c.camino = d.camino;
   return c;
 }

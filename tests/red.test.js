@@ -17,7 +17,7 @@ describe('mensajes', () => {
   });
   it('lee una posición', () => {
     const m = leerMensaje(JSON.stringify({ tipo: 'pos', x: 1, y: 0, z: 2, rot: 0.5, color: 5, t: 100 }));
-    expect(m).toEqual({ tipo: 'pos', x: 1, y: 0, z: 2, rot: 0.5, color: 5, oculto: 0, t: 100 });
+    expect(m).toEqual({ tipo: 'pos', x: 1, y: 0, z: 2, rot: 0.5, color: 5, oculto: 0, camino: null, t: 100 });
   });
   it('escondido en una caja: solo 1 cuenta como escondido', () => {
     const pos = o => leerMensaje(JSON.stringify({ tipo: 'pos', x: 0, y: 0, z: 0, rot: 0, oculto: o })).oculto;
@@ -58,4 +58,12 @@ describe('movimiento suave', () => {
   it('si salta muy lejos, aparece allá de golpe', () => {
     expect(mezclar([0, 0, 0], [TELETRANSPORTE + 5, 0, 0], 0.5)).toEqual([TELETRANSPORTE + 5, 0, 0]);
   });
+});
+
+import { leerMensaje as leer2 } from '../src/red.js';
+import { CAMINOS } from '../src/tienda.js';
+describe('✨ el camino viaja con tu posición', () => {
+  it('un camino que existe pasa', () => expect(leer2(JSON.stringify({ tipo: 'pos', x: 1, y: 0, z: 2, rot: 0, camino: 'fuego' })).camino).toBe('fuego'));
+  it('uno inventado no pasa', () => expect(leer2(JSON.stringify({ tipo: 'pos', x: 1, y: 0, z: 2, rot: 0, camino: 'arcoiris' })).camino).toBe(null));
+  it('los caminos válidos son los de la tienda', () => expect(CAMINOS.map(c => c.id)).toEqual(['amarillo', 'fuego', 'electrico']));
 });

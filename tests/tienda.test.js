@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { COSTO_SEGUIR, pagarParaSeguir, CAJAS, PALETA, COLOR_INICIAL, MONEDAS_POR_NOCHE, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, leerCuenta } from '../src/tienda.js';
+import { CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, COSTO_SEGUIR, pagarParaSeguir, CAJAS, PALETA, COLOR_INICIAL, MONEDAS_POR_NOCHE, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, leerCuenta } from '../src/tienda.js';
 
 describe('🪙 monedas', () => {
   it('empiezas con 0 monedas, verde y con la caja de cartón', () => {
-    expect(nuevaCuenta()).toEqual({ monedas: 0, color: COLOR_INICIAL, cajas: ['carton'], caja: 'carton' });
+    expect(nuevaCuenta()).toEqual({ monedas: 0, color: COLOR_INICIAL, cajas: ['carton'], caja: 'carton', caminos: [], camino: null });
   });
   it('cada noche ganada da 10', () => {
     let c = nuevaCuenta();
@@ -52,7 +52,7 @@ describe('🛒 tienda de cajas', () => {
 
 describe('💾 leer la cuenta guardada', () => {
   it('un guardado bueno se lee igual', () => {
-    const c = { monedas: 35, color: PALETA[2], cajas: ['carton', 'espacial'], caja: 'espacial' };
+    const c = { monedas: 35, color: PALETA[2], cajas: ['carton', 'espacial'], caja: 'espacial', caminos: ['fuego'], camino: 'fuego' };
     expect(leerCuenta(c)).toEqual(c);
   });
   it('un guardado raro no rompe nada', () => {
@@ -74,4 +74,21 @@ describe('📦 las cajas nuevas', () => {
     expect(r).toMatchObject({ ok: true, cuenta: { monedas: 0, caja: 'piedra' } });
   });
   it('un guardado con la caja de Navidad se lee bien', () => expect(leerCuenta({ monedas: 3, cajas: ['carton', 'regalo'], caja: 'regalo' }).caja).toBe('regalo'));
+});
+
+describe('✨ caminos (trails)', () => {
+  it('hay amarillo, fuego y eléctrico', () => expect(CAMINOS.map(c => c.id)).toEqual(['amarillo', 'fuego', 'electrico']));
+  it('empiezas sin camino', () => expect(nuevaCuenta().camino).toBe(null));
+  it('con 5 monedas te echan de la tienda de caminos; con 10 entras', () => {
+    expect(puedeEntrarCaminos({ ...nuevaCuenta(), monedas: 5 })).toBe(false);
+    expect(puedeEntrarCaminos({ ...nuevaCuenta(), monedas: 10 })).toBe(true);
+  });
+  it('comprar el de fuego: descuenta y te lo pone', () => expect(comprarCamino({ ...nuevaCuenta(), monedas: 30 }, 'fuego')).toMatchObject({ ok: true, cuenta: { monedas: 5, camino: 'fuego', caminos: ['fuego'] } }));
+  it('no te alcanza: no compra nada', () => expect(comprarCamino({ ...nuevaCuenta(), monedas: 24 }, 'electrico')).toMatchObject({ ok: false, motivo: 'no-alcanza' }));
+  it('te lo puedes quitar (null) y volver a poner', () => {
+    const c = comprarCamino({ ...nuevaCuenta(), monedas: 10 }, 'amarillo').cuenta;
+    expect(ponerCamino(c, null).camino).toBe(null);
+    expect(ponerCamino(ponerCamino(c, null), 'amarillo').camino).toBe('amarillo');
+    expect(ponerCamino(c, 'fuego').camino).toBe('amarillo');   // (el de fuego no lo tiene)
+  });
 });

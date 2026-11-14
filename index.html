@@ -88,6 +88,7 @@
   .panelLobby[hidden] { display:none; }
   .panelLobby h2 { margin:0 0 10px; font:400 22px/1 "ADLaM Display", Impact, sans-serif; letter-spacing:.03em; }
   .panelLobby .cerrar { position:absolute; right:10px; top:8px; border:0; background:none; color:#fff; font-size:24px; cursor:pointer; }
+  .botonesIdioma { display:flex; gap:10px; } .botonesIdioma button { flex:1; border:0; border-radius:12px; padding:14px 10px; font:700 17px/1 system-ui, sans-serif; color:#fff; background:#2d5f9a; cursor:pointer; } .botonesIdioma button.elegido { box-shadow:inset 0 0 0 3px #ffd60a; }
   #paletaColores { display:grid; grid-template-columns:repeat(6, 1fr); gap:6px; max-height:52vh; overflow:auto; }
   #paletaColores button { aspect-ratio:1; border-radius:12px; border:3px solid rgba(255,255,255,.25); cursor:pointer; }
   #paletaColores button.puesto { border-color:#fff; box-shadow:0 0 0 2px #000 inset; }
@@ -134,40 +135,41 @@
 <div id="login">
   <form id="loginForm" class="login-card" autocomplete="off">
     <h1>COLOR DRAGONS</h1>
-    <label for="loginName">Tu usuario</label>
-    <input id="loginName" type="text" maxlength="24" placeholder="el humano" spellcheck="false">
-    <p>Si ya guardaste con este usuario, sigues donde lo dejaste. Para guardar, pulsa el botón verde <b>GUARDAR</b>.</p>
-    <p id="loginError" hidden>Escribe un nombre de usuario para jugar.</p>
-    <button type="submit">Jugar</button>
+    <label for="loginName" data-t="login.usuario">Tu usuario</label>
+    <input id="loginName" type="text" maxlength="24" placeholder="el humano" data-t-ph="login.placeholder" spellcheck="false">
+    <p data-t-html="login.ayuda">Si ya guardaste con este usuario, sigues donde lo dejaste. Para guardar, pulsa el botón verde <b>GUARDAR</b>.</p>
+    <p id="loginError" hidden data-t="login.error">Escribe un nombre de usuario para jugar.</p>
+    <button type="submit" data-t="login.jugar">Jugar</button>
   </form>
 </div>
-<p id="saved" aria-live="polite">CAMBIOS GUARDADOS</p>
+<p id="saved" aria-live="polite" data-t="ui.guardado">CAMBIOS GUARDADOS</p>
 <div id="guia" hidden role="dialog" aria-labelledby="guiaQuien">
-  <button type="button" id="guiaCerrar" class="chico" aria-label="Cerrar el diálogo del bot guía">×</button>
-  <p class="guia-quien" id="guiaQuien">🤖 BOT GUÍA</p>
+  <button type="button" id="guiaCerrar" class="chico" aria-label="Cerrar el diálogo del bot guía" data-t-aria="guia.cerrarAria">×</button>
+  <p class="guia-quien" id="guiaQuien" data-t="guia.quien">🤖 BOT GUÍA</p>
   <p class="guia-texto" id="guiaTexto" aria-live="polite"></p>
   <div class="guia-botones">
-    <button type="button" id="guiaComo">¿Cómo juego?</button>
-    <button type="button" id="guiaQue" class="otro">¿Qué tengo que hacer?</button>
-    <button type="button" id="guiaColor" class="chico" aria-label="Cambiar el color del bot guía">🎨 Color</button>
+    <button type="button" id="guiaComo" data-t="guia.como">¿Cómo juego?</button>
+    <button type="button" id="guiaQue" class="otro" data-t="guia.que">¿Qué tengo que hacer?</button>
+    <button type="button" id="guiaColor" class="chico" aria-label="Cambiar el color del bot guía" data-t-aria="guia.colorAria" data-t="guia.color">🎨 Color</button>
   </div>
 </div>
-<button type="button" id="saveBtn">GUARDAR</button>
-<button type="button" id="guiaBtn">🤖 Guía</button>
+<button type="button" id="saveBtn" data-t="ui.guardar">GUARDAR</button>
+<button type="button" id="guiaBtn" data-t="ui.guia">🤖 Guía</button>
 <button type="button" id="cajaBtn" hidden>📦 Caja</button>
 <button type="button" id="usarBtn" hidden>✋ Usar</button>
 <p id="aviso" hidden></p>
 <div id="sustoNegro"></div>
 <div id="sustoFlash" hidden></div>
-<div id="perdiste" class="panelLobby" hidden><h2>💀 ¡PERDISTE LA NOCHE!</h2><p id="perdisteTexto" style="margin:0"></p><div class="botones"><button type="button" id="pagarBtn"></button><button type="button" id="lobbyBtn">🏠 Volver al lobby</button></div></div>
-<div id="paleta" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar la paleta">×</button><h2>🎨 Elige tu color</h2><div id="paletaColores"></div></div>
-<div id="tienda" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Salir de la tienda">×</button><h2>🛒 Tienda de cajas</h2><p id="tiendaMonedas" style="margin:0 0 6px"></p><div id="tiendaCajas"></div></div>
+<div id="perdiste" class="panelLobby" hidden><h2 data-t="perdiste.titulo">💀 ¡PERDISTE LA NOCHE!</h2><p id="perdisteTexto" style="margin:0"></p><div class="botones"><button type="button" id="pagarBtn"></button><button type="button" id="lobbyBtn" data-t="perdiste.lobby">🏠 Volver al lobby</button></div></div>
+<div id="traductorPanel" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 data-t="traductor.titulo">🌍 Idioma · Language</h2><div class="botonesIdioma"><button type="button" data-idioma="es">🇪🇸 Español</button><button type="button" data-idioma="en">🇬🇧 English</button></div></div>
+<div id="paleta" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 data-t="paleta.titulo">🎨 Elige tu color</h2><div id="paletaColores"></div></div>
+<div id="tienda" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 id="tiendaTitulo">🛒 Tienda de cajas</h2><p id="tiendaMonedas" style="margin:0 0 6px"></p><div id="tiendaCajas"></div></div>
 <div id="contador" hidden><b id="contadorNoche">NOCHE 1</b><span id="contadorTexto"></span></div>
 <div id="intro" hidden><div class="intro-caja"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="16" y="8" width="32" height="34" rx="3" fill="#0a0a0c"/><rect x="16" y="32" width="32" height="5" fill="#2a2a30"/><ellipse cx="32" cy="44" rx="28" ry="6" fill="#0a0a0c"/></svg><p id="introTexto"></p></div></div>
 <p id="cartelNoche" hidden></p>
-<p id="escapaste" hidden><span>E</span><span>S</span><span>C</span><span>A</span><span>P</span><span>A</span><span>S</span><span>T</span><span>E</span></p>
+<p id="escapaste" hidden></p>
 <div id="dentroCaja" hidden><div class="rendija"></div><small></small></div>
-<p id="lockHint" hidden>Haz clic para mirar con el ratón (Esc para soltarlo)</p>
+<p id="lockHint" hidden data-t="ui.lockHint">Haz clic para mirar con el ratón (Esc para soltarlo)</p>
 <div id="stick"><div id="knob"></div></div>
 <div id="camStick" aria-label="Mover la cámara"><div class="knob"></div><span>CÁMARA</span></div>
 <button id="jump" type="button">SALTAR</button>
@@ -175,14 +177,15 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COMO, textoQueHago, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=16';
-import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=16';
-import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=16';
-import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=16';
-import { crearDragon, animarDragon } from './src/criaturas.js?v=16';
-import { CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=16';
-import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=16';
-import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
+import { alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=17';
+import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=17';
+import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=17';
+import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=17';
+import { crearDragon, animarDragon } from './src/criaturas.js?v=17';
+import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=17';
+import { CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=17';
+import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=17';
+import * as F from './src/fiesta.js?v=17';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
 (() => {
   // iPhone ignora user-scalable=no: aquí se bloquea el zoom con dos dedos y el doble toque
   for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
@@ -521,17 +524,21 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
   }
 
   // ---------- Carteles (de los dibujos de Mathias): un dibujo en canvas pegado a una pared o a un poste ----------
+  // 🌍 Los letreros con texto se guardan aquí: al cambiar de idioma se vuelven a dibujar
+  const letreros = [];
+  function repintarLetreros() { for (const { tex, dibujar } of letreros) { const c = tex.image, g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height); dibujar(g, c.width, c.height); tex.needsUpdate = true; } }
   function cartel(w, h, ancho, alto, dibujar) {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(ancho, alto), new THREE.MeshLambertMaterial({ map: lienzo(w, h, dibujar), transparent: true }));
+    const tex = lienzo(w, h, dibujar); letreros.push({ tex, dibujar });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(ancho, alto), new THREE.MeshLambertMaterial({ map: tex, transparent: true }));
     scene.add(m); return m;
   }
   const letras = (g, texto, x, y, tam, color, fuente = 'Impact, "Arial Narrow Bold", sans-serif') => { g.fillStyle = color; g.font = `${tam}px ${fuente}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(texto, x, y); };
   // En una pared: lado = hacia dónde mira el cartel
   const enPared = (m, x, y, z, lado) => { m.position.set(x, y, z); m.rotation.y = { s: 0, n: Math.PI, e: Math.PI / 2, w: -Math.PI / 2 }[lado]; };
-  const cintaPeligro = texto => lienzo(512, 64, (g, w, h) => {
+  const cintaPeligro = clave => { const dibujar = (g, w, h) => {
     g.fillStyle = '#a8924a'; g.fillRect(0, 0, w, h);
-    for (let x = 0; x < w; x += 128) letras(g, texto, x + 64, h / 2 + 2, 44, '#2b2b2b');
-  });
+    for (let x = 0; x < w; x += 128) letras(g, tr(clave), x + 64, h / 2 + 2, 44, '#2b2b2b');
+  }; const tex = lienzo(512, 64, dibujar); letreros.push({ tex, dibujar }); return tex; };
 
   // ---------- Muebles ----------
   // Mesa de laboratorio: cubierta clara sobre un mueble de metal (sólida: no te puedes meter debajo)
@@ -777,7 +784,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     const calma = cartel(256, 320, 2.2, 2.75, (g, w, h) => {
       g.fillStyle = '#5a4a46'; g.fillRect(0, 0, w, h);
       g.fillStyle = '#c9bfb2'; g.beginPath(); g.moveTo(w / 2, 34); g.lineTo(w / 2 + 26, 70); g.lineTo(w / 2 - 26, 70); g.fill();   // la corona chiquita
-      letras(g, 'KEEP', w / 2, 125, 74, '#d8cfc2'); letras(g, 'CALM', w / 2, 210, 74, '#d8cfc2');
+      letras(g, tr('letrero.keep'), w / 2, 125, 74, '#d8cfc2'); letras(g, tr('letrero.calm'), w / 2, 210, 74, '#d8cfc2');
     });
     enPared(calma, -33.68, 1.9, 12, 'e');
     // La sonrisa pintada en la pared: ojos de punto y una boca enorme y temblorosa (desquiciada 😬)
@@ -847,7 +854,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     const brazo = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 0.06), METAL_OSCURO); brazo.position.y = 0.2; manivela.add(brazo);
     const pomo = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), lambert(0x8a3a33)); pomo.position.y = 0.42; manivela.add(pomo);
     manivela.rotation.x = 0.6;
-    const food = cartel(128, 64, 0.7, 0.35, (g, w, h) => { g.fillStyle = '#b5ab92'; g.fillRect(0, 0, w, h); letras(g, 'FOOD', w / 2, h / 2 + 2, 40, '#2e261b'); });
+    const food = cartel(128, 64, 0.7, 0.35, (g, w, h) => { g.fillStyle = '#b5ab92'; g.fillRect(0, 0, w, h); letras(g, tr('letrero.food'), w / 2, h / 2 + 2, 40, '#2e261b'); });
     enPared(food, mx, y + 1.95, mz + 0.42, 's');
   }
   // ⚫ Grey's Cove (subsuelo 2): cartel STOP, las mesas de White, la caja gigante con hoyos envuelta en cintas DANGER y NO,
@@ -864,7 +871,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
       g.strokeStyle = '#d9d2c8'; g.lineWidth = 8; g.beginPath();
       for (let i = 0; i < 8; i++) { const a = (i + 0.5) / 8 * Math.PI * 2; g.lineTo(w / 2 + Math.cos(a) * 110, w / 2 + Math.sin(a) * 110); }
       g.closePath(); g.stroke();
-      letras(g, 'STOP', w / 2, w / 2 + 6, 84, '#e2dccf');
+      letras(g, tr('letrero.stop'), w / 2, w / 2 + 6, 84, '#e2dccf');
     });
     const placa = new THREE.Mesh(new THREE.CylinderGeometry(0.47, 0.47, 0.04, 8), METAL_OSCURO);
     placa.rotation.x = Math.PI / 2; placa.rotation.y = Math.PI / 8; placa.position.set(-37, y + 2.1, -21); scene.add(placa);
@@ -880,7 +887,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
       g.fillStyle = '#d2cdbb'; g.fillRect(0, 0, w, h); g.fillStyle = '#3a372f';
       for (const [hx, hy, r] of [[20, 16, 4], [44, 40, 5], [70, 18, 3], [92, 44, 4], [110, 22, 3], [32, 50, 3], [80, 30, 2]]) { g.beginPath(); g.arc(hx, hy, r, 0, Math.PI * 2); g.fill(); }
     }) }));
-    const danger = new THREE.MeshLambertMaterial({ map: cintaPeligro('DANGER'), side: THREE.DoubleSide }), no = new THREE.MeshLambertMaterial({ map: cintaPeligro('NO'), side: THREE.DoubleSide });
+    const danger = new THREE.MeshLambertMaterial({ map: cintaPeligro('letrero.danger'), side: THREE.DoubleSide }), no = new THREE.MeshLambertMaterial({ map: cintaPeligro('letrero.no'), side: THREE.DoubleSide });
     const cinta1 = new THREE.Mesh(new THREE.BoxGeometry(4.08, 0.35, 2.68), [danger, danger, danger, danger, danger, danger]); cinta1.position.set(-40, y + 1.4, -29.5); scene.add(cinta1);
     const cinta2 = new THREE.Mesh(new THREE.BoxGeometry(0.4, 2.28, 2.7), [no, no, no, no, no, no]); cinta2.position.set(-40.6, y + 1.1, -29.5); cinta2.rotation.z = 0.3; scene.add(cinta2);
     // Cinta DANGER colgada entre dos postes (cerca de la caja)
@@ -897,7 +904,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     cinta(-45, -45, CZ, -28.5); cinta(-45, -45, -28.5, -31.4); cinta(-35.9, -35.9, CZ, -28.5); cinta(-35.9, -35.9, -28.5, -31.4);
     danger.map.wrapS = THREE.RepeatWrapping; danger.map.repeat.set(1, 1);
     // KEEP OUT en la pared oeste
-    const fuera = cartel(256, 160, 1.9, 1.2, (g, w, h) => { g.fillStyle = '#b5ab92'; g.fillRect(0, 0, w, h); g.strokeStyle = '#3a3630'; g.lineWidth = 8; g.strokeRect(6, 6, w - 12, h - 12); letras(g, 'KEEP', w / 2, 52, 56, '#3a3630'); letras(g, 'OUT!', w / 2, 112, 56, '#3a3630'); });
+    const fuera = cartel(256, 160, 1.9, 1.2, (g, w, h) => { g.fillStyle = '#b5ab92'; g.fillRect(0, 0, w, h); g.strokeStyle = '#3a3630'; g.lineWidth = 8; g.strokeRect(6, 6, w - 12, h - 12); letras(g, tr('letrero.keepOut1'), w / 2, 52, 56, '#3a3630'); letras(g, tr('letrero.keepOut2'), w / 2, 112, 56, '#3a3630'); });
     enPared(fuera, -51.68, 1.8 + y, -24, 'e');
     // La mesa del diario (¿de quién será?)
     const yd = mesaLab(-50, -19.5, y, 1.4, 2.4);
@@ -1118,7 +1125,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
       escondido = e; desdeDonde = { x: ps.pos.x, y: ps.pos.y, z: ps.pos.z };
       camYaw = Math.atan2(e.x - ps.pos.x, e.z - ps.pos.z);   // adentro miras hacia donde estabas (por donde vendrían)
       fpPitch = 0; ps.vel.set(0, 0, 0); dentroEl.hidden = false; guiaEl.hidden = true;
-      dentroEl.querySelector('small').textContent = `🚪 Dentro del armario · ${IS_TOUCH ? 'toca 📦 para salir' : 'B para salir'}`;
+      dentroEl.querySelector('small').textContent = tr('armario.dentro', { como: tr(IS_TOUCH ? 'armario.salirTouch' : 'armario.salirB') });
       return;
     }
     enCaja = true;
@@ -1129,14 +1136,15 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
   function queUsar() {
     if (!loginEl.hidden || oculto()) return null;
     const c = botonCerca(ps.pos);
-    if (c) return { texto: c.abierta ? 'cerrar la puerta' : 'abrir la puerta', hacer: () => { c.abierta = !c.abierta; } };
-    if (mesaLinternas.visible && !tengoLinterna && cercaMesaLinternas()) return { texto: 'agarrar una linterna 🔦', hacer: agarrarLinterna };
+    if (c) return { texto: tr(c.abierta ? 'usar.cerrarPuerta' : 'usar.abrirPuerta'), hacer: () => { c.abierta = !c.abierta; } };
+    if (mesaLinternas.visible && !tengoLinterna && cercaMesaLinternas()) return { texto: tr('usar.linterna'), hacer: agarrarLinterna };
     const iObj = noche ? objetoCerca(noche, ps.pos) : -1;
-    if (iObj >= 0) return { texto: `agarrar ${OBJETOS[nocheDe(noche.n).objeto].emoji}`, hacer: () => agarrar(iObj) };
-    if (cercaComedero() && !platoLleno) return { texto: 'servirle comida a Yellow', hacer: () => { if (red.id !== null) enviar({ tipo: 'alimentar' }); else servirComida(); } };
-    if (enLobby && Math.hypot(ps.pos.x - BALDE.x, ps.pos.z - BALDE.z) < 2) return { texto: 'pintarte 🎨', hacer: abrirPaleta };
+    if (iObj >= 0) return { texto: tr('usar.agarrar', { emoji: OBJETOS[nocheDe(noche.n).objeto].emoji }), hacer: () => agarrar(iObj) };
+    if (cercaComedero() && !platoLleno) return { texto: tr('usar.comida'), hacer: () => { if (red.id !== null) enviar({ tipo: 'alimentar' }); else servirComida(); } };
+    if (enLobby && Math.hypot(ps.pos.x - BALDE.x, ps.pos.z - BALDE.z) < 2) return { texto: tr('usar.pintarte'), hacer: abrirPaleta };
+    if (enLobby && Math.hypot(ps.pos.x - TRADUCTOR.x, ps.pos.z - TRADUCTOR.z) < 2.2) return { texto: tr('usar.traductor'), hacer: abrirTraductor };
     const a = esconditeCerca(ps.pos.x, ps.pos.y, ps.pos.z, escondites, 2.4);
-    if (a) return { texto: a.abierto ? 'cerrar el armario' : 'abrir el armario', hacer: () => { a.abierto = !a.abierto; } };
+    if (a) return { texto: tr(a.abierto ? 'usar.cerrarArmario' : 'usar.abrirArmario'), hacer: () => { a.abierto = !a.abierto; } };
     return null;
   }
   function usarE() { const u = queUsar(); if (u) u.hacer(); }
@@ -1153,12 +1161,12 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
   function updateEscondites(dt) {
     const cerca = !oculto() && loginEl.hidden && esconditeCerca(ps.pos.x, ps.pos.y, ps.pos.z, escondites), u = queUsar();
     avisoEl.hidden = !(cerca || u) || IS_TOUCH;
-    avisoEl.innerHTML = [u && `<kbd>E</kbd> ${u.texto}`, cerca && '<kbd>B</kbd> meterte en el armario'].filter(Boolean).join(' · ');
+    avisoEl.innerHTML = [u && `<kbd>E</kbd> ${u.texto}`, cerca && `<kbd>B</kbd> ${tr('aviso.armario')}`].filter(Boolean).join(' · ');
     usarBtn.hidden = !u; if (u) usarBtn.textContent = `✋ ${u.texto[0].toUpperCase()}${u.texto.slice(1)}`;
     // La puerta del armario gira de a poco hacia abierta o cerrada
     for (const a of escondites) { a.ang += ((a.abierto ? -1.9 : 0) - a.ang) * Math.min(1, dt * 6); a.bisagra.rotation.y = a.ang; }
     cajaBtn.hidden = !loginEl.hidden;
-    cajaBtn.textContent = oculto() ? '📦 Salir' : cerca ? '🚪 Armario' : '📦 Caja';
+    cajaBtn.textContent = tr(oculto() ? 'ui.salir' : cerca ? 'ui.armario' : 'ui.caja');
     body.visible = !enCaja;   // en la caja no se te ve el cuerpo ni los ojos: solo la caja
     for (const o of ojosJugador) o.visible = !enCaja;
     if (escondido) player.visible = false;
@@ -1190,8 +1198,8 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     usarCuenta();   // 🎨 tu color (tus amigos te ven de este color) y tu caja
     loadedLocal = loaded;
     ps.pos.set(spawn.x, spawn.y, spawn.z); ps.vel.set(0, 0, 0); camYaw = Math.PI;   // 🌞 siempre empiezas en el Spawn
-    showToast(loaded ? `¡Hola de nuevo, ${name}!` : `Hola, ${name}. Bienvenido al laboratorio`);
-    guiaSaludo = `¡Hola, ${name}! Soy tu bot guía 🤖. `; guiaMostrar(true);   // al empezar, el cubito aparece a tu lado (el diálogo se abre con ENTER)
+    showToast(tr(loaded ? 'toast.holaDeNuevo' : 'toast.bienvenido', { nombre: name }));
+    guiaSaludo = tr('guia.saludo', { nombre: name }); guiaMostrar(true);   // al empezar, el cubito aparece a tu lado (el diálogo se abre con ENTER)
     conectarRed(name);
     // 🏠 Empiezas en el lobby (para probar: ?noche=3 te lleva directo a esa noche; ?noche=6, a la final)
     if (!ONLINE && pidioNoche >= 1 && pidioNoche <= NOCHE_FINAL) empezarDesdeLobby(pidioNoche); else irAlLobby();
@@ -1205,7 +1213,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     try {
       localStorage.setItem(saveKey(userName), serializeSave({ pos: ps.pos, cuenta }));
     } catch (e) {
-      showToast('No se pudo guardar: este navegador no deja guardar datos', true);
+      showToast(tr('toast.noGuardar'), true);
       return;
     }
     savedEl.classList.add('show');
@@ -1246,7 +1254,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
   }
   function guiaDecir(boton, antes = '') {
     const sala = salaEn(ps.pos.x, ps.pos.y, ps.pos.z);   // 📍 dónde estás (así no hacen falta carteles que tapen la vista)
-    const texto = boton === 'guiaQue' ? (sala ? `📍 Estás en: ${sala.nombre}. ` : '') + textoQueHago('mundo') : GUIA_COMO[IS_TOUCH ? 'touch' : 'teclado'];
+    const texto = boton === 'guiaQue' ? (sala ? tr('guia.estasEn', { sala: tr('sala.' + sala.id) }) : '') + tr('guia.queHago') : tr(IS_TOUCH ? 'guia.comoTouch' : 'guia.comoTeclado');
     guiaTexto.textContent = antes + texto;
     for (const b of guiaEl.querySelectorAll('button')) b.classList.toggle('elegido', b.id === boton);
   }
@@ -1330,31 +1338,31 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
         for (const j of m.jugadores) addFriend(j);
         // En una compu nueva (sin guardado en el navegador) apareces donde te dejó la base de datos
         const n = m.jugadores.length;
-        showToast(n ? `¡Conectado! Hay ${n} amigo${n > 1 ? 's' : ''} jugando` : '¡Conectado! Eres el primero en llegar', false, 3000);
+        showToast(n ? tr('toast.conectadoAmigos', { n, s: plural(n) }) : tr('toast.conectadoPrimero'), false, 3000);
       } else if (m.tipo === 'entra') {
-        addFriend(m); showToast(`${m.nombre} entró al juego`);
+        addFriend(m); showToast(tr('toast.entro', { nombre: m.nombre }));
       } else if (m.tipo === 'pos') {
         const f = red.otros.get(m.id);
-        if (f) { f.body.material.color.setHex(m.color); f.oculto = !!m.oculto; agregarMuestra(f.suave, [m.x, m.y, m.z, m.rot], m.t, performance.now()); }
+        if (f) { f.body.material.color.setHex(m.color); f.oculto = !!m.oculto; f.camino = m.camino || null; agregarMuestra(f.suave, [m.x, m.y, m.z, m.rot], m.t, performance.now()); }
       } else if (m.tipo === 'sale') {
         const f = red.otros.get(m.id);
         if (f) { explode(f); red.otros.delete(m.id); }
-        showToast(`💥 ${m.nombre} se desconectó`, true, 3000);
+        showToast(tr('toast.salio', { nombre: m.nombre }), true, 3000);
       } else if (m.tipo === 'dragones' || m.tipo === 'dragonEvento') {
         mensajeDragones(m);
       } else if (['noche', 'nocheFase', 'plato'].includes(m.tipo)) {
         mensajeNoche(m);
       } else if (m.tipo === 'error') {
         red.error = true;   // (para que al cerrarse no diga "¿el servidor está encendido?")
-        showToast(m.texto, true, 5000);
+        showToast(m.codigo === 'nombreUsado' ? tr('toast.nombreUsado', { nombre: m.nombre }) : m.texto, true, 5000);
       }
     };
     ws.onclose = () => {
       // Si nunca llegó la bienvenida, la sala no existe o el servidor está apagado
-      if (red.id === null) { red.ws = null; if (!red.error) showToast('No se pudo entrar a la sala: ¿el servidor está encendido? Juegas solo', true, 5000); red.error = false; if (!noche && !fiesta) irAlLobby(); return; }
+      if (red.id === null) { red.ws = null; if (!red.error) showToast(tr('toast.sinSala'), true, 5000); red.error = false; if (!noche && !fiesta) irAlLobby(); return; }
       for (const f of red.otros.values()) scene.remove(f.obj);
       red.otros.clear(); red.ws = null; red.id = null; red.dragones = false;   // (sin servidor, tu compu vuelve a mover a los dragones)
-      showToast('Se cortó la conexión con el servidor', true, 4000);
+      showToast(tr('toast.cortado'), true, 4000);
     };
   }
   function updateRed(dt) {
@@ -1362,7 +1370,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     if (red.id !== null && (red.envio -= dt) <= 0) {
       red.envio = Math.max(red.envio + 1 / ENVIOS_POR_SEGUNDO, 0);   // sumar (no reemplazar): así salen 10 por segundo de verdad, no 8
       // Si no te moviste, no hace falta repetirlo 10 veces por segundo: basta una vez por segundo (para que el servidor sepa que sigues ahí)
-      const pos = { tipo: 'pos', x: corto(ps.pos.x), y: corto(ps.pos.y), z: corto(ps.pos.z), rot: corto(ps.facing), color: body.material.color.getHex(), oculto: oculto() ? 1 : 0 };
+      const pos = { tipo: 'pos', x: corto(ps.pos.x), y: corto(ps.pos.y), z: corto(ps.pos.z), rot: corto(ps.facing), color: body.material.color.getHex(), oculto: oculto() ? 1 : 0, camino: cuenta.camino };
       const txt = JSON.stringify(pos);
       pos.t = Math.round(performance.now());   // tu hora: los demás la usan para dibujarte suave (va aparte para que "¿te moviste?" no cambie siempre)
       red.quieto = txt === red.ultimaPos ? (red.quieto || 0) + 1 : 0;
@@ -1426,14 +1434,14 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     const cayeron = red.id === null ? soltar(noche, 'yo') : 0;
     if (cayeron) { noche.objetos.forEach((o, i) => { if (mallasObjetos[i]) mallasObjetos[i].visible = o.estado === 'suelto'; }); pintarContador(); }
     // 💀 ¡SUSTO! Y después: pagas 20 monedas y sigues (desde el spawn), o pierdes la noche y vuelves al lobby
-    asustar(cuerposDragon.get(idDragon), idDragon, def ? def.nombre : 'Un dragón',
-      () => { ps.pos.set(spawn.x, spawn.y, spawn.z); ps.vel.set(0, 0, 0); showToast('🪙 Pagaste: ¡sigues en la noche! (desde el spawn)'); },
+    asustar(cuerposDragon.get(idDragon), idDragon, def ? def.nombre : tr('dragon.alguien'),
+      () => { ps.pos.set(spawn.x, spawn.y, spawn.z); ps.vel.set(0, 0, 0); showToast(tr('toast.pagaste')); },
       perderNoche);
   }
   function perderNoche() {
     if (red.id !== null) red.ignorarNoche = true;   // con amigos: ellos siguen; tú esperas en el lobby (cruzando la puerta vuelves a entrar)
     irAlLobby();
-    showToast('💀 Perdiste la noche. Cruza la puerta para intentarlo otra vez', true, 3500);
+    showToast(tr('toast.perdiste'), true, 3500);
   }
 
   // ---------- 💀 Los sustos: la cámara salta a la cara del dragón, grita y tiembla la pantalla ----------
@@ -1455,8 +1463,8 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     susto.t += dt;
     if (susto.fase === 'susto' && susto.t > 1.3) {
       susto.fase = 'elegir';
-      document.getElementById('perdisteTexto').textContent = `¡${susto.nombre} te atrapó! Tienes ${cuenta.monedas} 🪙`;
-      pagarBtn.textContent = `🪙 Pagar ${COSTO_SEGUIR} y seguir`; pagarBtn.disabled = cuenta.monedas < COSTO_SEGUIR;
+      document.getElementById('perdisteTexto').textContent = tr('perdiste.texto', { nombre: susto.nombre, monedas: cuenta.monedas });
+      pagarBtn.textContent = tr('perdiste.pagar', { costo: COSTO_SEGUIR }); pagarBtn.disabled = cuenta.monedas < COSTO_SEGUIR;
       perdisteEl.hidden = false;
     }
   }
@@ -1557,7 +1565,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
       const quien = m.jugador === red.id ? 'yo' : m.jugador;
       if (m.que === 'alerta') alertaSobre(quien);
       else if (m.que === 'atrapado' && quien === 'yo') atrapado(m.dragon);
-      else if (m.que === 'despierta') showToast('🟡 ¡Yellow se despertó con hambre y salió a buscar comida!', true, 3500);
+      else if (m.que === 'despierta') showToast(tr('toast.yellowHambre'), true, 3500);
     }
   }
   const miraA = new THREE.Vector3();
@@ -1571,7 +1579,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
         if (e.tipo === 'alerta') alertaSobre('yo');
         else if (e.tipo === 'atrapado') atrapado(e.dragon);
         else if (e.tipo === 'come') platoLleno = false;
-        else if (e.tipo === 'despierta') showToast('🟡 ¡Yellow se despertó con hambre y salió a buscar comida!', true, 3500);
+        else if (e.tipo === 'despierta') showToast(tr('toast.yellowHambre'), true, 3500);
       }
     }
     const ahora = performance.now();
@@ -1691,7 +1699,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
   })();
   let tengoLinterna = false;
   const cercaMesaLinternas = () => Math.abs(ps.pos.y - MESA_LINTERNAS.y) < 2 && Math.hypot(ps.pos.x - MESA_LINTERNAS.x, ps.pos.z - MESA_LINTERNAS.z) < MESA_LINTERNAS.radio;
-  function agarrarLinterna() { tengoLinterna = true; linterna.intensity = 4; enMano.visible = true; showToast('🔦 ¡Agarraste una linterna!', false, 1800); }
+  function agarrarLinterna() { tengoLinterna = true; linterna.intensity = 4; enMano.visible = true; showToast(tr('toast.linterna'), false, 1800); }
   function apagon(on) {
     focosApagados = on;
     luzCielo.intensity = on ? 0.16 : 0.55; luzAmbiente.intensity = on ? 0.08 : 0.12;   // (en el apagón queda una penumbra: se ven las siluetas)
@@ -1720,8 +1728,8 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     if (!noche) { contadorEl.hidden = true; return; }
     const def = nocheDe(noche.n), o = OBJETOS[def.objeto], k = entregados(noche), lleva = llevaDe(noche, miId());
     contadorEl.hidden = noche.fase !== 'jugando';
-    document.getElementById('contadorNoche').textContent = `NOCHE ${noche.n}${def.apagon ? ' · APAGÓN' : ''}`;
-    document.getElementById('contadorTexto').textContent = `${o.emoji} ${o.nombre}: ${k} / ${def.cantidad}` + (lleva ? ` · llevas ${lleva}: ¡al Center Lab!` : '');
+    document.getElementById('contadorNoche').textContent = tr('noche.n', { n: noche.n }) + (def.apagon ? tr('noche.apagon') : '');
+    document.getElementById('contadorTexto').textContent = `${o.emoji} ${tr('obj.' + def.objeto)}: ${k} / ${def.cantidad}` + (lleva ? tr('noche.llevas', { n: lleva, lugar: tr('sala.centerLab') }) : '');
   }
   // 🎥 La intro: la cámara recorre el laboratorio mientras el sombrero habla (letra por letra)
   const recorrido = new THREE.CatmullRomCurve3([[-4, 4.5, -27], [-22, 4.5, -24], [-24, 4.5, -6], [-10, 4.5, 4], [6, 4.5, 6], [17, 4.5, 2], [12, 4.5, 22], [24, 4.5, 2], [20, 4.5, -18], [-2, 4.5, -10], [-4, 3, -21]].map(p => new THREE.Vector3(...p)));
@@ -1764,7 +1772,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     // La intro (con la voz del sombrero)
     const enIntro = noche.fase === 'intro';
     introEl.hidden = !enIntro;
-    if (enIntro) introTexto.textContent = nocheDe(noche.n).mensaje.slice(0, Math.floor(noche.tiempo * 9));   // letra por letra, despacito
+    if (enIntro) introTexto.textContent = tr('hat.noche' + noche.n).slice(0, Math.floor(noche.tiempo * 9));   // letra por letra, despacito
     if (!conServidor) {
       const antes = noche.fase;
       tickNoche(noche, dt);
@@ -1787,7 +1795,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
   }
   function avisoEntrega(k) {
     const def = nocheDe(noche.n);
-    showToast(def.maquina ? `🔋 ¡${k} batería${k > 1 ? 's' : ''} conectada${k > 1 ? 's' : ''} a la máquina!` : `${OBJETOS[def.objeto].emoji} ¡Entregaste ${k}!`, false, 1800);
+    showToast(def.maquina ? tr('toast.baterias', { n: k, s: plural(k), ies: ies(k) }) : tr('toast.entregaste', { emoji: OBJETOS[def.objeto].emoji, n: k }), false, 1800);
   }
   // E junto a un objeto: lo agarras
   function agarrar(i) {
@@ -1796,7 +1804,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
   }
   function cambioDeFase() {
     pintarContador();
-    if (noche.fase === 'ganada') { cartelEl.textContent = `¡NOCHE ${noche.n} COMPLETADA!`; cartelEl.hidden = false; cuenta = ganarNoche(cuenta); autoguardar(); }   // 🪙 +10 monedas, en secreto
+    if (noche.fase === 'ganada') { cartelEl.textContent = tr('noche.completada', { n: noche.n }); cartelEl.hidden = false; cuenta = ganarNoche(cuenta); autoguardar(); }   // 🪙 +10 monedas, en secreto
   }
   // Lo que llega del servidor (jugando con amigos)
   function mensajeNoche(m) {
@@ -1838,7 +1846,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     for (let i = 0; i < 5; i++) { silla(103 + i * 0.9, 11.8); silla(118 + i * 0.9, 11.8); }
     // Tanques de muestras (vacíos y con líquido) como decoración, y plantas en tubos de vidrio
     tanque(103, 3, 0, 0x7fa0a8); tanque(123, 3, 0, 0x9a8fb0);
-    for (const [x, z] of [[124.8, -12.5], [101.2, 12.5]]) {
+    for (const [x, z] of [[101.2, 12.5]]) {
       bloque(x - 0.35, x + 0.35, 0, 0.5, z - 0.35, z + 0.35, METAL, { solido: true });
       bloque(x - 0.3, x + 0.3, 0.5, 1.9, z - 0.3, z + 0.3, VIDRIO, { solido: false });
       const hoja = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), lambert(0x5f8a5a)); hoja.scale.y = 1.6; hoja.position.set(x, 1.2, z); scene.add(hoja);
@@ -1846,7 +1854,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     // El letrero del laboratorio y la puerta grande para entrar (con su marco que brilla)
     const letrero = cartel(512, 128, 7, 1.75, (g, w, h) => {
       g.fillStyle = '#26363a'; g.fillRect(0, 0, w, h);
-      letras(g, 'COLOR DRAGONS', w / 2, 58, 64, '#e9efe8'); letras(g, 'LABORATORY', w / 2, 104, 30, '#9fbfc4');
+      letras(g, 'COLOR DRAGONS', w / 2, 58, 64, '#e9efe8'); letras(g, tr('letrero.laboratorio'), w / 2, 104, 30, '#9fbfc4');
     });
     enPared(letrero, 113, 4.3, LOBBY.z0 + 0.32, 's');
     const marco = new THREE.MeshBasicMaterial({ color: 0x9fe3c8 });
@@ -1860,8 +1868,8 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
   function pintarPantallaLobby() {
     const c = pantallaLobby.material.map.image, g = c.getContext('2d'), n = progreso();
     g.fillStyle = '#10181a'; g.fillRect(0, 0, c.width, c.height);
-    letras(g, n === NOCHE_FINAL ? 'NOCHE FINAL' : `NOCHE ${n}`, c.width / 2, 62, 64, '#9fe3c8');
-    letras(g, 'cruza la puerta para empezar', c.width / 2, 124, 28, '#7f9a9c', 'system-ui, sans-serif');
+    letras(g, n === NOCHE_FINAL ? tr('noche.final') : tr('noche.n', { n }), c.width / 2, 62, 64, '#9fe3c8');
+    letras(g, tr('lobby.cruza'), c.width / 2, 124, 28, '#7f9a9c', 'system-ui, sans-serif');
     pantallaLobby.material.map.needsUpdate = true;
   }
   // Tu avance: la noche que te toca. Vive solo mientras el juego está abierto: cada vez que entras, empiezas en la noche 1 (aunque hayas guardado)
@@ -1908,6 +1916,50 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
   }
   paletaEl.querySelector('.cerrar').addEventListener('click', e => { paletaEl.hidden = true; e.currentTarget.blur(); });
 
+  // ---------- 🌍 El Traductor: un robot con banderas del mundo en la cara (van cambiando). E abre el panel de idiomas ----------
+  const TRADUCTOR = { x: 122.5, z: -11.8 };
+  const BANDERAS = [
+    (g, w, h) => { g.fillStyle = '#c60b1e'; g.fillRect(0, 0, w, h); g.fillStyle = '#ffc400'; g.fillRect(0, h / 4, w, h / 2); },   // España
+    (g, w, h) => { g.fillStyle = '#012169'; g.fillRect(0, 0, w, h); g.strokeStyle = '#fff'; g.lineWidth = h / 5; g.beginPath(); g.moveTo(0, 0); g.lineTo(w, h); g.moveTo(w, 0); g.lineTo(0, h); g.stroke(); g.strokeStyle = '#c8102e'; g.lineWidth = h / 14; g.stroke(); g.fillStyle = '#fff'; g.fillRect(w / 2 - h / 6, 0, h / 3, h); g.fillRect(0, h / 3, w, h / 3); g.fillStyle = '#c8102e'; g.fillRect(w / 2 - h / 10, 0, h / 5, h); g.fillRect(0, h * 0.4, w, h / 5); },   // Reino Unido
+    (g, w, h) => { [0x006847, 0xffffff, 0xce1126].forEach((c, i) => { g.fillStyle = '#' + c.toString(16).padStart(6, '0'); g.fillRect(i * w / 3, 0, w / 3 + 1, h); }); g.fillStyle = '#8c5a2b'; g.beginPath(); g.arc(w / 2, h / 2, h / 8, 0, Math.PI * 2); g.fill(); },   // México
+    (g, w, h) => { g.fillStyle = '#fcd116'; g.fillRect(0, 0, w, h / 2); g.fillStyle = '#003893'; g.fillRect(0, h / 2, w, h / 4); g.fillStyle = '#ce1126'; g.fillRect(0, h * 0.75, w, h / 4); },   // Colombia
+    (g, w, h) => { for (let i = 0; i < 13; i++) { g.fillStyle = i % 2 ? '#fff' : '#b22234'; g.fillRect(0, i * h / 13, w, h / 13 + 1); } g.fillStyle = '#3c3b6e'; g.fillRect(0, 0, w * 0.42, h * 0.54); },   // Estados Unidos
+    (g, w, h) => { ['#0055a4', '#fff', '#ef4135'].forEach((c, i) => { g.fillStyle = c; g.fillRect(i * w / 3, 0, w / 3 + 1, h); }); },   // Francia
+    (g, w, h) => { g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.fillStyle = '#bc002d'; g.beginPath(); g.arc(w / 2, h / 2, h * 0.3, 0, Math.PI * 2); g.fill(); },   // Japón
+    (g, w, h) => { g.fillStyle = '#009c3b'; g.fillRect(0, 0, w, h); g.fillStyle = '#ffdf00'; g.beginPath(); g.moveTo(w / 2, h * 0.1); g.lineTo(w * 0.9, h / 2); g.lineTo(w / 2, h * 0.9); g.lineTo(w * 0.1, h / 2); g.fill(); g.fillStyle = '#002776'; g.beginPath(); g.arc(w / 2, h / 2, h * 0.2, 0, Math.PI * 2); g.fill(); },   // Brasil
+    (g, w, h) => { g.fillStyle = '#74acdf'; g.fillRect(0, 0, w, h); g.fillStyle = '#fff'; g.fillRect(0, h / 3, w, h / 3); g.fillStyle = '#f6b40e'; g.beginPath(); g.arc(w / 2, h / 2, h / 10, 0, Math.PI * 2); g.fill(); },   // Argentina
+  ];
+  const traductor = (() => {
+    const g = new THREE.Group(); g.position.set(TRADUCTOR.x, 0, TRADUCTOR.z); g.rotation.y = Math.atan2(113 - TRADUCTOR.x, 0 - TRADUCTOR.z); scene.add(g);   // (mira al centro del lobby)
+    const metal = lambert(0xc9d2d6), oscuro = lambert(0x3c4145);
+    const cuerpo = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.1, 0.6), metal); cuerpo.position.y = 0.95; g.add(cuerpo);
+    for (const lado of [-1, 1]) { const pata = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.45, 10), oscuro); pata.position.set(lado * 0.25, 0.22, 0); g.add(pata); const brazo = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.8, 8), oscuro); brazo.position.set(lado * 0.55, 1.0, 0); brazo.rotation.z = lado * 0.25; g.add(brazo); }
+    const cabeza = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.8, 0.6), metal); cabeza.position.y = 1.95; g.add(cabeza);
+    // la pantalla de la cara: muestra una bandera, y cada segundo y medio cambia a otra
+    const c = document.createElement('canvas'); c.width = 96; c.height = 64;
+    const tex = new THREE.CanvasTexture(c);
+    const pantalla = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.6), new THREE.MeshBasicMaterial({ map: tex })); pantalla.position.set(0, 1.95, 0.31); g.add(pantalla);
+    const antena = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.35, 6), oscuro); antena.position.y = 2.52; g.add(antena);
+    const luz = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), new THREE.MeshBasicMaterial({ color: 0x5ad1ff })); luz.position.y = 2.72; g.add(luz);
+    const letrero = cartel(256, 64, 1.6, 0.4, (gg, w, h) => { gg.fillStyle = '#20343c'; gg.fillRect(0, 0, w, h); letras(gg, tr('letrero.traductor'), w / 2, h / 2 + 2, 40, '#9fe3ff'); });
+    letrero.position.set(0, 3.05, 0); g.add(letrero);
+    return { tex, canvas: c, luz, cabeza, i: -1 };
+  })();
+  function moverTraductor() {
+    const i = Math.floor(performance.now() / 1500) % BANDERAS.length;
+    if (i !== traductor.i) { traductor.i = i; const g = traductor.canvas.getContext('2d'); BANDERAS[i](g, 96, 64); traductor.tex.needsUpdate = true; }
+    traductor.cabeza.rotation.y = Math.sin(performance.now() / 900) * 0.15;
+  }
+  const traductorPanel = document.getElementById('traductorPanel');
+  function abrirTraductor() {
+    for (const b of traductorPanel.querySelectorAll('[data-idioma]')) b.classList.toggle('elegido', b.dataset.idioma === idioma());
+    traductorPanel.hidden = false; paletaEl.hidden = true; tiendaEl.hidden = true;
+  }
+  traductorPanel.querySelector('.cerrar').addEventListener('click', e => { traductorPanel.hidden = true; e.currentTarget.blur(); });
+  for (const b of traductorPanel.querySelectorAll('[data-idioma]')) b.addEventListener('click', e => {
+    cambiarIdioma(b.dataset.idioma); abrirTraductor(); e.currentTarget.blur(); showToast(tr('traductor.listo'));
+  });
+
   // ---------- 🛒 La tienda de cajas (en el rincón del lobby). Si no te alcanza, ¡te echan volando! ----------
   const TIENDA = { x0: LOBBY.x0, x1: 105, z0: LOBBY.z0, z1: -8 };
   (() => {
@@ -1919,50 +1971,79 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     tapete.rotation.x = -Math.PI / 2; tapete.position.set((TIENDA.x0 + TIENDA.x1) / 2, 0.011, (TIENDA.z0 + TIENDA.z1) / 2); scene.add(tapete);
     const letrero = cartel(512, 128, 4.2, 1.05, (g, w, h) => {
       g.fillStyle = '#3a2a4a'; g.fillRect(0, 0, w, h);
-      letras(g, 'TIENDA DE CAJAS', w / 2, 62, 50, '#ffd76a'); letras(g, '📦 🌌', w / 2, 108, 30, '#ffffff', 'system-ui, sans-serif');
+      letras(g, tr('letrero.tiendaCajas'), w / 2, 62, 50, '#ffd76a'); letras(g, '📦 🌌', w / 2, 108, 30, '#ffffff', 'system-ui, sans-serif');
     });
     enPared(letrero, 102.6, 3.6, LOBBY.z0 + 0.32, 's');
     // La caja espacial de muestra, encima del mostrador (girando)
     const muestra = cajaCarton(); muestra.obj.visible = true; vestirCaja(muestra, 'espacial'); muestra.obj.scale.setScalar(0.5); muestra.obj.position.set(100.8, 1.18, -11); scene.add(muestra.obj);
     tiendaMuestra = muestra.obj;
   })();
+  // ---------- ✨ La tienda de caminos (al lado de la de cajas, contra la misma pared) ----------
+  const TIENDA_CAMINOS = { x0: LOBBY.x0, x1: 105, z0: -7, z1: -1 };
+  (() => {
+    const madera = lambert(0x3f5a73), borde = lambert(0x58e0ff);
+    bloque(100.2, 101.4, 0, 1.1, -6.6, -1.4, madera);
+    bloque(100.1, 101.5, 1.1, 1.18, -6.7, -1.3, borde, { solido: false });
+    const tapete = new THREE.Mesh(new THREE.PlaneGeometry(TIENDA_CAMINOS.x1 - TIENDA_CAMINOS.x0, TIENDA_CAMINOS.z1 - TIENDA_CAMINOS.z0), lambert(0x24465c));
+    tapete.rotation.x = -Math.PI / 2; tapete.position.set((TIENDA_CAMINOS.x0 + TIENDA_CAMINOS.x1) / 2, 0.011, (TIENDA_CAMINOS.z0 + TIENDA_CAMINOS.z1) / 2); scene.add(tapete);
+    const letrero = cartel(512, 128, 4, 1, (g, w, h) => {
+      g.fillStyle = '#16303f'; g.fillRect(0, 0, w, h);
+      letras(g, tr('letrero.tiendaCaminos'), w / 2, 62, 46, '#7df9ff'); letras(g, '✨ 🔥 ⚡', w / 2, 108, 30, '#ffffff', 'system-ui, sans-serif');
+    });
+    enPared(letrero, LOBBY.x0 + 0.32, 3.4, -4, 'e');
+  })();
+
+  // Las dos tiendas usan la misma ventana: modo 'cajas' o 'caminos'
   const tiendaEl = document.getElementById('tienda');
-  let enTienda = false;
-  const dentroTienda = () => enLobby && ps.pos.x < TIENDA.x1 && ps.pos.z < TIENDA.z1 && ps.pos.y < 1;
+  let enTienda = null, tiendaModo = 'cajas';
+  const dentroDe = r => enLobby && ps.pos.x > r.x0 && ps.pos.x < r.x1 && ps.pos.z > r.z0 && ps.pos.z < r.z1 && ps.pos.y < 1;
+  const MUESTRAS = {
+    carton: '#b58a55',
+    espacial: 'radial-gradient(circle at 30% 30%, #fff 0 2px, transparent 3px), radial-gradient(circle at 70% 60%, #fff6c8 0 3px, transparent 4px), radial-gradient(circle at 45% 80%, #cfe3ff 0 1.5px, transparent 2.5px), #05050a',
+    regalo: 'linear-gradient(90deg, transparent 42%, #e8bf3a 42% 58%, transparent 58%), linear-gradient(transparent 42%, #e8bf3a 42% 58%, transparent 58%), #c3202b',
+    playa: 'linear-gradient(#9fd8f2 0 35%, #2f8fd0 35% 62%, #e9cf8f 62%)',
+    piedra: 'radial-gradient(circle at 38% 52%, #111 0 2.5px, transparent 3px), radial-gradient(circle at 62% 52%, #111 0 2.5px, transparent 3px), radial-gradient(ellipse at 50% 100%, #5c64a6 0 62%, transparent 63%)',
+    amarillo: 'linear-gradient(100deg, #2b3b44 0 30%, #ffd60a 30% 45%, #2b3b44 45% 55%, #ffd60a 55% 70%, #2b3b44 70%)',
+    fuego: 'radial-gradient(ellipse at 50% 85%, #ffd23f 0 18%, #ff8c00 19% 38%, #ff4500 39% 55%, transparent 56%), #2b1a14',
+    electrico: 'linear-gradient(120deg, transparent 40%, #7df9ff 40% 46%, transparent 46%), linear-gradient(60deg, transparent 48%, #ffffff 48% 53%, transparent 53%), #10202c',
+  };
+  function filaTienda(lista, { id, precio, nombre, tengo, puesto, alComprar, alPoner, alQuitar }) {
+    const fila = document.createElement('div'); fila.className = 'itemTienda';
+    const m = document.createElement('div'); m.className = 'muestra'; m.style.background = MUESTRAS[id] || '#777';
+    const n = document.createElement('div'); n.className = 'nombre'; n.textContent = nombre + (precio ? ` · ${precio} 🪙` : '');
+    const b = document.createElement('button'); b.type = 'button';
+    if (puesto && alQuitar) { b.textContent = tr('tienda.quitar'); b.addEventListener('click', () => { alQuitar(); b.blur(); }); }
+    else { b.textContent = puesto ? tr(tiendaModo === 'cajas' ? 'tienda.puesta' : 'tienda.puesto') : tengo ? tr(tiendaModo === 'cajas' ? 'tienda.ponerte' : 'tienda.ponerteCamino') : tr('tienda.comprar'); b.disabled = puesto;
+      b.addEventListener('click', () => { if (tengo) alPoner(); else alComprar(); b.blur(); }); }
+    fila.append(m, n, b); lista.appendChild(fila);
+  }
   function pintarTienda() {
-    document.getElementById('tiendaMonedas').textContent = `Tienes ${cuenta.monedas} 🪙`;
+    document.getElementById('tiendaTitulo').textContent = tr(tiendaModo === 'cajas' ? 'tienda.titulo' : 'tiendaCaminos.titulo');
+    document.getElementById('tiendaMonedas').textContent = tr('tienda.tienes', { n: cuenta.monedas });
     const lista = document.getElementById('tiendaCajas'); lista.innerHTML = '';
-    for (const c of CAJAS) {
-      const tengo = cuenta.cajas.includes(c.id), puesta = cuenta.caja === c.id;
-      const fila = document.createElement('div'); fila.className = 'itemTienda';
-      const m = document.createElement('div'); m.className = 'muestra';
-      m.style.background = {
-        espacial: 'radial-gradient(circle at 30% 30%, #fff 0 2px, transparent 3px), radial-gradient(circle at 70% 60%, #fff6c8 0 3px, transparent 4px), radial-gradient(circle at 45% 80%, #cfe3ff 0 1.5px, transparent 2.5px), #05050a',
-        regalo: 'linear-gradient(90deg, transparent 42%, #e8bf3a 42% 58%, transparent 58%), linear-gradient(transparent 42%, #e8bf3a 42% 58%, transparent 58%), #c3202b',
-        playa: 'linear-gradient(#9fd8f2 0 35%, #2f8fd0 35% 62%, #e9cf8f 62%)',
-        piedra: 'radial-gradient(circle at 38% 52%, #111 0 2.5px, transparent 3px), radial-gradient(circle at 62% 52%, #111 0 2.5px, transparent 3px), radial-gradient(ellipse at 50% 100%, #5c64a6 0 62%, transparent 63%)',
-      }[c.id] || '#b58a55';
-      const n = document.createElement('div'); n.className = 'nombre'; n.textContent = c.nombre + (c.precio ? ` · ${c.precio} 🪙` : '');
-      const b = document.createElement('button'); b.type = 'button';
-      b.textContent = puesta ? 'Puesta ✓' : tengo ? 'Ponértela' : 'Comprar'; b.disabled = puesta;
-      b.addEventListener('click', () => {
-        if (tengo) cuenta = ponerCaja(cuenta, c.id);
-        else { const r = comprar(cuenta, c.id); if (!r.ok) { showToast('No te alcanza 🪙', true); return; } cuenta = r.cuenta; showToast(`¡Compraste la ${c.nombre}! B para ponértela 📦`); }
-        usarCuenta(); autoguardar(); pintarTienda(); b.blur();
-      });
-      fila.append(m, n, b); lista.appendChild(fila);
-    }
+    const listo = () => { usarCuenta(); autoguardar(); pintarTienda(); };
+    if (tiendaModo === 'cajas') for (const c of CAJAS) filaTienda(lista, {
+      id: c.id, precio: c.precio, nombre: tr('caja.' + c.id), tengo: cuenta.cajas.includes(c.id), puesto: cuenta.caja === c.id,
+      alPoner: () => { cuenta = ponerCaja(cuenta, c.id); listo(); },
+      alComprar: () => { const r = comprar(cuenta, c.id); if (!r.ok) { showToast(tr('tienda.noAlcanza'), true); return; } cuenta = r.cuenta; showToast(tr('tienda.compraste', { nombre: tr('caja.' + c.id) })); listo(); },
+    });
+    else for (const c of CAMINOS) filaTienda(lista, {
+      id: c.id, precio: c.precio, nombre: tr('camino.' + c.id), tengo: cuenta.caminos.includes(c.id), puesto: cuenta.camino === c.id,
+      alPoner: () => { cuenta = ponerCamino(cuenta, c.id); listo(); },
+      alQuitar: () => { cuenta = ponerCamino(cuenta, null); listo(); },
+      alComprar: () => { const r = comprarCamino(cuenta, c.id); if (!r.ok) { showToast(tr('tienda.noAlcanza'), true); return; } cuenta = r.cuenta; showToast(tr('tienda.comprasteCamino', { nombre: tr('camino.' + c.id) })); listo(); },
+    });
   }
   tiendaEl.querySelector('.cerrar').addEventListener('click', e => { tiendaEl.hidden = true; e.currentTarget.blur(); });
-  // Cada cuadro: ¿entraste a la tienda? Si te alcanza, se abre; si no, el tendero te lanza afuera
+  // Cada cuadro: ¿entraste a una tienda? Si te alcanza, se abre; si no, el tendero te lanza afuera
   function revisarTienda(dt) {
     if (tiendaMuestra) tiendaMuestra.rotation.y += dt;
-    const dentro = dentroTienda();
-    if (dentro && !enTienda) {
-      if (puedeEntrar(cuenta)) { pintarTienda(); tiendaEl.hidden = false; paletaEl.hidden = true; }   // (una sola ventana a la vez)
+    const dentro = dentroDe(TIENDA) ? 'cajas' : dentroDe(TIENDA_CAMINOS) ? 'caminos' : null;
+    if (dentro && dentro !== enTienda) {
+      if (dentro === 'cajas' ? puedeEntrar(cuenta) : puedeEntrarCaminos(cuenta)) { tiendaModo = dentro; pintarTienda(); tiendaEl.hidden = false; paletaEl.hidden = true; traductorPanel.hidden = true; }   // (una sola ventana a la vez)
       else {
-        ps.vel.x = 15; ps.vel.z = 11; ps.vel.y = 9; ps.onGround = false;   // ¡FUERA! (sales volando unos metros)
-        showToast('🛒 ¡Fuera de mi tienda! No tienes suficientes monedas', true, 2600);
+        ps.vel.x = 15; ps.vel.z = dentro === 'cajas' ? 11 : 0; ps.vel.y = 9; ps.onGround = false;   // ¡FUERA! (sales volando unos metros)
+        showToast(tr('tienda.fuera'), true, 2600);
       }
     }
     if (!dentro && enTienda) tiendaEl.hidden = true;
@@ -1970,6 +2051,94 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     // La paleta se cierra si te alejas del balde (o sales del lobby)
     if (!paletaEl.hidden && (!enLobby || Math.hypot(ps.pos.x - BALDE.x, ps.pos.z - BALDE.z) > 3)) paletaEl.hidden = true;
   }
+
+  // ---------- ✨ Los caminos (trails): chispitas que vas dejando al caminar (tú y tus amigos) ----------
+  //   amarillo → manchitas amarillas en el piso · fuego → llamitas que suben · eléctrico → rayitos celestes que parpadean
+  const chispas = [], libres = { amarillo: [], fuego: [], electrico: [] };
+  const geoPlano = new THREE.PlaneGeometry(1, 1), geoRayo = new THREE.BoxGeometry(0.04, 0.04, 0.55);
+  const COLORES_FUEGO = [0xff4500, 0xff8c00, 0xffd23f], COLORES_RAYO = [0x7df9ff, 0xffffff, 0x3fb8ff];
+  function chispa(tipo, x, y, z) {
+    let c = libres[tipo].pop();
+    if (!c) {
+      const brillo = tipo !== 'amarillo';
+      const mat = new THREE.MeshBasicMaterial({ color: 0xffd60a, transparent: true, depthWrite: false, blending: brillo ? THREE.AdditiveBlending : THREE.NormalBlending, side: THREE.DoubleSide });
+      const m = tipo === 'fuego' ? new THREE.Sprite(new THREE.SpriteMaterial({ color: 0xff8c00, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })) : new THREE.Mesh(tipo === 'electrico' ? geoRayo : geoPlano, mat);
+      scene.add(m); c = { m, tipo };
+    }
+    const m = c.m; m.visible = true;
+    if (tipo === 'amarillo') {
+      m.rotation.set(-Math.PI / 2, 0, Math.random() * 3); m.position.set(x + (Math.random() - 0.5) * 0.2, y + 0.03, z + (Math.random() - 0.5) * 0.2); m.scale.set(0.5, 0.5, 1);
+      c.vida = c.max = 1.6; c.vy = 0;
+    } else if (tipo === 'fuego') {
+      m.material.color.setHex(COLORES_FUEGO[Math.floor(Math.random() * 3)]);
+      m.position.set(x + (Math.random() - 0.5) * 0.5, y + 0.1 + Math.random() * 0.3, z + (Math.random() - 0.5) * 0.5);
+      c.vida = c.max = 0.55 + Math.random() * 0.3; c.vy = 1.2 + Math.random() * 1.2; c.tam = 0.3 + Math.random() * 0.25;
+    } else {
+      m.material.color.setHex(COLORES_RAYO[Math.floor(Math.random() * 3)]);
+      m.position.set(x + (Math.random() - 0.5) * 0.7, y + Math.random() * 1.4, z + (Math.random() - 0.5) * 0.7);
+      m.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
+      c.vida = c.max = 0.18 + Math.random() * 0.15; c.vy = 0;
+    }
+    chispas.push(c);
+  }
+  // 🎀 La cinta: sale de tu ESPALDA y se estira detrás de ti mientras caminas (como en los juegos de velocidad).
+  // Guarda los últimos puntos por donde pasó tu espalda; cada cuadro arma una tira con ellos: la punta nueva pegada a ti,
+  // y la cola se va bajando hacia el piso y se hace transparente hasta desaparecer
+  const CINTA = { puntos: 48, vida: 0.75, ancho: 0.85, cada: 0.12 };   // (el eléctrico es más finito: ver ANCHO_CINTA)
+  const ANCHO_CINTA = { amarillo: 1, fuego: 1, electrico: 0.45 };
+  const COLOR_CINTA = { amarillo: [1, 0.84, 0.05], fuego: [1, 0.45, 0.05], electrico: [0.45, 0.95, 1] };
+  function nuevaCinta(tipo) {
+    const n = CINTA.puntos, geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 2 * 3), 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(n * 2 * 4), 4));
+    const idx = []; for (let i = 0; i < n - 1; i++) { const a = i * 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } geo.setIndex(idx);
+    const mat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: tipo === 'amarillo' ? THREE.NormalBlending : THREE.AdditiveBlending });
+    const m = new THREE.Mesh(geo, mat); m.frustumCulled = false; scene.add(m);
+    return { tipo, m, pts: [] };
+  }
+  // quien: { cinta } (tú o un amigo) · x, y, z: dónde está · rot: hacia dónde mira
+  function moverCinta(quien, tipo, x, y, z, rot, dt) {
+    if (quien.cinta && quien.cinta.tipo !== tipo) { scene.remove(quien.cinta.m); quien.cinta.m.geometry.dispose(); quien.cinta = null; }
+    if (!tipo) return;
+    if (!quien.cinta) quien.cinta = nuevaCinta(tipo);
+    const c = quien.cinta, ahora = performance.now() / 1000;
+    const espalda = { x: x - Math.sin(rot) * 0.35, y: y + 0.95, z: z - Math.cos(rot) * 0.35, t: ahora };
+    const ult = c.pts[0];
+    if (ult && Math.hypot(espalda.x - ult.x, espalda.z - ult.z) > 3) c.pts.length = 0;   // (se teletransportó: empezar otra cinta)
+    if (!ult || Math.hypot(espalda.x - ult.x, espalda.z - ult.z) > CINTA.cada) c.pts.unshift(espalda); else Object.assign(ult, { x: espalda.x, y: espalda.y, z: espalda.z });
+    while (c.pts.length > CINTA.puntos || (c.pts.length && ahora - c.pts[c.pts.length - 1].t > CINTA.vida)) c.pts.pop();
+    // Armar la tira
+    const pos = c.m.geometry.attributes.position.array, col = c.m.geometry.attributes.color.array, [r, g, b] = COLOR_CINTA[tipo];
+    for (let i = 0; i < CINTA.puntos; i++) {
+      const p = c.pts[Math.min(i, c.pts.length - 1)] || espalda, q = c.pts[Math.min(i + 1, c.pts.length - 1)] || p;
+      const edad = Math.min(1, (ahora - p.t) / CINTA.vida), vivo = i < c.pts.length ? 1 - edad : 0;
+      let dx = p.x - q.x, dz = p.z - q.z; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;
+      const w = CINTA.ancho * ANCHO_CINTA[tipo] * (0.55 + 0.45 * (1 - edad)) / 2;
+      const alto = p.y - Math.min(1, edad * 2.5) * 0.8;   // la cola baja hacia el piso
+      let zig = 0; if (tipo === 'electrico') zig = (i % 2 ? 1 : -1) * (0.15 + Math.random() * 0.3);   // (zigzag que tiembla: un rayo)
+      const ox = -dz, oz = dx;
+      pos.set([p.x + ox * (w + zig), alto, p.z + oz * (w + zig), p.x - ox * (w - zig), alto, p.z - oz * (w - zig)], i * 6);
+      const brillo = tipo === 'fuego' ? 1 - edad * 0.6 : 1;   // el fuego se pone más rojo atrás
+      col.set([r, g * brillo, b, vivo * 0.9, r, g * brillo, b, vivo * 0.9], i * 8);
+    }
+    c.m.geometry.attributes.position.needsUpdate = true; c.m.geometry.attributes.color.needsUpdate = true;
+    // el fuego suelta llamitas desde la espalda; el eléctrico parpadea (la cinta entera se prende y apaga un poquito)
+    if (tipo === 'fuego' && c.pts.length > 3 && Math.random() < dt * 25) chispa(tipo, espalda.x, espalda.y - 0.4, espalda.z);
+    if (tipo === 'electrico') c.m.material.opacity = Math.random() < 0.25 ? 0.35 : 1;
+  }
+  const yoCamino = {};
+  function updateCaminos(dt) {
+    moverCinta(yoCamino, oculto() || !loginEl.hidden || !player.visible ? null : cuenta.camino, ps.pos.x, ps.pos.y, ps.pos.z, ps.facing, dt);
+    for (const f of red.otros.values()) moverCinta(f, f.oculto ? null : f.camino, f.obj.position.x, f.obj.position.y, f.obj.position.z, f.look ? f.look.rotation.y : 0, dt);
+    for (let i = chispas.length - 1; i >= 0; i--) {
+      const c = chispas[i]; c.vida -= dt;
+      if (c.vida <= 0) { c.m.visible = false; libres[c.tipo].push(c); chispas.splice(i, 1); continue; }
+      const k = c.vida / c.max;
+      if (c.tipo === 'fuego') { c.m.position.y += c.vy * dt; c.m.scale.setScalar(c.tam * k); c.m.material.opacity = k; }
+      else c.m.material.opacity = Math.random() < 0.5 ? 1 : 0.3;   // (los rayos parpadean)
+    }
+  }
+
   // Cruzar la puerta del lobby → empieza la noche que te toca
   function revisarPuertaLobby() {
     if (!enLobby || Math.abs(ps.pos.x - PUERTA_LOBBY.x) > PUERTA_LOBBY.ancho / 2 || ps.pos.z > LOBBY.z0 + 1.1) return;
@@ -2147,7 +2316,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
   }
   let cayendo = -1, bajandoRampa = -1, compuertaCerrada = false;
   const camaraFinal = new THREE.CatmullRomCurve3([[163, 3, 6], [166, 3.5, -10], [175, 4, -6], [186, 4.5, 0], [192, 4, -9], [199, 4, 4], [199, 6, -10], [210, 6.5, -8], [164, 2.8, 6]].map(p => new THREE.Vector3(...p)));
-  const bonk = () => showToast('💥 ¡BONK!', true, 1200);
+  const bonk = () => showToast(tr('toast.bonk'), true, 1200);
   // Cada cuadro de la noche final
   function updateFiesta(dt) {
     if (!fiesta) return false;
@@ -2169,7 +2338,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     if (g.modo === 'dormir') cg.abajo.rotation.x = 0;
     // Las etapas
     if (f.fase === 'intro') {
-      introEl.hidden = false; introTexto.textContent = F.MENSAJE_INICIO.slice(0, Math.floor(f.tiempo * 9));
+      introEl.hidden = false; introTexto.textContent = tr('hat.inicio').slice(0, Math.floor(f.tiempo * 9));
       const u = Math.min(1, f.tiempo / F.DURACION.intro);
       camera.position.copy(camaraFinal.getPointAt(u)); camera.lookAt(camaraFinal.getPointAt(Math.min(1, u + 0.04), _mira));
       if (f.tiempo >= F.DURACION.intro) { f.fase = 'fiesta'; f.tiempo = 0; introEl.hidden = true; }
@@ -2183,12 +2352,12 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     if (f.fase === 'fiesta' && F.enElDescanso(ps.pos)) {
       f.fase = 'bloques'; cayendo = 0;
       solidoCompuerta.top = -1000; solidoCompuerta.bottom = -1001;
-      showToast('📦 ¡Se abrió la compuerta! Entra y saca las cajas de encima de la escotilla', false, 4000);
+      showToast(tr('toast.compuerta'), false, 4000);
     }
     // Al entrar al cuarto de las cajas, la compuerta se cierra detrás de ti
     if (f.fase === 'bloques' && !compuertaCerrada && F.enCuartoCajas(ps.pos)) {
       compuertaCerrada = true; solidoCompuerta.top = 6; solidoCompuerta.bottom = 3;
-      showToast(`🚪 ¡La puerta se cerró detrás de ti! Quedan ${F.cajasQueTapan(f)} cajas encima de la escotilla`, true, 3500);
+      showToast(tr('toast.puertaCerro', { n: F.cajasQueTapan(f) }), true, 3500);
     }
     if (f.fase === 'bloques') empujarCajas(dt);
     if (f.fase === 'bloques' && F.escotillaLibre(f)) {
@@ -2198,7 +2367,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
       for (const e of escalonesBajada) platforms.push(e);
       // Grey viene por donde siempre: sube la escalera, cruza la compuerta (que se abre para él) y baja por la rampa
       F.empezarSubida(f); compuertaCerrada = false; solidoCompuerta.top = -1000; solidoCompuerta.bottom = -1001;
-      showToast('💥 ¡La escotilla cayó como rampa! Grey viene subiendo la escalera… ¡Baja y escapa por las ventilaciones!', true, 4500);
+      showToast(tr('toast.escotilla'), true, 4500);
     }
     if (f.fase === 'escape' && F.afuera(ps.pos)) {
       f.fase = 'choque'; f.tiempo = 0;
@@ -2223,7 +2392,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     }
     if (f.fase === 'hat') {
       // 🎩 Hat aparece completo y habla
-      introEl.hidden = false; introTexto.textContent = F.MENSAJE_FINAL.slice(0, Math.floor(f.tiempo * 9));
+      introEl.hidden = false; introTexto.textContent = tr('hat.final').slice(0, Math.floor(f.tiempo * 9));
       animarDragon(hat.g.userData.amarillo, dt, { vel: 0 });
       const [izq, der] = hat.g.userData.brazos;
       izq.rotation.x = Math.sin(t * 1.3) * 0.15; izq.rotation.z = -0.05 - Math.sin(t * 0.9) * 0.05;   // el izquierdo se mece
@@ -2329,7 +2498,7 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     }
     if (!escondido) physics(ps, dt, keys.Space && !busy && !esc && !enCaja);   // (con la caja puesta no se salta)
     if (esc && ps.pos.y > PISO_PRINCIPAL + 0.5) { ps.pos.y = PISO_PRINCIPAL + 0.5; ps.vel.y = 0; }   // arriba de todo: te bajas caminando
-    if (ps.pos.y < PISO_SUBSUELO - 15) { ps.pos.set(spawn.x, spawn.y, spawn.z); ps.vel.set(0, 0, 0); showToast('Te caíste del laboratorio: vuelves al spawn', true); }
+    if (ps.pos.y < PISO_SUBSUELO - 15) { ps.pos.set(spawn.x, spawn.y, spawn.z); ps.vel.set(0, 0, 0); showToast(tr('toast.caiste'), true); }
     bendState(ps, dt);
     updateGuia(dt);
     updateRed(dt);
@@ -2340,6 +2509,9 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     const fiestaCamara = updateFiesta(dt);
     revisarPuertaLobby();
     revisarTienda(dt);
+    updateCaminos(dt);
+    moverTraductor();
+    if (!traductorPanel.hidden && (!enLobby || Math.hypot(ps.pos.x - TRADUCTOR.x, ps.pos.z - TRADUCTOR.z) > 3.5)) traductorPanel.hidden = true;
     updateSusto(dt);
     updatePuertas(dt, [ps.pos, ...[...red.otros.values()].map(f => f.obj.position), ...[...cuerposDragon.values()].map(c => c.obj.position)]);
 
@@ -2392,6 +2564,20 @@ import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos arc
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
   }
+  // 🌍 Cambiar el idioma de TODO: los textos de la pantalla, los letreros, la pantalla del lobby y el ESCAPASTE
+  function aplicarIdioma() {
+    document.documentElement.lang = idioma();
+    for (const el of document.querySelectorAll('[data-t]')) el.textContent = tr(el.dataset.t);
+    for (const el of document.querySelectorAll('[data-t-html]')) el.innerHTML = tr(el.dataset.tHtml);
+    for (const el of document.querySelectorAll('[data-t-ph]')) el.placeholder = tr(el.dataset.tPh);
+    for (const el of document.querySelectorAll('[data-t-aria]')) el.setAttribute('aria-label', tr(el.dataset.tAria));
+    repintarLetreros(); pintarPantallaLobby();
+    escapasteEl.innerHTML = [...tr('escapaste')].map(l => (l === ' ' ? '<span>&nbsp;</span>' : `<span>${l}</span>`)).join('');
+    if (!tiendaEl.hidden) pintarTienda();
+  }
+  function cambiarIdioma(i) { ponerIdioma(i); try { localStorage.setItem('color-dragons:idioma', i); } catch (e) {} aplicarIdioma(); }
+  try { ponerIdioma(localStorage.getItem('color-dragons:idioma') || 'es'); } catch (e) {}
+  aplicarIdioma();
   const juntadas = juntarQuietos();
   if (window.cd) cd.juntadas = juntadas;
   tick();
