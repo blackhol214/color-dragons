@@ -46,7 +46,8 @@ export function leerMensaje(texto) {
     if (![m.x, m.y, m.z, m.rot].every(esNumero)) return null;
     // oculto: 1 si estás metido en una caja (tus amigos no te ven)
     // camino: el trail que lleva puesto (solo uno de los que existen; si no, ninguno)
-    return { tipo: 'pos', x: m.x, y: m.y, z: m.z, rot: m.rot, color: esNumero(m.color) ? m.color : null, oculto: m.oculto === 1 ? 1 : 0, camino: CAMINOS_VALIDOS.includes(m.camino) ? m.camino : null, mascota: MASCOTAS_VALIDAS.includes(m.mascota) ? m.mascota : null, t: horaDe(m.t) };
+    return { tipo: 'pos', x: m.x, y: m.y, z: m.z, rot: m.rot, color: esNumero(m.color) ? m.color : null, oculto: m.oculto === 1 ? 1 : 0, camino: CAMINOS_VALIDOS.includes(m.camino) ? m.camino : null, mascota: MASCOTAS_VALIDAS.includes(m.mascota) ? m.mascota : null,
+      mascotas: Array.isArray(m.mascotas) ? [...new Set(m.mascotas.filter(x => MASCOTAS_VALIDAS.includes(x)))] : null, t: horaDe(m.t) };   // mascotas: si lleva varias a la vez
   }
   // 🌙 Las noches: agarrar el objeto número i (E), entregar lo que llevas en el Center Lab, servirle comida a Yellow
   if (m.tipo === 'recoger') return Number.isInteger(m.i) && m.i >= 0 && m.i < 100 ? { tipo: 'recoger', i: m.i } : null;

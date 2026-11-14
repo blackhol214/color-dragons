@@ -44,6 +44,23 @@
   #camStick span { position:absolute; left:0; right:0; bottom:-18px; text-align:center; font:700 11px system-ui; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.6); pointer-events:none; }
   #fpBtn { position:fixed; left:24px; bottom:calc(150px + env(safe-area-inset-bottom,0px)); width:56px; height:56px; border-radius:50%; border:2px solid rgba(255,255,255,.7); background:rgba(22,48,31,.82); font-size:24px; display:none; touch-action:manipulation; }
   #fpBtn.on { background:rgba(176,120,0,.9); }
+  /* 🔊 El botón y el panel del sonido (arriba a la izquierda, al lado del ⚙️ de la cámara) */
+  #sonidoBtn { position:fixed; left:68px; top:calc(14px + env(safe-area-inset-top,0px)); z-index:15; width:44px; height:44px; border-radius:50%; border:2px solid rgba(255,255,255,.7); background:rgba(22,48,31,.82); color:#fff; font-size:20px; cursor:pointer; touch-action:manipulation; }
+  #sonidoBtn[hidden] { display:none; }
+  #sonidoPanel { bottom:auto; top:calc(66px + env(safe-area-inset-top,0px)); }
+  #sonidoPanel label { display:block; margin:10px 0 2px; }
+  #sonidoPanel label b { float:right; font-variant-numeric:tabular-nums; }
+  #sonidoPanel input[type=range] { width:100%; accent-color:#2fae4e; }
+  #sonidoPanel label.silencio { display:flex; align-items:center; gap:8px; margin-top:14px; cursor:pointer; } #sonidoPanel label.silencio input { width:20px; height:20px; accent-color:#c0392b; }
+  #sonidoPanel .nota { margin:10px 0 0; font:600 12px/1.4 system-ui, sans-serif; color:#b9c6c9; }
+  /* ⚙️ Ajustes de cámara */
+  #ajustesBtn { position:fixed; left:16px; top:calc(14px + env(safe-area-inset-top,0px)); z-index:15; width:44px; height:44px; border-radius:50%; border:2px solid rgba(255,255,255,.7); background:rgba(22,48,31,.82); color:#fff; font-size:22px; cursor:pointer; touch-action:manipulation; }
+  #ajustesPanel { bottom:auto; top:calc(66px + env(safe-area-inset-top,0px)); }
+  #ajustesPanel label { display:block; margin:10px 0 2px; }
+  #ajustesPanel label b { float:right; font-variant-numeric:tabular-nums; }
+  #ajustesPanel input[type=range] { width:100%; }
+  #ajustesPanel select { width:100%; padding:6px; border-radius:8px; font:600 14px system-ui, sans-serif; }
+  #ajustesPanel .botones { margin-top:12px; display:flex; gap:8px; }
   /* Los avisos salen en el CENTRO de la pantalla (más fácil de leer) */
   #toast { position:fixed; left:50%; top:42%; transform:translate(-50%, -50%) scale(.96); z-index:24; margin:0; padding:14px 22px; border-radius:16px; background:rgba(22,48,31,.9); color:#fff;
     font:700 20px/1.35 system-ui, sans-serif; text-align:center; white-space:normal; width:max-content; max-width:min(560px, calc(100% - 32px)); box-shadow:0 8px 24px rgba(0,0,0,.3);
@@ -89,7 +106,8 @@
   .panelLobby h2 { margin:0 0 10px; font:400 22px/1 "ADLaM Display", Impact, sans-serif; letter-spacing:.03em; }
   .panelLobby .cerrar { position:absolute; right:10px; top:8px; border:0; background:none; color:#fff; font-size:24px; cursor:pointer; }
   .botonesIdioma { display:flex; gap:10px; } .botonesIdioma button { flex:1; border:0; border-radius:12px; padding:14px 10px; font:700 17px/1 system-ui, sans-serif; color:#fff; background:#2d5f9a; cursor:pointer; } .botonesIdioma button.elegido { box-shadow:inset 0 0 0 3px #ffd60a; }
-  #mascotasLista { max-height:56vh; overflow:auto; } .probas { font:600 12px/1.5 system-ui, sans-serif; color:#b9c6c9; margin:4px 0 8px; } .probas b { color:#ffd76a; } .subtitulo { margin:10px 0 2px; font:800 13px system-ui, sans-serif; color:#9fe3c8; letter-spacing:.04em; }
+  #mascotasLista { max-height:56vh; overflow:auto; }
+  #mascotasLista button.todas { display:block; width:100%; margin:4px 0 8px; border:0; border-radius:12px; padding:10px; font:700 15px system-ui, sans-serif; color:#fff; background:#6a4bc4; cursor:pointer; } #mascotasLista button.todas.on { background:#2fae4e; } .probas { font:600 12px/1.5 system-ui, sans-serif; color:#b9c6c9; margin:4px 0 8px; } .probas b { color:#ffd76a; } .subtitulo { margin:10px 0 2px; font:800 13px system-ui, sans-serif; color:#9fe3c8; letter-spacing:.04em; }
   .itemTienda .botones2 { display:flex; gap:6px; } .itemTienda button.vender { background:#a8741a; }
   #paletaColores { display:grid; grid-template-columns:repeat(6, 1fr); gap:6px; max-height:52vh; overflow:auto; }
   #paletaColores button { aspect-ratio:1; border-radius:12px; border:3px solid rgba(255,255,255,.25); cursor:pointer; }
@@ -108,6 +126,12 @@
   #perdiste h2 { color:#ff5a4f; font-size:30px; }
   #perdiste .botones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
   #perdiste button { border:0; border-radius:12px; padding:12px 16px; font:700 15px/1 system-ui, sans-serif; color:#fff; cursor:pointer; }
+  #observarBtn { background:#5b4b8a; }
+  /* 👻 Modo fantasma: la barrita (ir junto a un amigo, o volver al lobby) */
+  #fantasmaBar { position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); z-index:16; display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:16px; background:rgba(40,30,70,.88); color:#fff; font:700 15px system-ui, sans-serif; box-shadow:0 6px 20px rgba(0,0,0,.35); }
+  #fantasmaBar[hidden] { display:none; }
+  #fantasmaBar button { border:0; border-radius:10px; min-width:40px; height:40px; padding:0 10px; background:rgba(255,255,255,.16); color:#fff; font:700 16px system-ui, sans-serif; cursor:pointer; touch-action:manipulation; }
+  #fantasmaBar #fantNombre { min-width:140px; text-align:center; }
   #pagarBtn { background:#c79a1a; } #pagarBtn:disabled { background:#4a5558; cursor:default; } #lobbyBtn { background:#7a2a24; }
   #dentroCaja { position:fixed; inset:0; z-index:10; pointer-events:none; overflow:hidden; }
   #dentroCaja .rendija { position:absolute; left:50%; top:46%; width:min(62vw, 560px); height:clamp(56px, 11vh, 96px); transform:translate(-50%, -50%); border-radius:999px;
@@ -162,7 +186,7 @@
 <p id="aviso" hidden></p>
 <div id="sustoNegro"></div>
 <div id="sustoFlash" hidden></div>
-<div id="perdiste" class="panelLobby" hidden><h2 data-t="perdiste.titulo">💀 ¡PERDISTE LA NOCHE!</h2><p id="perdisteTexto" style="margin:0"></p><div class="botones"><button type="button" id="pagarBtn"></button><button type="button" id="lobbyBtn" data-t="perdiste.lobby">🏠 Volver al lobby</button></div></div>
+<div id="perdiste" class="panelLobby" hidden><h2 data-t="perdiste.titulo">💀 ¡PERDISTE LA NOCHE!</h2><p id="perdisteTexto" style="margin:0"></p><div class="botones"><button type="button" id="pagarBtn"></button><button type="button" id="lobbyBtn" data-t="perdiste.lobby">🏠 Volver al lobby</button><button type="button" id="observarBtn" data-t="perdiste.observar" hidden>👻 Observar</button></div></div>
 <div id="traductorPanel" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 data-t="traductor.titulo">🌍 Idioma · Language</h2><div class="botonesIdioma"><button type="button" data-idioma="es">🇪🇸 Español</button><button type="button" data-idioma="en">🇬🇧 English</button></div></div>
 <div id="mascotasPanel" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 data-t="mascotas.titulo">🥚 Tienda de mascotas</h2><p id="mascotasMonedas" style="margin:0 0 6px"></p><div id="mascotasLista"></div></div>
 <div id="paleta" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 data-t="paleta.titulo">🎨 Elige tu color</h2><div id="paletaColores"></div></div>
@@ -176,19 +200,39 @@
 <div id="stick"><div id="knob"></div></div>
 <div id="camStick" aria-label="Mover la cámara"><div class="knob"></div><span>CÁMARA</span></div>
 <button id="jump" type="button">SALTAR</button>
+<button id="sonidoBtn" type="button" hidden aria-label="Ajustes de sonido" data-t-aria="sonido.aria">🔊</button>
+<div id="sonidoPanel" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 data-t="sonido.titulo">🔊 Sonido</h2>
+  <label><span data-t="sonido.musica">🎵 Música</span> <b id="sonidoMusicaVal"></b><input id="sonidoMusica" type="range" min="0" max="100" step="5"></label>
+  <label><span data-t="sonido.ambiente">🌬️ Ambiente</span> <b id="sonidoAmbienteVal"></b><input id="sonidoAmbiente" type="range" min="0" max="100" step="5"></label>
+  <label class="silencio"><input id="sonidoSilencio" type="checkbox"> <span data-t="sonido.silencio">Silenciar todo</span></label>
+  <p class="nota" data-t="sonido.nota">Cada zona tiene sus sonidos (gotas, grillos, máquinas…). La música viene apagada: súbela si la quieres.</p></div>
+<div id="fantasmaBar" hidden><button type="button" id="fantAnt" aria-label="Anterior" data-t-aria="fantasma.anterior">◀</button><span id="fantNombre"></span><button type="button" id="fantSig" aria-label="Siguiente" data-t-aria="fantasma.siguiente">▶</button><button type="button" id="fantLobby" data-t="fantasma.lobby">🏠 Lobby</button></div>
+<button id="ajustesBtn" type="button" aria-label="Ajustes de cámara" data-t-aria="ajustes.aria">⚙️</button>
+<div id="ajustesPanel" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 data-t="ajustes.titulo">⚙️ Cámara</h2>
+  <label for="ajSens"><span data-t="ajustes.sens">Sensibilidad del ratón</span> <b id="ajSensV"></b></label><input type="range" id="ajSens" min="10" max="200" step="5">
+  <label for="ajGiro"><span data-t="ajustes.giro">Velocidad de giro (flechas / joystick)</span> <b id="ajGiroV"></b></label><input type="range" id="ajGiro" min="10" max="200" step="5">
+  <label for="ajSuave"><span data-t="ajustes.suave">Suavizado</span> <b id="ajSuaveV"></b></label><input type="range" id="ajSuave" min="0" max="90" step="5">
+  <label for="ajAsist"><span data-t="ajustes.asist">Cámara asistida (te sigue al caminar)</span> <b id="ajAsistV"></b></label><input type="range" id="ajAsist" min="0" max="100" step="10">
+  <label for="ajFov"><span data-t="ajustes.fov">Campo de visión</span> <b id="ajFovV"></b></label><input type="range" id="ajFov" min="45" max="90" step="1">
+  <label for="ajCalidad"><span data-t="ajustes.calidad">Calidad de los gráficos</span> <b id="ajFps"></b></label><select id="ajCalidad"><option value="auto"></option><option value="alta"></option><option value="media"></option><option value="baja"></option></select>
+  <label><input type="checkbox" id="ajBob"> <span data-t="ajustes.bob">Balanceo al caminar (primera persona)</span></label>
+  <div class="botones"><button type="button" id="ajComodo" data-t="ajustes.comodo">😌 Modo cómodo</button><button type="button" id="ajReset" data-t="ajustes.reset">↺ Normal</button></div>
+</div>
 <button id="fpBtn" type="button" aria-label="Cambiar a primera persona">👁️</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
 import { alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=18';
-import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=18';
+import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=19';
 import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=18';
 import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=18';
 import { crearDragon, animarDragon } from './src/criaturas.js?v=18';
-import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=18';
-import { MASCOTAS, PRECIO_HUEVO, mascotaDe, abrirHuevo, venderRepetida, llevarMascota, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=18';
+import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=22';   // (v=19: textos nuevos del 🔊 sonido)
+import { MASCOTAS, PRECIO_HUEVO, mascotaDe, abrirHuevo, venderRepetida, llevarMascota, TODAS, mascotasQueLlevas, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=19';
 import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=18';
-import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
+import * as F from './src/fiesta.js?v=18';
+import { CALIDADES, CLAVE_CALIDAD, CLAVE_CALIDAD_AUTO, leerCalidad, leerNivel, calidadInicial, ratioPara, bajarCalidad, ajustarResolucion } from './src/calidad.js?v=1';
+import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES } from './src/sonido.js?v=19';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
 (() => {
   // iPhone ignora user-scalable=no: aquí se bloquea el zoom con dos dedos y el doble toque
   for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
@@ -198,12 +242,19 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
   const IS_TOUCH = matchMedia('(pointer:coarse)').matches;
   const canvas = document.getElementById('game');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));   // (más de 1,5 casi no se nota y hace que todo vaya más lento)   // en el celular, menos píxeles extra (igual se ve nítido)
+  // ⚙️ La calidad (src/calidad.js): Auto elige según tu compu y tu pantalla, y baja sola si el juego va lento
+  const leerLS = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const nivelAuto = () => leerNivel(leerLS(CLAVE_CALIDAD_AUTO)) || calidadInicial({ nucleos: navigator.hardwareConcurrency || 0, memoria: navigator.deviceMemory || 0,
+    tactil: matchMedia('(pointer:coarse)').matches, ancho: screen.width, alto: screen.height, ratio: devicePixelRatio || 1 });
+  const calidad = { elegida: leerCalidad(leerLS(CLAVE_CALIDAD)) };
+  calidad.nivel = calidad.elegida === 'auto' ? nivelAuto() : calidad.elegida;
+  let pixelRatio = ratioPara(calidad.nivel, devicePixelRatio, matchMedia('(pointer:coarse)').matches);
+  renderer.setPixelRatio(pixelRatio);
   // (Sin sombras del sol: el laboratorio tiene techo. Debajo de cada personaje va una sombrita redonda)
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x111416);
-  scene.fog = new THREE.Fog(0x111416, 18, 62);   // lo de lejos se pierde en la oscuridad
+  scene.fog = new THREE.Fog(0x111416, 18, CALIDADES[calidad.nivel].niebla);   // lo de lejos se pierde en la oscuridad (más cerca en calidad baja)
 
   const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 900);
   scene.add(camera);
@@ -962,6 +1013,11 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
     if (!loginEl.hidden) return;                 // en la pantalla de inicio: solo se escribe el usuario
     keys[e.code] = true;
     if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
+    if (fantasma) {   // 👻 de fantasma solo vuelas: Q y E te llevan junto a un amigo (y O abre los ajustes)
+      if (!e.repeat && (e.code === 'KeyQ' || e.code === 'KeyE')) cambiarFantasma(e.code === 'KeyQ' ? -1 : 1);
+      if (e.code === 'KeyO' && !e.repeat) abrirAjustes(ajustesPanel.hidden);
+      return;
+    }
     if (e.code === 'KeyV' && !e.repeat) setFirstPerson(!firstPerson);
     if (e.code === 'KeyH' && !e.repeat) guiaMostrar(!guiaVisible);   // H: esconde o llama al bot guía
     if ((e.code === 'Enter' || e.code === 'NumpadEnter') && !e.repeat) { e.preventDefault(); if (!(noche && noche.fase === 'intro')) guiaDialogo(guiaEl.hidden); }   // (durante la intro, ENTER no hace nada)   // ENTER: abre o cierra el diálogo del bot guía
@@ -969,10 +1025,49 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
     if (e.code === 'KeyB' && !e.repeat) alternarEscondite();          // B: tu caja (o el armario, si estás al lado)
     if (e.code === 'KeyE' && !e.repeat) usarE();                      // E: el botón de la puerta del Panic Hole, o la puerta del armario
     if (e.code === 'Escape' && !guiaEl.hidden) guiaEl.hidden = true;
+    if (e.code === 'KeyO' && !e.repeat) abrirAjustes(ajustesPanel.hidden);   // O: ajustes de cámara
   });
   addEventListener('keyup', e => { keys[e.code] = false; });
 
   let camYaw = Math.PI, camPitch = 0.35, dragging = false, lx = 0, ly = 0;
+
+  // ⚙️ Ajustes de cámara (se recuerdan en este navegador): sensibilidad, giro, suavizado y campo de visión
+  const AJ_NORMAL = { sens: 100, giro: 100, suave: 0, fov: 55, bob: true, asist: 0 }, AJ_COMODO = { sens: 40, giro: 45, suave: 60, fov: 70, bob: false, asist: 60 };
+  const aj = { ...AJ_NORMAL };
+  try { Object.assign(aj, JSON.parse(localStorage.getItem('color-dragons:camara') || '{}')); } catch (e) {}
+  const ajustesPanel = document.getElementById('ajustesPanel'), ajustesBtn = document.getElementById('ajustesBtn');
+  const ajInputs = { sens: 'ajSens', giro: 'ajGiro', suave: 'ajSuave', fov: 'ajFov', asist: 'ajAsist' };
+  function aplicarAjustes() {
+    for (const k in ajInputs) {
+      const inp = document.getElementById(ajInputs[k]); inp.value = aj[k];
+      document.getElementById(ajInputs[k] + 'V').textContent = aj[k] + (k === 'fov' ? '°' : '%');
+    }
+    ajBob.checked = aj.bob;
+    camera.fov = aj.fov; camera.updateProjectionMatrix();
+    try { localStorage.setItem('color-dragons:camara', JSON.stringify(aj)); } catch (e) {}
+  }
+  for (const k in ajInputs) document.getElementById(ajInputs[k]).addEventListener('input', e => { aj[k] = +e.target.value; aplicarAjustes(); });
+  const abrirAjustes = on => { ajustesPanel.hidden = !on; if (on) document.getElementById('sonidoPanel').hidden = true; if (on && isLocked()) document.exitPointerLock(); };
+  ajustesBtn.addEventListener('click', () => { abrirAjustes(ajustesPanel.hidden); ajustesBtn.blur(); });
+  ajustesPanel.querySelector('.cerrar').addEventListener('click', () => abrirAjustes(false));
+  document.getElementById('ajComodo').addEventListener('click', e => { Object.assign(aj, AJ_COMODO); aplicarAjustes(); e.currentTarget.blur(); });
+  document.getElementById('ajReset').addEventListener('click', e => { Object.assign(aj, AJ_NORMAL); aplicarAjustes(); e.currentTarget.blur(); });
+  const ajBob = document.getElementById('ajBob');
+  ajBob.addEventListener('change', () => { aj.bob = ajBob.checked; aplicarAjustes(); ajBob.blur(); });
+  const sensRaton = () => aj.sens / 100, sensGiro = () => aj.giro / 100;
+  let ultimoManual = -1e9;   // cuándo moviste TÚ la cámara por última vez (la asistida te deja en paz un rato)
+  const tocasteCamara = () => { ultimoManual = performance.now(); };
+  // Suavizado: la cámara que VES (vista*) persigue a la de verdad (camYaw…) en vez de saltar de golpe
+  let vistaYaw = camYaw, vistaPitch = camPitch, vistaFp = 0;
+  const difAng = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
+  function suavizarVista(dt) {
+    const s = aj.suave / 100;
+    const k = s <= 0 ? 1 : 1 - Math.exp(-dt * (2 + 28 * (1 - s / 0.9)));
+    const dy = difAng(camYaw, vistaYaw);
+    if (Math.abs(dy) > 2) vistaYaw = camYaw; else vistaYaw += dy * k;   // un giro enorme (teletransporte) no se suaviza
+    vistaPitch += (camPitch - vistaPitch) * k;
+    vistaFp = Math.abs(fpPitch - vistaFp) > 1.5 ? fpPitch : vistaFp + (fpPitch - vistaFp) * k;
+  }
 
   // Primera persona: el cursor se bloquea al centro y el ratón mueve la cámara sin hacer clic
   const cross = document.getElementById('cross'), lockHint = document.getElementById('lockHint');
@@ -993,8 +1088,10 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
   document.addEventListener('pointerlockchange', updateLockUI);
   document.addEventListener('mousemove', e => {
     if (!firstPerson || !isLocked()) return;
-    camYaw -= e.movementX * FP_SENS;
-    fpPitch = Math.min(1.3, Math.max(-1.3, fpPitch - e.movementY * FP_SENS));
+    if (!ajustesPanel.hidden) return;
+    tocasteCamara();
+    camYaw -= e.movementX * FP_SENS * sensRaton();
+    fpPitch = Math.min(1.3, Math.max(-1.3, fpPitch - e.movementY * FP_SENS * sensRaton()));
   });
 
   canvas.addEventListener('pointerdown', e => {
@@ -1004,9 +1101,10 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
   addEventListener('pointerup', () => { dragging = false; });
   addEventListener('pointermove', e => {
     if (!dragging) return;
-    camYaw -= (e.clientX - lx) * 0.005;
-    if (firstPerson) fpPitch = Math.min(1.3, Math.max(-1.3, fpPitch - (e.clientY - ly) * 0.004));
-    else camPitch = Math.min(1.2, Math.max(0.1, camPitch + (e.clientY - ly) * 0.004));
+    const sr = sensRaton(); tocasteCamara();
+    camYaw -= (e.clientX - lx) * 0.005 * sr;
+    if (firstPerson) fpPitch = Math.min(1.3, Math.max(-1.3, fpPitch - (e.clientY - ly) * 0.004 * sr));
+    else camPitch = Math.min(1.2, Math.max(0.1, camPitch + (e.clientY - ly) * 0.004 * sr));
     lx = e.clientX; ly = e.clientY;
   });
 
@@ -1100,7 +1198,7 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
   const ps = makeState(player);
   ps.pos.set(spawn.x, spawn.y, spawn.z);
 
-  // Sombrita redonda debajo de ti (en vez de las sombras del sol: aquí hay techo)
+  // Sombrita redonda debajo de ti (en vez de las sombras del sol: aquí hay techo, y una sombra con forma se ve mal en los bordes de las plataformas)
   const sombra = new THREE.Mesh(new THREE.CircleGeometry(0.6, 24), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35, depthWrite: false }));
   sombra.rotation.x = -Math.PI / 2; scene.add(sombra);
   const camRay = new THREE.Raycaster();
@@ -1115,7 +1213,7 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
   let enCaja = false, escondido = null, desdeDonde = null;
   const oculto = () => enCaja || !!escondido;
   function alternarEscondite() {
-    if (!loginEl.hidden) return;
+    if (!loginEl.hidden || fantasma) return;
     if (escondido) {
       // Sales del armario por donde entraste
       ps.pos.set(desdeDonde.x, desdeDonde.y, desdeDonde.z); ps.vel.set(0, 0, 0);
@@ -1151,7 +1249,7 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
     if (a) return { texto: tr(a.abierto ? 'usar.cerrarArmario' : 'usar.abrirArmario'), hacer: () => { a.abierto = !a.abierto; } };
     return null;
   }
-  function usarE() { const u = queUsar(); if (u) u.hacer(); }
+  function usarE() { if (fantasma) return; const u = queUsar(); if (u) u.hacer(); }
   usarBtn.addEventListener('click', e => { usarE(); e.currentTarget.blur(); });
   // 🔧 Para probar: con ?debug en el link, la consola puede ver y mover al jugador (window.cd)
   if (new URLSearchParams(location.search).has('debug')) window.cd = { ps, camera, salaEn, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; }, get escondido() { return escondido; }, get enCaja() { return enCaja; }, get dragones() { return dragones; }, get cuerpos() { return cuerposDragon; }, get noche() { return noche; }, get fiesta() { return fiesta; }, get red() { return red; }, platforms, atrapar: id => atrapado(id), get susto() { return susto; }, renderer, scene, bloqueanCamara, get camPitch() { return camPitch; }, crearMascota: id => crearMascota(id) };
@@ -1198,6 +1296,7 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
     if (!name) { loginError.hidden = false; loginName.focus(); return; }
     userName = name;
     loginEl.hidden = true; loginName.blur();
+    arrancarSonido();   // 🔊 el clic en Jugar es el permiso que pide el navegador para sonar
     const loaded = loadGame(name);
     usarCuenta();   // 🎨 tu color (tus amigos te ven de este color) y tu caja
     loadedLocal = loaded;
@@ -1282,11 +1381,11 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
     if (!guiaVisible) return;
     const b = guiaBot;
     b.t = b.t < 0 ? 0 : b.t + dt;
-    // Flota a tu derecha (mirando desde la cámara), un poco más arriba de tu cabeza, subiendo y bajando
-    guiaMeta.set(ps.pos.x + Math.cos(camYaw) * 1.3, ps.pos.y + 1.9 + Math.sin(b.t * 2.5) * 0.12, ps.pos.z - Math.sin(camYaw) * 1.3);
+    // Flota justo DETRÁS de ti (de tu espalda), más arriba de tu cabeza para no taparte desde la cámara, subiendo y bajando
+    guiaMeta.set(ps.pos.x - Math.sin(ps.facing) * 1.0, ps.pos.y + 2.75 + Math.sin(b.t * 2.5) * 0.12, ps.pos.z - Math.cos(ps.facing) * 1.0);
     if (b.t === 0 || b.obj.position.distanceTo(guiaMeta) > 25) b.obj.position.copy(guiaMeta);   // recién llamado o te teletransportaste: aparece ahí
     else b.obj.position.lerp(guiaMeta, Math.min(1, dt * 5));                                   // si no, te sigue suave
-    b.obj.rotation.y = camYaw + Math.sin(b.t * 1.7) * 0.25;   // te mira (hacia la cámara) y se balancea un poquito
+    b.obj.rotation.y = ps.facing + Math.sin(b.t * 1.7) * 0.25;   // mira hacia donde tú miras y se balancea un poquito
     b.luz.visible = guiaEl.hidden || Math.floor(b.t * 3) % 2 === 0;
   }
 
@@ -1304,7 +1403,7 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
   }
   // Un amigo: rectángulo de su color con ojos, igual que tú
   // Cuando un amigo se va: también se van su mascota y su cinta
-  function quitarExtras(f) { if (f.mascotaObj) scene.remove(f.mascotaObj); if (f.cinta) scene.remove(f.cinta.m); f.mascotaObj = f.cinta = null; }
+  function quitarExtras(f) { for (const m of f.mascotasObjs || []) scene.remove(m); if (f.cinta) scene.remove(f.cinta.m); f.mascotasObjs = []; f.mascotasClave = ''; f.cinta = null; }
   function addFriend(j) {
     const obj = new THREE.Group(), look = new THREE.Group();   // look: el rectángulo con ojos (se esconde si está en su caja)
     const b = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), new THREE.MeshLambertMaterial({ color: j.color }));
@@ -1349,7 +1448,7 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
         addFriend(m); showToast(tr('toast.entro', { nombre: m.nombre }));
       } else if (m.tipo === 'pos') {
         const f = red.otros.get(m.id);
-        if (f) { f.body.material.color.setHex(m.color); f.oculto = !!m.oculto; f.camino = m.camino || null; f.mascota = m.mascota || null; agregarMuestra(f.suave, [m.x, m.y, m.z, m.rot], m.t, performance.now()); }
+        if (f) { f.body.material.color.setHex(m.color); f.oculto = !!m.oculto; f.camino = m.camino || null; f.mascotas = m.mascotas || (m.mascota ? [m.mascota] : []); agregarMuestra(f.suave, [m.x, m.y, m.z, m.rot], m.t, performance.now()); }
       } else if (m.tipo === 'sale') {
         const f = red.otros.get(m.id);
         if (f) { explode(f); quitarExtras(f); red.otros.delete(m.id); }
@@ -1376,7 +1475,7 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
     if (red.id !== null && (red.envio -= dt) <= 0) {
       red.envio = Math.max(red.envio + 1 / ENVIOS_POR_SEGUNDO, 0);   // sumar (no reemplazar): así salen 10 por segundo de verdad, no 8
       // Si no te moviste, no hace falta repetirlo 10 veces por segundo: basta una vez por segundo (para que el servidor sepa que sigues ahí)
-      const pos = { tipo: 'pos', x: corto(ps.pos.x), y: corto(ps.pos.y), z: corto(ps.pos.z), rot: corto(ps.facing), color: body.material.color.getHex(), oculto: oculto() ? 1 : 0, camino: cuenta.camino, mascota: cuenta.mascota };
+      const pos = { tipo: 'pos', x: corto(ps.pos.x), y: corto(ps.pos.y), z: corto(ps.pos.z), rot: corto(ps.facing), color: body.material.color.getHex(), oculto: oculto() ? 1 : 0, camino: cuenta.camino, mascota: mascotasQueLlevas(cuenta)[0] || null, mascotas: mascotasQueLlevas(cuenta) };
       const txt = JSON.stringify(pos);
       pos.t = Math.round(performance.now());   // tu hora: los demás la usan para dibujarte suave (va aparte para que "¿te moviste?" no cambie siempre)
       red.quieto = txt === red.ultimaPos ? (red.quieto || 0) + 1 : 0;
@@ -1450,6 +1549,95 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
     showToast(tr('toast.perdiste'), true, 3500);
   }
 
+  // ---------- 👻 Modo fantasma: perdiste, pero tus amigos siguen vivos → vuelas como fantasma por la noche ----------
+  // Tu cuerpo de verdad espera en el lobby (así los dragones no te persiguen y para tus amigos estás "muerto" ahí).
+  // Lo que manejas es un fantasmita transparente que vuela y atraviesa paredes: WASD para moverte, ESPACIO sube, SHIFT baja,
+  // Q / E (o ◀ ▶) te llevan volando junto a un amigo. No puedes agarrar nada ni ganar monedas. Cuando ganan o ya no queda nadie, vuelves al lobby.
+  let fantasma = null;   // { pos: dónde está tu fantasmita, amigo: el último amigo al que fuiste }
+  const fantasmaBar = document.getElementById('fantasmaBar'), fantNombre = document.getElementById('fantNombre'), observarBtn = document.getElementById('observarBtn');
+  const FANTASMA_VEL = 7;
+  // Hasta dónde puede volar: la caja del laboratorio (todas las salas que no son ni el lobby ni la fiesta)
+  const LAB = SALAS.filter(q => q.zona !== 'lobby' && q.zona !== 'fiesta').reduce((b, q) => ({ x0: Math.min(b.x0, q.x0), x1: Math.max(b.x1, q.x1), z0: Math.min(b.z0, q.z0), z1: Math.max(b.z1, q.z1) }), { x0: Infinity, x1: -Infinity, z0: Infinity, z1: -Infinity });
+  // El fantasmita: tu mismo rectángulo, pero blanco y transparente (y con tus ojos)
+  const fantasmaObj = (() => {
+    const g = new THREE.Group();
+    const cuerpo = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), new THREE.MeshLambertMaterial({ color: 0xeef3ff, emissive: 0x334055, transparent: true, opacity: 0.45, depthWrite: false }));
+    cuerpo.position.y = H / 2; g.add(cuerpo);
+    for (const ex of [-0.22, 0.22]) { const e = new THREE.Mesh(eyeGeo, eyeMat); e.scale.z = 0.5; e.position.set(ex, H * 0.78, D / 2 + 0.01); g.add(e); }
+    g.visible = false; scene.add(g);
+    return g;
+  })();
+  // Los amigos que siguen en la noche (los que no están en el lobby)
+  function vivosEnNoche() {
+    return [...red.otros.values()].filter(f => { const q = f.obj.position, s = salaEn(q.x, q.y, q.z); return s ? s.zona !== 'lobby' : q.x < 98; });
+  }
+  const puedeObservar = () => red.id !== null && !!noche && !fiesta && noche.fase === 'jugando' && vivosEnNoche().length > 0;
+  function observar() {
+    if (!vivosEnNoche().length) { perderNoche(); return; }
+    if (firstPerson) setFirstPerson(false);
+    if (escondido) alternarEscondite();
+    fantasma = { pos: new THREE.Vector3(ps.pos.x, ps.pos.y + 0.3, ps.pos.z), giro: ps.facing, amigo: null };   // apareces donde te atraparon
+    enCaja = false; ps.pos.copy(alLado(LOBBY_SPAWN)); ps.vel.set(0, 0, 0);
+    fantasmaObj.visible = true; fantasmaBar.hidden = false; pintarFantasma();
+    showToast(tr('toast.fantasma'), false, 4000);
+  }
+  function pintarFantasma() {
+    const f = fantasma && fantasma.amigo && red.otros.get(fantasma.amigo);
+    fantNombre.textContent = f ? tr('fantasma.junto', { nombre: f.nombre }) : tr('fantasma.libre');
+    const hay = vivosEnNoche().length > 0;
+    document.getElementById('fantAnt').disabled = document.getElementById('fantSig').disabled = !hay;
+  }
+  // Te lleva volando junto a un amigo (el siguiente o el anterior de la lista)
+  function cambiarFantasma(paso) {
+    if (!fantasma) return;
+    const vivos = vivosEnNoche();
+    if (!vivos.length) return;
+    const i = vivos.findIndex(f => f.id === fantasma.amigo);
+    const f = vivos[((i < 0 ? 0 : i + paso) % vivos.length + vivos.length) % vivos.length];
+    fantasma.amigo = f.id;
+    fantasma.pos.set(f.obj.position.x, f.obj.position.y + 0.3, f.obj.position.z);
+    camYaw = f.look ? f.look.rotation.y + Math.PI : camYaw;   // quedas detrás de tu amigo, mirando hacia donde él mira
+    pintarFantasma();
+  }
+  function salirFantasma(aviso) {
+    if (!fantasma) return;
+    fantasma = null; fantasmaBar.hidden = true; fantasmaObj.visible = false;
+    perderNoche();
+    if (aviso) showToast(tr(aviso), false, 3500);
+  }
+  // Dónde está tu fantasmita (para la cámara, las luces y el sonido)
+  const fantasmaFoco = () => (fantasma ? fantasma.pos : null);
+  const _vuelo = new THREE.Vector3();
+  function updateFantasma(dt) {
+    if (!fantasma) return;
+    if (red.id === null || !noche || fiesta) { salirFantasma(null); return; }
+    if (!vivosEnNoche().length) { salirFantasma('toast.fantasmaNadie'); return; }
+    // Volar: WASD (o el joystick) según hacia dónde mira la cámara; ESPACIO sube y SHIFT baja. Atraviesas paredes y pisos
+    let fx = joy.x, fz = joy.y;
+    if (keys.KeyW || keys.ArrowUp) fz -= 1;
+    if (keys.KeyS || keys.ArrowDown) fz += 1;
+    if (keys.KeyA) fx -= 1;
+    if (keys.KeyD) fx += 1;
+    const len = Math.hypot(fx, fz);
+    if (len > 0.1) {
+      const n = Math.min(len, 1) / len; fx *= n; fz *= n;
+      const sn = Math.sin(camYaw), cs = Math.cos(camYaw);
+      _vuelo.set(fx * cs + fz * sn, 0, -fx * sn + fz * cs);
+      fantasma.pos.addScaledVector(_vuelo, FANTASMA_VEL * dt);
+      fantasma.giro = acercarAngulo(fantasma.giro, Math.atan2(_vuelo.x, _vuelo.z), Math.min(1, dt * 10));
+      if (fantasma.amigo) { fantasma.amigo = null; pintarFantasma(); }   // te fuiste por tu cuenta
+    }
+    const sube = (keys.Space ? 1 : 0) - (keys.ShiftLeft || keys.ShiftRight ? 1 : 0);
+    fantasma.pos.y += sube * FANTASMA_VEL * 0.7 * dt;
+    fantasma.pos.set(Math.min(LAB.x1, Math.max(LAB.x0, fantasma.pos.x)), Math.min(ALTO - 1, Math.max(PISO_SUBSUELO - 0.5, fantasma.pos.y)), Math.min(LAB.z1, Math.max(LAB.z0, fantasma.pos.z)));
+    // el fantasmita flota (sube y baja un poquito) y mira hacia donde vuela
+    fantasmaObj.position.set(fantasma.pos.x, fantasma.pos.y + Math.sin(t * 2.2) * 0.1, fantasma.pos.z);
+    fantasmaObj.rotation.y = fantasma.giro;
+  }
+  document.getElementById('fantAnt').addEventListener('click', e => { cambiarFantasma(-1); e.currentTarget.blur(); });
+  document.getElementById('fantSig').addEventListener('click', e => { cambiarFantasma(1); e.currentTarget.blur(); });
+  document.getElementById('fantLobby').addEventListener('click', e => { e.currentTarget.blur(); salirFantasma(null); });
+
   // ---------- 💀 Los sustos: la cámara salta a la cara del dragón, grita y tiembla la pantalla ----------
   let susto = null, audio = null;
   const sustoFlash = document.getElementById('sustoFlash'), perdisteEl = document.getElementById('perdiste'), pagarBtn = document.getElementById('pagarBtn');
@@ -1471,6 +1659,7 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
       susto.fase = 'elegir';
       document.getElementById('perdisteTexto').textContent = tr('perdiste.texto', { nombre: susto.nombre, monedas: cuenta.monedas });
       pagarBtn.textContent = tr('perdiste.pagar', { costo: COSTO_SEGUIR }); pagarBtn.disabled = cuenta.monedas < COSTO_SEGUIR;
+      observarBtn.hidden = !(susto.alPerder === perderNoche && puedeObservar());   // 👻 solo si quedan amigos vivos en la noche
       perdisteEl.hidden = false;
     }
   }
@@ -1544,6 +1733,7 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
     cuenta = r.cuenta; autoguardar();
     const s = susto; terminarSusto(); s.alSeguir();
   });
+  observarBtn.addEventListener('click', e => { e.currentTarget.blur(); if (!susto) return; terminarSusto(); if (puedeObservar()) observar(); else perderNoche(); });
   document.getElementById('lobbyBtn').addEventListener('click', e => { e.currentTarget.blur(); if (!susto) return; const s = susto; terminarSusto(); s.alPerder(); });
   // El grito: ruido que baja de tono + un gruñido grave (hecho con sonido sintetizado, sin archivos)
   function gritar() {
@@ -1815,6 +2005,8 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
   // Lo que llega del servidor (jugando con amigos)
   function mensajeNoche(m) {
     if (red.ignorarNoche) return;   // (perdiste la noche: esperas en el lobby)
+    // 👻 Si estabas mirando de fantasma y la noche termina (ganaron o empieza otra), vuelves al lobby (sin monedas: tú perdiste esta)
+    if (fantasma && ((m.tipo === 'noche' && (m.fase !== 'jugando' || (noche && m.n !== noche.n))) || m.tipo === 'nocheFase')) { salirFantasma(m.tipo === 'nocheFase' || m.fase === 'ganada' ? 'toast.fantasmaGanaron' : null); return; }
     if (m.tipo === 'noche') {
       // El servidor manda la foto completa de la noche cada vez que algo cambia
       const q = { n: m.n, fase: m.fase, tiempo: m.tiempo, objetos: m.objetos.map(([x, y, z, e, quien]) => ({ x, y, z, estado: ['suelto', 'llevado', 'entregado'][e], quien })) };
@@ -1971,6 +2163,7 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
   //   ganso: como el bot guía (un cubo blanco) pero sin antena y con pico · oso: un cubo café con orejas y nariz de oso
   //   planta: una macetita con una planta · fantasmita: flota y es medio transparente · mini Yellow: tu Yellow en chiquito
   //   cubo arcoíris: un cubo que cambia de color todo el tiempo (¡legendario!)
+  const MASCOTA_TAMANO = 0.55 / 0.5;   // del mismo tamaño que el bot guía (su cubo mide 0,55 y el cuerpo de las mascotas 0,5)
   function crearMascota(id) {
     const g = new THREE.Group(), L = 0.5;
     const ojos = (padre, y, z, sep = 0.11, tam = 0.55) => { for (const ex of [-sep, sep]) { const e = new THREE.Mesh(eyeGeo, eyeMat); e.scale.set(tam, tam, 0.3); e.position.set(ex, y, z); padre.add(e); } };
@@ -2011,35 +2204,70 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
       g.userData.arcoiris = cuerpo.material;
     }
     g.userData.flota = flota; g.userData.cuerpo = cuerpo;
+    g.scale.setScalar(MASCOTA_TAMANO);
     scene.add(g);
     return g;
   }
   // Mueve una mascota hacia su lugar (al lado de su dueño, un poquito atrás), saltando al caminar o flotando
   const _meta = new THREE.Vector3();
-  function seguirDueno(m, x, y, z, rot, dt, t) {
-    const atrasX = -Math.sin(rot), atrasZ = -Math.cos(rot), ladoX = Math.cos(rot), ladoZ = -Math.sin(rot);
-    _meta.set(x + ladoX * 0.95 + atrasX * 0.6, y, z + ladoZ * 0.95 + atrasZ * 0.6);
+  // Con varias a la vez van en "formación", pegaditas a ti: derecha, izquierda, y cada par apenas más atrás y más alto (para verse todas).
+  // Las épicas van primero: son las de más adelante, las que más se lucen
+  const lugarMascota = i => ({ lado: (i % 2 === 0 ? 1 : -1) * (0.85 + Math.floor(i / 2) * 0.1), atras: 0.3 + Math.floor(i / 2) * 0.5, alto: Math.floor(i / 2) * 0.3 });
+  const epicasPrimero = ids => [...ids].sort((a, b) => (mascotaDe(b)?.rara ? 1 : 0) - (mascotaDe(a)?.rara ? 1 : 0));
+  function seguirDueno(m, x, y, z, rot, dt, t, i = 0) {
+    const atrasX = -Math.sin(rot), atrasZ = -Math.cos(rot), ladoX = Math.cos(rot), ladoZ = -Math.sin(rot), L = lugarMascota(i);
+    // Todas flotan como el bot guía: a la altura de tu pecho, subiendo y bajando suave (cada una a su ritmo)
+    const fase = m.userData.fase ?? (m.userData.fase = Math.random() * Math.PI * 2);
+    const calma = m.userData.calma ?? (m.userData.calma = 2.5 + Math.random() * 2);   // cada una te sigue a su velocidad (unas más flojas que otras)
+    // …y cada una se pasea un poquito por su cuenta alrededor de su lugar (no van pegadas como soldaditos)
+    const pasea = Math.sin(t * 0.55 + fase) * 0.25 + Math.sin(t * 1.3 + fase * 2) * 0.08, paseaAtras = Math.sin(t * 0.42 + fase * 1.7) * 0.22;
+    const lado = L.lado + pasea, atras = L.atras + paseaAtras;
+    _meta.set(x + ladoX * lado + atrasX * atras, y + 0.95 + L.alto + Math.sin(t * 2.5 + fase) * 0.12 + Math.sin(t * 0.7 + fase) * 0.1, z + ladoZ * lado + atrasZ * atras);
     const lejos = m.position.distanceTo(_meta);
-    if (lejos > 20) m.position.copy(_meta); else m.position.lerp(_meta, Math.min(1, dt * 6));
+    const ant = m.userData.dueno || (m.userData.dueno = { x, z });
+    if (lejos > 20) m.position.copy(_meta);
+    else {
+      // Primero se mueve CONTIGO (lo mismo que avanzaste), y después se acomoda suave: así al correr no se queda atrás
+      m.position.x += x - ant.x; m.position.z += z - ant.z;
+      m.position.lerp(_meta, Math.min(1, dt * calma));
+      // Nunca te atraviesa: si al girar quedó pegada a tu cuerpo, la empuja hacia afuera
+      const dx = m.position.x - x, dz = m.position.z - z, d = Math.hypot(dx, dz);
+      if (d < 0.75) { const k = d > 0.01 ? 0.75 / d : 0; m.position.x = x + (k ? dx * k : ladoX * 0.75); m.position.z = z + (k ? dz * k : ladoZ * 0.75); }
+    }
+    ant.x = x; ant.z = z;
     const camina = lejos > 0.15;
-    m.rotation.y += Math.atan2(Math.sin(rot - m.rotation.y), Math.cos(rot - m.rotation.y)) * Math.min(1, dt * 6);
-    const c = m.userData.cuerpo;
-    if (m.userData.flota) m.position.y = y + 0.5 + Math.sin(t * 2.2) * 0.12;
-    else if (c) c.position.y = (c.userData.y0 ?? (c.userData.y0 = c.position.y)) + (camina ? Math.abs(Math.sin(t * 11)) * 0.12 : 0);   // saltitos al caminar
+    const giro = rot + Math.sin(t * 1.7 + fase) * 0.25;   // y se balancea un poquito, como el bot guía
+    m.rotation.y += Math.atan2(Math.sin(giro - m.rotation.y), Math.cos(giro - m.rotation.y)) * Math.min(1, dt * 6);
     if (m.userData.arcoiris) m.userData.arcoiris.color.setHSL((t * 0.25) % 1, 0.85, 0.55);
     if (m.userData.dragon) animarDragon(m.userData.dragon, dt, { vel: camina ? 3 : 0 });
   }
-  // Tu mascota (y las de tus amigos): se crea o se cambia cuando cambia cuál llevas
-  function ponerMascotaA(quien, id) {
-    if (quien.mascotaId === id) return;
-    if (quien.mascotaObj) scene.remove(quien.mascotaObj);
-    quien.mascotaObj = id ? crearMascota(id) : null; quien.mascotaId = id;
+  // Tus mascotas (y las de tus amigos): se crean o se cambian cuando cambia cuáles llevas (una, ninguna o 🐾 todas)
+  function ponerMascotasA(quien, ids) {
+    const clave = ids.join(',');
+    if (quien.mascotasClave === clave) return;
+    for (const m of quien.mascotasObjs || []) scene.remove(m);
+    quien.mascotasObjs = ids.map(crearMascota); quien.mascotasClave = clave;
   }
   const yoMascota = {};
+  // Si dos mascotas quedan encimadas (al girar), se empujan un poquito cada una hacia su lado
+  const SEPARACION = 0.75;
+  function separarMascotas(lista) {
+    for (let a = 0; a < lista.length; a++) for (let b = a + 1; b < lista.length; b++) {
+      const p = lista[a].position, q = lista[b].position, dx = q.x - p.x, dz = q.z - p.z, d = Math.hypot(dx, dz);
+      if (d >= SEPARACION) continue;
+      const empuje = (SEPARACION - d) / 2, ux = d > 0.01 ? dx / d : 1, uz = d > 0.01 ? dz / d : 0;
+      p.x -= ux * empuje; p.z -= uz * empuje; q.x += ux * empuje; q.z += uz * empuje;
+    }
+  }
   function updateMascotas(dt) {
-    ponerMascotaA(yoMascota, loginEl.hidden ? cuenta.mascota : null);
-    if (yoMascota.mascotaObj) { yoMascota.mascotaObj.visible = !escondido; seguirDueno(yoMascota.mascotaObj, ps.pos.x, ps.pos.y, ps.pos.z, ps.facing, dt, t); }
-    for (const f of red.otros.values()) { ponerMascotaA(f, f.mascota || null); if (f.mascotaObj) seguirDueno(f.mascotaObj, f.obj.position.x, f.obj.position.y, f.obj.position.z, f.look ? f.look.rotation.y : 0, dt, t); }
+    ponerMascotasA(yoMascota, loginEl.hidden ? epicasPrimero(mascotasQueLlevas(cuenta)) : []);
+    yoMascota.mascotasObjs.forEach((m, i) => { m.visible = !escondido && !fantasma; seguirDueno(m, ps.pos.x, ps.pos.y, ps.pos.z, ps.facing, dt, t, i); });
+    separarMascotas(yoMascota.mascotasObjs);
+    for (const f of red.otros.values()) {
+      ponerMascotasA(f, epicasPrimero(f.mascotas || []));
+      f.mascotasObjs.forEach((m, i) => { m.visible = !f.oculto; seguirDueno(m, f.obj.position.x, f.obj.position.y, f.obj.position.z, f.look ? f.look.rotation.y : 0, dt, t, i); });
+      separarMascotas(f.mascotasObjs);
+    }
     // el huevo del pedestal gira, y tiembla cuando abres uno
     huevoPedestal.rotation.y += dt * 0.8;
     if (huevoTiembla > 0) { huevoTiembla -= dt; huevoPedestal.rotation.z = Math.sin(huevoTiembla * 40) * 0.25; } else huevoPedestal.rotation.z = 0;
@@ -2085,15 +2313,21 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
     // las tuyas
     const sub = document.createElement('p'); sub.className = 'subtitulo'; sub.textContent = tr('mascotas.tuyas'); lista.appendChild(sub);
     const tengo = MASCOTAS.filter(x => cuenta.mascotas[x.id]);
+    if (tengo.length > 1) {   // 🐾 ¡todas a la vez, para presumir!
+      const todas = document.createElement('button'); todas.type = 'button'; todas.className = 'todas' + (cuenta.mascota === TODAS ? ' on' : '');
+      todas.textContent = tr(cuenta.mascota === TODAS ? 'mascotas.llevandoTodas' : 'mascotas.llevarTodas', { n: tengo.length });
+      todas.addEventListener('click', () => { cuenta = llevarMascota(cuenta, cuenta.mascota === TODAS ? null : TODAS); autoguardar(); pintarMascotas(); todas.blur(); });
+      lista.appendChild(todas);
+    }
     if (!tengo.length) { const v = document.createElement('p'); v.className = 'probas'; v.textContent = tr('mascotas.ninguna'); lista.appendChild(v); }
     for (const x of tengo) {
       const f = document.createElement('div'); f.className = 'itemTienda';
       const mm = document.createElement('div'); mm.className = 'muestra'; mm.style.background = { ganso: '#f4f4f0', oso: '#8a5a32', planta: 'linear-gradient(#5fbf4a 0 45%, #c06a3c 45%)', fantasma: '#e6ecff', miniYellow: '#e2bd3c', arcoiris: 'linear-gradient(135deg, #ff4d4d, #ffd23f, #5ad16a, #4d9bff, #b14dff)' }[x.id];
       const nn = document.createElement('div'); nn.className = 'nombre'; nn.textContent = `${tr('mascota.' + x.id)} ×${cuenta.mascotas[x.id]}`;
       const bs = document.createElement('div'); bs.className = 'botones2';
-      const llevar = document.createElement('button'); llevar.type = 'button'; const la = cuenta.mascota === x.id;
+      const llevar = document.createElement('button'); llevar.type = 'button'; const la = cuenta.mascota === x.id || cuenta.mascota === TODAS;
       llevar.textContent = tr(la ? 'mascotas.llevando' : 'mascotas.llevar');
-      llevar.addEventListener('click', () => { cuenta = llevarMascota(cuenta, la ? null : x.id); autoguardar(); pintarMascotas(); llevar.blur(); });
+      llevar.addEventListener('click', () => { cuenta = llevarMascota(cuenta, la && cuenta.mascota !== TODAS ? null : x.id); autoguardar(); pintarMascotas(); llevar.blur(); });
       bs.appendChild(llevar);
       if (cuenta.mascotas[x.id] > 1) {
         const vender = document.createElement('button'); vender.type = 'button'; vender.className = 'vender'; vender.textContent = tr('mascotas.vender', { n: x.venta });
@@ -2587,8 +2821,60 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
 
   const clock = new THREE.Clock();
   let t = 0;
+  // La cámara de tercera persona, detrás de alguien (de ti, o del amigo que miras de fantasma)
+  const _cabeza = new THREE.Vector3(), _atras = new THREE.Vector3();
+  function camaraDetras(q, dt) {
+    const camYaw = vistaYaw, camPitch = vistaPitch;
+    const head = _cabeza.set(q.x, q.y + 1.2, q.z);
+    const back = _atras.set(Math.sin(camYaw) * Math.cos(camPitch), Math.sin(camPitch), Math.cos(camYaw) * Math.cos(camPitch));
+    // Si una pared (o el techo) queda en medio, la cámara se acerca enseguida; cuando ya no, se aleja suavemente
+    camRay.set(head, back); camRay.far = camQuiere;
+    const choque = camRay.intersectObjects(bloqueanCamara, false)[0];
+    const quiere = choque ? Math.max(1.2, choque.distance - 0.3) : camQuiere;
+    camDist += (quiere - camDist) * Math.min(1, dt * (quiere < camDist ? 14 : 4));   // se acerca rápido pero suave (no de golpe) y se aleja despacio
+    camera.position.copy(head).addScaledVector(back, camDist);
+    camera.lookAt(head);
+  }
+  // ⚙️ Cada 2 segundos mira cuántos cuadros por segundo van: si va lento baja la resolución (y en Auto, la calidad); si va sobrado la sube
+  const perf = { time: 0, frames: 0, buenos: 0, lento: 0, fps: 0 };
+  const opcionesCalidad = () => {
+    const nombre = n => idioma() === 'en' ? CALIDADES[n].name : CALIDADES[n].nombre;
+    for (const o of document.getElementById('ajCalidad').options) o.textContent = o.value === 'auto' ? `Auto (${nombre(calidad.nivel)})` : nombre(o.value);
+    document.getElementById('ajCalidad').value = calidad.elegida;
+  };
+  function ponerNivelCalidad(nivel) {
+    calidad.nivel = nivel;
+    const max = ratioPara(nivel, devicePixelRatio, IS_TOUCH);
+    if (pixelRatio > max) { pixelRatio = max; renderer.setPixelRatio(pixelRatio); resize(); }
+    scene.fog.far = CALIDADES[nivel].niebla;
+    opcionesCalidad();
+  }
+  document.getElementById('ajCalidad').addEventListener('change', e => {
+    calidad.elegida = leerCalidad(e.target.value);
+    try { localStorage.setItem(CLAVE_CALIDAD, calidad.elegida); } catch (err) {}
+    ponerNivelCalidad(calidad.elegida === 'auto' ? nivelAuto() : calidad.elegida);
+    e.target.blur();
+  });
+  function autoResolucion(raw) {
+    if (raw > 0.2) return;   // la pestaña estuvo escondida: ese cuadro no cuenta
+    perf.time += raw; perf.frames++;
+    if (perf.time < 2) return;
+    const fps = perf.fps = perf.frames / perf.time;
+    perf.time = perf.frames = 0;
+    if (!ajustesPanel.hidden) document.getElementById('ajFps').textContent = Math.round(fps) + ' FPS';
+    const max = ratioPara(calidad.nivel, devicePixelRatio, IS_TOUCH);
+    const r = ajustarResolucion(pixelRatio, max, fps, perf.buenos);
+    perf.buenos = r.buenos;
+    if (r.ratio !== pixelRatio) { pixelRatio = r.ratio; renderer.setPixelRatio(pixelRatio); resize(); return; }
+    if (fps < 30 && calidad.elegida === 'auto' && calidad.nivel !== 'baja' && ++perf.lento >= 2) {   // sigue lento con la resolución al mínimo: baja un nivel
+      perf.lento = 0; ponerNivelCalidad(bajarCalidad(calidad.nivel, fps));
+      try { localStorage.setItem(CLAVE_CALIDAD_AUTO, calidad.nivel); } catch (e) {}   // (la próxima vez empieza ya en este nivel)
+      showToast(tr('toast.calidad', { nivel: idioma() === 'en' ? CALIDADES[calidad.nivel].name : CALIDADES[calidad.nivel].nombre }), false, 2500);
+    }
+  }
   function tick() {
-    const dt = Math.min(clock.getDelta(), 0.05);
+    const raw = clock.getDelta(), dt = Math.min(raw, 0.05);
+    autoResolucion(raw);
     t += dt;
 
     let fx = 0, fz = 0;
@@ -2597,17 +2883,18 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
     if (keys.KeyA) fx -= 1;
     if (keys.KeyD) fx += 1;
     // Flechas izquierda/derecha giran la cámara (más rápido que con el ratón)
-    const CAM_TURN = 3;
-    if (keys.ArrowLeft) camYaw += CAM_TURN * dt;
-    if (keys.ArrowRight) camYaw -= CAM_TURN * dt;
+    const CAM_TURN = 3 * sensGiro();
+    if (keys.ArrowLeft) { camYaw += CAM_TURN * dt; tocasteCamara(); }
+    if (keys.ArrowRight) { camYaw -= CAM_TURN * dt; tocasteCamara(); }
     fx += joy.x; fz += joy.y;
     // Joystick de la cámara (celular): a los lados gira, arriba y abajo mira hacia arriba o abajo
     if (camJoy.x || camJoy.y) {
-      camYaw -= camJoy.x * 2.6 * dt;
-      if (firstPerson) fpPitch = Math.min(1.3, Math.max(-1.3, fpPitch - camJoy.y * 1.6 * dt));
-      else camPitch = Math.min(1.2, Math.max(0.1, camPitch + camJoy.y * 1.2 * dt));
+      const sg = sensGiro(); tocasteCamara();
+      camYaw -= camJoy.x * 2.6 * sg * dt;
+      if (firstPerson) fpPitch = Math.min(1.3, Math.max(-1.3, fpPitch - camJoy.y * 1.6 * sg * dt));
+      else camPitch = Math.min(1.2, Math.max(0.1, camPitch + camJoy.y * 1.2 * sg * dt));
     }
-    const busy = !loginEl.hidden || !!escondido || !!susto || !!(fiesta && ['intro', 'choque', 'hat', 'fin'].includes(fiesta.fase)) || !!(noche && noche.fase === 'intro');
+    const busy = !loginEl.hidden || !!escondido || !!susto || !!fantasma || !!(fiesta && ['intro', 'choque', 'hat', 'fin'].includes(fiesta.fase)) || !!(noche && noche.fase === 'intro');
     if (busy) fx = fz = 0; // eligiendo usuario (o metido en el armario) no te mueves
     const len = Math.hypot(fx, fz);
     let moving = false;
@@ -2624,6 +2911,14 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
       ps.walkX += mx * rapidez * dt;
       ps.walkZ += mz * rapidez * dt;
       turnTo(ps, mx, mz, dt);
+      // 🎥 Cámara asistida: mientras caminas, se acomoda sola detrás de ti (si no la moviste tú hace poquito).
+      // Solo cuando vas hacia ADELANTE: de lado o hacia atrás no se mueve (si no, darías vueltas en círculo y marea).
+      const adelante = Math.max(0, -fz) * n;   // 1 = derecho hacia adelante, 0.7 = en diagonal, 0 = de lado
+      if (aj.asist > 0 && !firstPerson && !escondido && adelante > 0.3 && performance.now() - ultimoManual > 1500) {
+        const k = 1 - Math.exp(-dt * 1.8 * (aj.asist / 100) * adelante);
+        camYaw += difAng(Math.atan2(-mx, -mz), camYaw) * k;
+        camPitch += (0.35 - camPitch) * k * 0.5;   // y vuelve despacito a la altura normal
+      }
     }
 
     // 🪜 En una escotilla: W o ESPACIO suben por la escalera, S baja. Si no tocas nada, resbalas despacito hacia abajo
@@ -2659,30 +2954,38 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
     moverTraductor();
     if (!traductorPanel.hidden && (!enLobby || Math.hypot(ps.pos.x - TRADUCTOR.x, ps.pos.z - TRADUCTOR.z) > 3.5)) traductorPanel.hidden = true;
     updateSusto(dt);
+    updateFantasma(dt);
     updatePuertas(dt, [ps.pos, ...[...red.otros.values()].map(f => f.obj.position), ...[...cuerposDragon.values()].map(c => c.obj.position)]);
 
     // pequeño rebote al caminar
     body.position.y = H/2 + (moving && ps.onGround && !enCaja ? Math.abs(Math.sin(t * 12)) * 0.08 : 0);
     // La sombrita redonda debajo de ti (más chica mientras más alto saltas)
     const alturaSombra = ps.pos.y - (ps.floorY ?? ps.pos.y);
-    sombra.visible = !escondido && ps.floorY > -1e8 && alturaSombra < 8;
+    sombra.visible = !escondido && !fantasma && ps.floorY > -1e8 && alturaSombra < 8;
     sombra.position.set(ps.pos.x, (ps.floorY ?? 0) + 0.02, ps.pos.z); sombra.scale.setScalar(Math.max(0.4, 1 - alturaSombra * 0.08));
 
     const p = player.position;
+    suavizarVista(dt);
     if (camaraSusto()) {
       // 💀 (el susto maneja la cámara)
     } else if (fiestaCamara) {
       // 🎬 (las cutscenes de la noche final manejan la cámara)
     } else if (camaraIntro()) {
       // 🎥 (la intro de la noche maneja la cámara)
+    } else if (fantasma && fantasmaFoco()) {
+      // 👻 Volando de fantasma: la misma cámara de tercera persona, detrás de tu fantasmita
+      camaraDetras(fantasmaFoco(), dt);
+      player.visible = false;
     } else if (escondido) {
+      const camYaw = vistaYaw, fpPitch = vistaFp;
       // 📦 Dentro de la caja: miras desde adentro (por la rendija), y puedes girar para ver quién viene
       const ey = escondido.y + 0.95;
       camera.position.set(escondido.x, ey, escondido.z);
       camera.lookAt(escondido.x - Math.sin(camYaw) * Math.cos(fpPitch), ey + Math.sin(fpPitch), escondido.z - Math.cos(camYaw) * Math.cos(fpPitch));
     } else if (firstPerson) {
+      const camYaw = vistaYaw, fpPitch = vistaFp;
       // Primera persona: la cámara va en los ojos y mira hacia donde apunta la cámara
-      const ey = p.y + body.position.y - H/2 + H*0.78;
+      const ey = p.y + (aj.bob ? body.position.y - H/2 : 0) + H*0.78;   // (sin balanceo si lo apagaste en ⚙️)
       camera.position.set(p.x, ey, p.z);
       camera.lookAt(
         p.x - Math.sin(camYaw) * Math.cos(fpPitch),
@@ -2691,25 +2994,56 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
       );
     } else {
       // Cámara en tercera persona
-      const head = new THREE.Vector3(p.x, p.y + 1.2, p.z);
-      const back = new THREE.Vector3(Math.sin(camYaw) * Math.cos(camPitch), Math.sin(camPitch), Math.cos(camYaw) * Math.cos(camPitch));
-      // Si una pared (o el techo) queda en medio, la cámara se acerca enseguida; cuando ya no, se aleja suavemente
-      camRay.set(head, back); camRay.far = camQuiere;
-      const choque = camRay.intersectObjects(bloqueanCamara, false)[0];
-      const quiere = choque ? Math.max(1.2, choque.distance - 0.3) : camQuiere;
-      camDist += (quiere - camDist) * Math.min(1, dt * (quiere < camDist ? 14 : 4));   // se acerca rápido pero suave (no de golpe) y se aleja despacio
-      camera.position.copy(head).addScaledVector(back, camDist);
-      camera.lookAt(head);
+      camaraDetras(p, dt);
       player.visible = camDist > 1.3;   // si la cámara queda pegada a ti, te escondes para no tapar la vista
     }
 
     // 🔧 (solo con ?debug) cámara libre para revisar cosas: cd.libre = { x, y, z, mx, my, mz }
     if (window.cd && cd.libre) { const L = cd.libre; camera.position.set(L.x, L.y, L.z); camera.lookAt(L.mx, L.my, L.mz); }
     apuntarLinterna();
-    moverFocos(ps.pos);
+    moverFocos((fantasma && fantasmaFoco()) || ps.pos);   // (de fantasma, las luces se prenden donde vuelas)
+    sonarZona(dt);
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
   }
+  // ---------- 🔊 Música y sonido ambiente (src/sonido.js): cada zona suena distinto y se cruzan suave ----------
+  let amb = null, ajSonido = { musica: 0, ambiente: 0.7, silencio: false }, agachado = false;
+  try { ajSonido = leerAjustes(localStorage.getItem(CLAVE_AJUSTES)); } catch (e) {}
+  const sonidoBtn = document.getElementById('sonidoBtn'), sonidoPanel = document.getElementById('sonidoPanel');
+  const sonMusica = document.getElementById('sonidoMusica'), sonAmbiente = document.getElementById('sonidoAmbiente'), sonSilencio = document.getElementById('sonidoSilencio');
+  function arrancarSonido() {
+    sonidoBtn.hidden = false;
+    if (amb) { amb.reanudar(); return; }
+    try { amb = crearAmbiente(); amb.volumen(ajSonido); amb.reanudar(); } catch (e) { amb = null; }
+    if (window.cd) cd.amb = amb;
+  }
+  addEventListener('pointerdown', () => { if (amb) amb.reanudar(); });   // (el iPhone a veces pausa el sonido: un toque lo despierta)
+  function sonarZona(dt) {
+    if (!amb) return;
+    const def = noche && nocheDe(noche.n);
+    amb.zona(zonaSonora({ jugando: loginEl.hidden, enLobby, fiesta: !!fiesta, apagon: !!(def && def.apagon), intro: !!(noche && noche.fase === 'intro'),
+      sala: (q => salaEn(q.x, q.y, q.z))((fantasma && fantasmaFoco()) || ps.pos), anterior: amb.actual }));
+    if (agachado !== !!susto) { agachado = !!susto; amb.agachar(agachado); }   // en un susto la música se hace a un lado
+    amb.tick(dt);
+  }
+  function pintarSonido() {
+    sonMusica.value = Math.round(ajSonido.musica * 100); sonAmbiente.value = Math.round(ajSonido.ambiente * 100); sonSilencio.checked = ajSonido.silencio;
+    document.getElementById('sonidoMusicaVal').textContent = sonMusica.value + ' %';
+    document.getElementById('sonidoAmbienteVal').textContent = sonAmbiente.value + ' %';
+    sonidoBtn.textContent = ajSonido.silencio ? '🔇' : '🔊';
+    sonMusica.disabled = sonAmbiente.disabled = ajSonido.silencio;
+  }
+  function cambiarSonido() {
+    ajSonido = leerAjustes(JSON.stringify({ musica: sonMusica.value / 100, ambiente: sonAmbiente.value / 100, silencio: sonSilencio.checked }));
+    try { localStorage.setItem(CLAVE_AJUSTES, guardarAjustes(ajSonido)); } catch (e) {}
+    if (amb) amb.volumen(ajSonido);
+    pintarSonido();
+  }
+  for (const el of [sonMusica, sonAmbiente]) { el.addEventListener('input', cambiarSonido); el.addEventListener('change', () => el.blur()); }   // blur: que las teclas vuelvan a mover al jugador
+  sonSilencio.addEventListener('change', () => { cambiarSonido(); sonSilencio.blur(); });
+  sonidoBtn.addEventListener('click', e => { sonidoPanel.hidden = !sonidoPanel.hidden; if (!sonidoPanel.hidden) ajustesPanel.hidden = true; pintarSonido(); e.currentTarget.blur(); });
+  sonidoPanel.querySelector('.cerrar').addEventListener('click', e => { sonidoPanel.hidden = true; e.currentTarget.blur(); });
+  pintarSonido();
   // 🌍 Cambiar el idioma de TODO: los textos de la pantalla, los letreros, la pantalla del lobby y el ESCAPASTE
   function aplicarIdioma() {
     document.documentElement.lang = idioma();
@@ -2717,7 +3051,7 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
     for (const el of document.querySelectorAll('[data-t-html]')) el.innerHTML = tr(el.dataset.tHtml);
     for (const el of document.querySelectorAll('[data-t-ph]')) el.placeholder = tr(el.dataset.tPh);
     for (const el of document.querySelectorAll('[data-t-aria]')) el.setAttribute('aria-label', tr(el.dataset.tAria));
-    repintarLetreros(); pintarPantallaLobby();
+    repintarLetreros(); pintarPantallaLobby(); opcionesCalidad();
     escapasteEl.innerHTML = [...tr('escapaste')].map(l => (l === ' ' ? '<span>&nbsp;</span>' : `<span>${l}</span>`)).join('');
     if (!tiendaEl.hidden) pintarTienda();
     if (!mascotasPanel.hidden) pintarMascotas();
@@ -2725,6 +3059,7 @@ import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos arc
   function cambiarIdioma(i) { ponerIdioma(i); try { localStorage.setItem('color-dragons:idioma', i); } catch (e) {} aplicarIdioma(); }
   try { ponerIdioma(localStorage.getItem('color-dragons:idioma') || 'es'); } catch (e) {}
   aplicarIdioma();
+  aplicarAjustes();
   const juntadas = juntarQuietos();
   if (window.cd) cd.juntadas = juntadas;
   tick();

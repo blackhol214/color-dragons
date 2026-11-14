@@ -69,8 +69,12 @@ export function venderRepetida(cuenta, id) {
   if (!m || n < 2) return { ok: false, cuenta };
   return { ok: true, cuenta: { ...cuenta, monedas: cuenta.monedas + m.venta, mascotas: { ...cuenta.mascotas, [id]: n - 1 } } };
 }
-// Llevar una mascota que tienes (o ninguna: null)
-export const llevarMascota = (cuenta, id) => (id === null || cuenta.mascotas[id] ? { ...cuenta, mascota: id } : cuenta);
+// Llevar una mascota que tienes (o ninguna: null). Con TODAS llevas una de cada mascota que tengas, ¡para presumir!
+export const TODAS = 'todas';
+const tieneAlguna = cuenta => MASCOTAS.some(m => cuenta.mascotas[m.id]);
+export const llevarMascota = (cuenta, id) => (id === null || cuenta.mascotas[id] || (id === TODAS && tieneAlguna(cuenta)) ? { ...cuenta, mascota: id } : cuenta);
+// Las mascotas que te siguen ahora (una lista: vacía, una sola, o todas las que tienes en el orden de la tienda)
+export const mascotasQueLlevas = cuenta => (cuenta.mascota === TODAS ? MASCOTAS.filter(m => cuenta.mascotas[m.id]).map(m => m.id) : cuenta.mascota ? [cuenta.mascota] : []);
 
 export const nuevaCuenta = () => ({ monedas: 0, color: COLOR_INICIAL, cajas: ['carton'], caja: 'carton', caminos: [], camino: null, mascotas: {}, mascota: null });
 
@@ -130,6 +134,6 @@ export function leerCuenta(d) {
   if (Array.isArray(d.caminos)) c.caminos = [...new Set(d.caminos.filter(id => caminoDe(id)))];
   if (c.caminos.includes(d.camino)) c.camino = d.camino;
   if (d.mascotas && typeof d.mascotas === 'object') for (const m of MASCOTAS) { const n = d.mascotas[m.id]; if (Number.isInteger(n) && n > 0 && n < 10000) c.mascotas[m.id] = n; }
-  if (c.mascotas[d.mascota]) c.mascota = d.mascota;
+  if (c.mascotas[d.mascota] || (d.mascota === TODAS && tieneAlguna(c))) c.mascota = d.mascota;
   return c;
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MASCOTAS, PRECIO_HUEVO, sacarMascota, abrirHuevo, venderRepetida, llevarMascota, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, COSTO_SEGUIR, pagarParaSeguir, CAJAS, PALETA, COLOR_INICIAL, MONEDAS_POR_NOCHE, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, leerCuenta } from '../src/tienda.js';
+import { MASCOTAS, PRECIO_HUEVO, sacarMascota, abrirHuevo, venderRepetida, llevarMascota, TODAS, mascotasQueLlevas, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, COSTO_SEGUIR, pagarParaSeguir, CAJAS, PALETA, COLOR_INICIAL, MONEDAS_POR_NOCHE, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, leerCuenta } from '../src/tienda.js';
 
 describe('🪙 monedas', () => {
   it('empiezas con 0 monedas, verde y con la caja de cartón', () => {
@@ -131,5 +131,18 @@ describe('🥚 mascotas', () => {
     expect(llevarMascota(c, 'oso').mascota).toBe('oso');
     expect(llevarMascota(c, 'arcoiris').mascota).toBe(null);
     expect(llevarMascota(llevarMascota(c, 'oso'), null).mascota).toBe(null);
+  });
+});
+
+describe('🐾 llevar todas las mascotas a la vez', () => {
+  it('llevas una de cada una que tengas, en el orden de la tienda', () => {
+    const c = llevarMascota({ ...nuevaCuenta(), mascotas: { oso: 3, ganso: 1, arcoiris: 1 } }, TODAS);
+    expect(c.mascota).toBe(TODAS);
+    expect(mascotasQueLlevas(c)).toEqual(['ganso', 'oso', 'arcoiris']);
+  });
+  it('sin mascotas no puedes llevar "todas"', () => expect(llevarMascota(nuevaCuenta(), TODAS).mascota).toBe(null));
+  it('una sola o ninguna', () => {
+    expect(mascotasQueLlevas({ ...nuevaCuenta(), mascotas: { oso: 1 }, mascota: 'oso' })).toEqual(['oso']);
+    expect(mascotasQueLlevas(nuevaCuenta())).toEqual([]);
   });
 });
