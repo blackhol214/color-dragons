@@ -32,7 +32,7 @@ export const esperaSonido = (s, azar = Math.random) => s.cada[0] + azar() * (s.c
 export const CRUCE_SEGUNDOS = 2.5;   // lo que dura el cruce (crossfade) de una zona a otra
 export const VOLUMEN_MAXIMO = 0.3;   // aunque pongas todo al 100 %, el juego nunca suena fuerte
 
-const REFUGIOS = ['spawn', 'escaleras', 'panico'];
+const REFUGIOS = ['spawn', 'escaleras', 'panico', 'secreto'];
 // ¿Qué zona suena? Mira dónde estás. Si no estás en ninguna sala (en una escalera, entre dos salas…), sigue la que sonaba antes
 export function zonaSonora({ jugando = true, enLobby = false, sala = null, apagon = false, fiesta = false, intro = false, anterior = null } = {}) {
   if (!jugando) return null;           // en la pantalla de inicio no suena nada

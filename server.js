@@ -135,6 +135,7 @@ let dragones = nuevosDragones();
 let ultimoTick = Date.now();
 // 🌙 La noche de ahora (null = todavía nadie entró)
 let noche = null, plato = true;
+const atrapadoHace = new Map();   // cuándo se avisó por última vez que atraparon a cada jugador
 function empezarNoche(n) {
   noche = nuevaNoche(n); plato = true;
   dragones = nuevosDragones();   // cada noche los dragones empiezan en su casa
@@ -158,6 +159,10 @@ setInterval(() => {
   const activos = nocheDe(noche.n).dragones, jugadores = [...conectados.values()].map(j => ({ id: j.id, x: j.x, y: j.y, z: j.z, oculto: j.oculto || 0 }));
   for (const e of tickDragones(dragones.filter(d => activos.includes(d.id)), jugadores, dt, Math.random, { plato })) {
     if (e.tipo === 'come') { plato = false; aTodos({ tipo: 'plato', lleno: false }); continue; }
+    if (e.tipo === 'atrapado') {   // 💀 el mismo jugador se avisa UNA vez (no 10 por segundo mientras sigue al lado del dragón)
+      if (ahora - (atrapadoHace.get(e.jugador) || 0) < 4000) continue;
+      atrapadoHace.set(e.jugador, ahora);
+    }
     aTodos({ tipo: 'dragonEvento', que: e.tipo, dragon: e.dragon, jugador: e.jugador });
     if (e.tipo === 'atrapado' && soltar(noche, e.jugador)) aTodos(fotoNoche());   // lo que llevaba se le cae y vuelve a su lugar
   }

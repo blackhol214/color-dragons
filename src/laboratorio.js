@@ -30,7 +30,10 @@ export const SALAS = [
   { id: 'pasilloOeste', nombre: 'Pasillo oeste', y: 0, x0: -26.5, x1: -21.5, z0: -18, z1: 4, pared: 0x868a8c, piso: 0x5a5e61,
     puertas: { n: [[-26.5, -21.5]], e: [[-12.5, -7.5], [-2, 2]], s: [[-26.5, -21.5]] } },
   { id: 'panico', nombre: 'Panic Hole', y: 0, x0: -34, x1: -21.5, z0: 4, z1: 20, pared: 0x97817c, piso: 0x6a5c58,
-    puertas: { n: [[-26.5, -21.5]], e: [[8, 11]] } },
+    puertas: { n: [[-26.5, -21.5]], e: [[8, 11]], w: [[10.9, 13.1]] } },   // (la del oeste es la puerta secreta, detrás del cartel KEEP CALM)
+  // 🔐 El cuarto secreto: solo se abre con el código 2026 en el cartel KEEP CALM, y solo para quien lo escribe. Adentro: el álbum de los dragones
+  { id: 'secreto', nombre: 'Cuarto secreto', y: 0, alto: 3.6, x0: -42, x1: -34, z0: 6, z1: 18, pared: 0x8c7a6a, piso: 0x5e5048, secreta: true,
+    puertas: { e: [[10.9, 13.1]] } },
   { id: 'salon', nombre: 'Salón central', y: 0, x0: -21.5, x1: 14, z0: -4, z1: 12, pared: 0x8a8d93, piso: 0x5f6268,
     puertas: { w: [[-2, 2], [8, 11]], e: [[2, 6]] } },
   { id: 'banos', nombre: 'Baños', y: 0, x0: 14, x1: 26, z0: -30, z1: -7.5, pared: 0xa7aaa5, piso: 0x7b807c,

@@ -127,6 +127,14 @@
   #perdiste .botones { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
   #perdiste button { border:0; border-radius:12px; padding:12px 16px; font:700 15px/1 system-ui, sans-serif; color:#fff; cursor:pointer; }
   #observarBtn { background:#5b4b8a; }
+  /* 🔐 El teclado del código secreto (en el cartel KEEP CALM) */
+  #codigoPanel { width:min(92vw, 300px); text-align:center; }
+  #codigoPantalla { margin:4px auto 10px; padding:8px; border-radius:10px; background:#0d1214; font:700 34px/1 ui-monospace, Menlo, monospace; letter-spacing:.35em; color:#7dffa0; }
+  #codigoPantalla.mal { color:#ff6b5f; animation:codigoTiembla .35s; }
+  @keyframes codigoTiembla { 25% { transform:translateX(-8px); } 75% { transform:translateX(8px); } }
+  #codigoTeclas { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+  #codigoTeclas button { height:52px; border:0; border-radius:12px; background:#3a4a4e; color:#fff; font:700 22px system-ui, sans-serif; cursor:pointer; touch-action:manipulation; }
+  #codigoTeclas button.ok { background:#2fae4e; }
   /* 👻 Modo fantasma: la barrita (ir junto a un amigo, o volver al lobby) */
   #fantasmaBar { position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); z-index:16; display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:16px; background:rgba(40,30,70,.88); color:#fff; font:700 15px system-ui, sans-serif; box-shadow:0 6px 20px rgba(0,0,0,.35); }
   #fantasmaBar[hidden] { display:none; }
@@ -206,6 +214,10 @@
   <label><span data-t="sonido.ambiente">🌬️ Ambiente</span> <b id="sonidoAmbienteVal"></b><input id="sonidoAmbiente" type="range" min="0" max="100" step="5"></label>
   <label class="silencio"><input id="sonidoSilencio" type="checkbox"> <span data-t="sonido.silencio">Silenciar todo</span></label>
   <p class="nota" data-t="sonido.nota">Cada zona tiene sus sonidos (gotas, grillos, máquinas…). La música viene apagada: súbela si la quieres.</p></div>
+<div id="codigoPanel" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 data-t="codigo.titulo">🔢 Código secreto</h2>
+  <div id="codigoPantalla">····</div>
+  <div id="codigoTeclas"></div>
+</div>
 <div id="fantasmaBar" hidden><button type="button" id="fantAnt" aria-label="Anterior" data-t-aria="fantasma.anterior">◀</button><span id="fantNombre"></span><button type="button" id="fantSig" aria-label="Siguiente" data-t-aria="fantasma.siguiente">▶</button><button type="button" id="fantLobby" data-t="fantasma.lobby">🏠 Lobby</button></div>
 <button id="ajustesBtn" type="button" aria-label="Ajustes de cámara" data-t-aria="ajustes.aria">⚙️</button>
 <div id="ajustesPanel" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 data-t="ajustes.titulo">⚙️ Cámara</h2>
@@ -224,15 +236,15 @@
 <script type="module">
 import { alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=18';
 import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=19';
-import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=18';
-import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=18';
+import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=19';
+import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=19';
 import { crearDragon, animarDragon } from './src/criaturas.js?v=18';
-import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=22';   // (v=19: textos nuevos del 🔊 sonido)
+import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=27';   // (v=19: textos nuevos del 🔊 sonido)
 import { MASCOTAS, PRECIO_HUEVO, mascotaDe, abrirHuevo, venderRepetida, llevarMascota, TODAS, mascotasQueLlevas, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=19';
-import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=18';
-import * as F from './src/fiesta.js?v=18';
+import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=19';
+import * as F from './src/fiesta.js?v=19';
 import { CALIDADES, CLAVE_CALIDAD, CLAVE_CALIDAD_AUTO, leerCalidad, leerNivel, calidadInicial, ratioPara, bajarCalidad, ajustarResolucion } from './src/calidad.js?v=1';
-import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES } from './src/sonido.js?v=19';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
+import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES } from './src/sonido.js?v=20';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
 (() => {
   // iPhone ignora user-scalable=no: aquí se bloquea el zoom con dos dedos y el doble toque
   for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
@@ -460,6 +472,7 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
       // ¿Con qué sala se conecta? Entre dos pasillos no hay puerta, y el salón queda abierto (así hay menos puertas)
       const otra = SALAS.find(o => o !== s && o.y === s.y && ({ n: o.z1, s: o.z0, w: o.x1, e: o.x0 })[lado] === ({ n: s.z0, s: s.z1, w: s.x0, e: s.x1 })[lado]
         && (lado === 'n' || lado === 's' ? o.x0 <= a && o.x1 >= b : o.z0 <= a && o.z1 >= b));
+      if (s.secreta || (otra && otra.secreta)) continue;   // 🔐 la puerta secreta se hace aparte (más abajo: la del cartel KEEP CALM)
       const esPanico = s.id === 'panico' || (otra && otra.id === 'panico');
       if (!esPanico && (!otra || (PASILLOS.includes(s.id) && PASILLOS.includes(otra.id)) || SIN_PUERTAS.includes(s.id) || SIN_PUERTAS.includes(otra.id))) continue;
       const linea = { n: s.z0, s: s.z1, w: s.x0, e: s.x1 }[lado], clave = `${s.y}|${horizontal}|${linea}|${a}|${b}`;
@@ -536,7 +549,7 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
   // de sala en sala). Con 20 luces prendidas a la vez, las compus más lentas se ponían a 20 cuadros por segundo: ¡ese era el LAG!
   const focos = {}, FOCOS_PRENDIDOS = 4;
   for (const [id, color, k] of [['spawn', 0xe8eee8, 1], ['testLab', 0xd6ece6, 1], ['salon', 0xe6e8ee, 1.1], ['centerLab', 0xe2eaf0, 1.2], ['banos', 0xeef0e6, 0.9],
-    ['lockers', 0xe0eadb, 0.9], ['panico', 0xf0d6cf, 0.8], ['greyCove', 0xc9ccd0, 0.9], ['yellowRoom', 0xf0e0a8, 0.9], ['tunelCentro', 0xd8d0b0, 0.6],
+    ['lockers', 0xe0eadb, 0.9], ['panico', 0xf0d6cf, 0.8], ['secreto', 0xfff0d8, 0.9], ['greyCove', 0xc9ccd0, 0.9], ['yellowRoom', 0xf0e0a8, 0.9], ['tunelCentro', 0xd8d0b0, 0.6],
     ['lobby', 0xf2f6f6, 1.4], ['fSalon', 0xf6d8ee, 1.2], ['fSpawn', 0xe8dcf6, 1], ['fRampa', 0xdfe2f6, 1], ['fBloques', 0xe6eadb, 1], ['fPasillo', 0xd8dde8, 0.9], ['fVent1', 0xc8d2d8, 0.4], ['fVent2', 0xc8d2d8, 0.5], ['fVent3', 0xc8d2d8, 0.5], ['fSalida', 0x9fb4d8, 0.5]]) {
     const s = SALAS.find(q => q.id === id);
     focos[id] = { x: (s.x0 + s.x1) / 2, y: s.y + altoDe(s.y) - 0.6, z: (s.z0 + s.z1) / 2, color, k: k * 1.15 };   // (solo el dato: dónde va y de qué color)
@@ -833,6 +846,7 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
   filaLockers(20.8, -7.45, 18, true, 's');
   filaLockers(31.45, -5.6, 14, false, 'w');
   banca(25, -1.5, 0, 6, 0.6);
+  let cartelCalma = null;
   // 😐 Panic Hole: el cartel KEEP CALM, la carita feliz pintada, un colchón viejo y un botiquín
   {
     const calma = cartel(256, 320, 2.2, 2.75, (g, w, h) => {
@@ -840,7 +854,7 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
       g.fillStyle = '#c9bfb2'; g.beginPath(); g.moveTo(w / 2, 34); g.lineTo(w / 2 + 26, 70); g.lineTo(w / 2 - 26, 70); g.fill();   // la corona chiquita
       letras(g, tr('letrero.keep'), w / 2, 125, 74, '#d8cfc2'); letras(g, tr('letrero.calm'), w / 2, 210, 74, '#d8cfc2');
     });
-    enPared(calma, -33.68, 1.9, 12, 'e');
+    enPared(calma, -33.62, 1.9, 12, 'e'); cartelCalma = calma;
     // La sonrisa pintada en la pared: ojos de punto y una boca enorme y temblorosa (desquiciada 😬)
     const carita = cartel(512, 512, 4.2, 4.2, (g, w) => {
       const tinta = 'rgba(34,30,28,.85)';
@@ -1011,13 +1025,11 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
   let firstPerson = false, fpPitch = 0;
   addEventListener('keydown', e => {
     if (!loginEl.hidden) return;                 // en la pantalla de inicio: solo se escribe el usuario
+    if (!codigoPanel.hidden) { teclaCodigo(e); return; }   // 🔐 escribiendo el código secreto
     keys[e.code] = true;
     if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
-    if (fantasma) {   // 👻 de fantasma solo vuelas: Q y E te llevan junto a un amigo (y O abre los ajustes)
-      if (!e.repeat && (e.code === 'KeyQ' || e.code === 'KeyE')) cambiarFantasma(e.code === 'KeyQ' ? -1 : 1);
-      if (e.code === 'KeyO' && !e.repeat) abrirAjustes(ajustesPanel.hidden);
-      return;
-    }
+    if (fantasma && !e.repeat && (e.code === 'KeyQ' || e.code === 'KeyE')) { cambiarFantasma(e.code === 'KeyQ' ? -1 : 1); return; }   // 👻 Q / E: ir junto a un amigo (de fantasma no puedes usar nada)
+    if (fantasma && e.code === 'KeyB') return;
     if (e.code === 'KeyV' && !e.repeat) setFirstPerson(!firstPerson);
     if (e.code === 'KeyH' && !e.repeat) guiaMostrar(!guiaVisible);   // H: esconde o llama al bot guía
     if ((e.code === 'Enter' || e.code === 'NumpadEnter') && !e.repeat) { e.preventDefault(); if (!(noche && noche.fase === 'intro')) guiaDialogo(guiaEl.hidden); }   // (durante la intro, ENTER no hace nada)   // ENTER: abre o cierra el diálogo del bot guía
@@ -1236,6 +1248,9 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
   const usarBtn = document.getElementById('usarBtn');
   function queUsar() {
     if (!loginEl.hidden || oculto()) return null;
+    if (cercaCalma()) return { texto: tr('usar.codigo'), hacer: abrirCodigo };   // 🔐 el cartel KEEP CALM esconde algo…
+    const ps2 = puertaSecretaCerca();
+    if (ps2) return ps2;
     const c = botonCerca(ps.pos);
     if (c) return { texto: tr(c.abierta ? 'usar.cerrarPuerta' : 'usar.abrirPuerta'), hacer: () => { c.abierta = !c.abierta; } };
     if (mesaLinternas.visible && !tengoLinterna && cercaMesaLinternas()) return { texto: tr('usar.linterna'), hacer: agarrarLinterna };
@@ -1395,7 +1410,8 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     const c = document.createElement('canvas'); c.width = 256; c.height = 64;
     const g = c.getContext('2d');
     g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, 8, 256, 48);
-    g.fillStyle = color; g.font = 'bold 34px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillStyle = color; g.textAlign = 'center'; g.textBaseline = 'middle';
+    let tam = 34; do { g.font = `bold ${tam}px system-ui, sans-serif`; tam -= 2; } while (tam > 14 && g.measureText(text).width > 240);   // los nombres largos se achican para caber
     g.fillText(text, 128, 33);
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false }));
     s.scale.set(2.4, 0.6, 1); s.position.y = H + 0.6;
@@ -1475,7 +1491,8 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     if (red.id !== null && (red.envio -= dt) <= 0) {
       red.envio = Math.max(red.envio + 1 / ENVIOS_POR_SEGUNDO, 0);   // sumar (no reemplazar): así salen 10 por segundo de verdad, no 8
       // Si no te moviste, no hace falta repetirlo 10 veces por segundo: basta una vez por segundo (para que el servidor sepa que sigues ahí)
-      const pos = { tipo: 'pos', x: corto(ps.pos.x), y: corto(ps.pos.y), z: corto(ps.pos.z), rot: corto(ps.facing), color: body.material.color.getHex(), oculto: oculto() ? 1 : 0, camino: cuenta.camino, mascota: mascotasQueLlevas(cuenta)[0] || null, mascotas: mascotasQueLlevas(cuenta) };
+      const yo = fantasma ? fantasma.lobby : ps.pos;   // 👻 de fantasma, para los demás (y para los dragones) sigues en el lobby
+      const pos = { tipo: 'pos', x: corto(yo.x), y: corto(yo.y), z: corto(yo.z), rot: corto(ps.facing), color: body.material.color.getHex(), oculto: oculto() ? 1 : 0, camino: cuenta.camino, mascota: mascotasQueLlevas(cuenta)[0] || null, mascotas: mascotasQueLlevas(cuenta) };
       const txt = JSON.stringify(pos);
       pos.t = Math.round(performance.now());   // tu hora: los demás la usan para dibujarte suave (va aparte para que "¿te moviste?" no cambie siempre)
       red.quieto = txt === red.ultimaPos ? (red.quieto || 0) + 1 : 0;
@@ -1532,8 +1549,9 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     sp.scale.set(0.6, 1.2, 1); scene.add(sp);
     alertas.push({ sp, quien, vida: 2.5 });
   }
+  let inmuneHasta = 0;   // justo después de elegir en el panel, otro "atrapado" del servidor (que llegó tarde) no cuenta
   function atrapado(idDragon) {
-    if (susto || !noche) return;
+    if (susto || !noche || fantasma || performance.now() < inmuneHasta) return;
     const def = DRAGONES.find(d => d.id === idDragon);
     // Lo que llevabas se cae y vuelve a su lugar (con amigos, eso lo hace el servidor)
     const cayeron = red.id === null ? soltar(noche, 'yo') : 0;
@@ -1549,37 +1567,28 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     showToast(tr('toast.perdiste'), true, 3500);
   }
 
-  // ---------- 👻 Modo fantasma: perdiste, pero tus amigos siguen vivos → vuelas como fantasma por la noche ----------
-  // Tu cuerpo de verdad espera en el lobby (así los dragones no te persiguen y para tus amigos estás "muerto" ahí).
-  // Lo que manejas es un fantasmita transparente que vuela y atraviesa paredes: WASD para moverte, ESPACIO sube, SHIFT baja,
-  // Q / E (o ◀ ▶) te llevan volando junto a un amigo. No puedes agarrar nada ni ganar monedas. Cuando ganan o ya no queda nadie, vuelves al lobby.
-  let fantasma = null;   // { pos: dónde está tu fantasmita, amigo: el último amigo al que fuiste }
+  // ---------- 👻 Modo fantasma: perdiste, pero tus amigos siguen vivos → sigues caminando por la noche como fantasma ----------
+  // Caminas normal (con paredes y todo), pero eres INTANGIBLE para los dragones: al servidor le dices que estás en el lobby,
+  // así que no te ven, no te persiguen y no te atrapan. Te ves transparente. No puedes agarrar nada, esconderte ni ganar monedas.
+  // Q / E (o ◀ ▶) te llevan junto a un amigo. Cuando ganan o ya no queda nadie vivo, vuelves al lobby.
+  let fantasma = null;   // { lobby: dónde le dices al servidor que estás, amigo: el último amigo al que fuiste }
   const fantasmaBar = document.getElementById('fantasmaBar'), fantNombre = document.getElementById('fantNombre'), observarBtn = document.getElementById('observarBtn');
-  const FANTASMA_VEL = 7;
-  // Hasta dónde puede volar: la caja del laboratorio (todas las salas que no son ni el lobby ni la fiesta)
-  const LAB = SALAS.filter(q => q.zona !== 'lobby' && q.zona !== 'fiesta').reduce((b, q) => ({ x0: Math.min(b.x0, q.x0), x1: Math.max(b.x1, q.x1), z0: Math.min(b.z0, q.z0), z1: Math.max(b.z1, q.z1) }), { x0: Infinity, x1: -Infinity, z0: Infinity, z1: -Infinity });
-  // El fantasmita: tu mismo rectángulo, pero blanco y transparente (y con tus ojos)
-  const fantasmaObj = (() => {
-    const g = new THREE.Group();
-    const cuerpo = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), new THREE.MeshLambertMaterial({ color: 0xeef3ff, emissive: 0x334055, transparent: true, opacity: 0.45, depthWrite: false }));
-    cuerpo.position.y = H / 2; g.add(cuerpo);
-    for (const ex of [-0.22, 0.22]) { const e = new THREE.Mesh(eyeGeo, eyeMat); e.scale.z = 0.5; e.position.set(ex, H * 0.78, D / 2 + 0.01); g.add(e); }
-    g.visible = false; scene.add(g);
-    return g;
-  })();
   // Los amigos que siguen en la noche (los que no están en el lobby)
   function vivosEnNoche() {
     return [...red.otros.values()].filter(f => { const q = f.obj.position, s = salaEn(q.x, q.y, q.z); return s ? s.zona !== 'lobby' : q.x < 98; });
   }
   const puedeObservar = () => red.id !== null && !!noche && !fiesta && noche.fase === 'jugando' && vivosEnNoche().length > 0;
+  // Transparente como fantasma (o de vuelta normal)
+  function verseFantasma(si) {
+    body.material.transparent = si; body.material.opacity = si ? 0.4 : 1; body.material.depthWrite = !si; body.material.needsUpdate = true;
+  }
   function observar() {
     if (!vivosEnNoche().length) { perderNoche(); return; }
-    if (firstPerson) setFirstPerson(false);
     if (escondido) alternarEscondite();
-    fantasma = { pos: new THREE.Vector3(ps.pos.x, ps.pos.y + 0.3, ps.pos.z), giro: ps.facing, amigo: null };   // apareces donde te atraparon
-    enCaja = false; ps.pos.copy(alLado(LOBBY_SPAWN)); ps.vel.set(0, 0, 0);
-    fantasmaObj.visible = true; fantasmaBar.hidden = false; pintarFantasma();
-    showToast(tr('toast.fantasma'), false, 4000);
+    enCaja = false; ps.vel.set(0, 0, 0);
+    fantasma = { lobby: alLado(LOBBY_SPAWN), amigo: null };   // te quedas donde te atraparon (pero para los dragones ya no estás)
+    verseFantasma(true); fantasmaBar.hidden = false; pintarFantasma();
+    showToast(tr('toast.fantasma'), false, 4500);
   }
   function pintarFantasma() {
     const f = fantasma && fantasma.amigo && red.otros.get(fantasma.amigo);
@@ -1587,7 +1596,7 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     const hay = vivosEnNoche().length > 0;
     document.getElementById('fantAnt').disabled = document.getElementById('fantSig').disabled = !hay;
   }
-  // Te lleva volando junto a un amigo (el siguiente o el anterior de la lista)
+  // Te lleva junto a un amigo (el siguiente o el anterior de la lista)
   function cambiarFantasma(paso) {
     if (!fantasma) return;
     const vivos = vivosEnNoche();
@@ -1595,48 +1604,173 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     const i = vivos.findIndex(f => f.id === fantasma.amigo);
     const f = vivos[((i < 0 ? 0 : i + paso) % vivos.length + vivos.length) % vivos.length];
     fantasma.amigo = f.id;
-    fantasma.pos.set(f.obj.position.x, f.obj.position.y + 0.3, f.obj.position.z);
-    camYaw = f.look ? f.look.rotation.y + Math.PI : camYaw;   // quedas detrás de tu amigo, mirando hacia donde él mira
+    ps.pos.copy(alLado(f.obj.position)); ps.vel.set(0, 0, 0);
+    camYaw = f.look ? f.look.rotation.y + Math.PI : camYaw;   // quedas mirando hacia donde mira tu amigo
     pintarFantasma();
   }
   function salirFantasma(aviso) {
     if (!fantasma) return;
-    fantasma = null; fantasmaBar.hidden = true; fantasmaObj.visible = false;
+    fantasma = null; fantasmaBar.hidden = true; verseFantasma(false);
     perderNoche();
     if (aviso) showToast(tr(aviso), false, 3500);
   }
-  // Dónde está tu fantasmita (para la cámara, las luces y el sonido)
-  const fantasmaFoco = () => (fantasma ? fantasma.pos : null);
-  const _vuelo = new THREE.Vector3();
-  function updateFantasma(dt) {
+  function updateFantasma() {
     if (!fantasma) return;
     if (red.id === null || !noche || fiesta) { salirFantasma(null); return; }
     if (!vivosEnNoche().length) { salirFantasma('toast.fantasmaNadie'); return; }
-    // Volar: WASD (o el joystick) según hacia dónde mira la cámara; ESPACIO sube y SHIFT baja. Atraviesas paredes y pisos
-    let fx = joy.x, fz = joy.y;
-    if (keys.KeyW || keys.ArrowUp) fz -= 1;
-    if (keys.KeyS || keys.ArrowDown) fz += 1;
-    if (keys.KeyA) fx -= 1;
-    if (keys.KeyD) fx += 1;
-    const len = Math.hypot(fx, fz);
-    if (len > 0.1) {
-      const n = Math.min(len, 1) / len; fx *= n; fz *= n;
-      const sn = Math.sin(camYaw), cs = Math.cos(camYaw);
-      _vuelo.set(fx * cs + fz * sn, 0, -fx * sn + fz * cs);
-      fantasma.pos.addScaledVector(_vuelo, FANTASMA_VEL * dt);
-      fantasma.giro = acercarAngulo(fantasma.giro, Math.atan2(_vuelo.x, _vuelo.z), Math.min(1, dt * 10));
-      if (fantasma.amigo) { fantasma.amigo = null; pintarFantasma(); }   // te fuiste por tu cuenta
-    }
-    const sube = (keys.Space ? 1 : 0) - (keys.ShiftLeft || keys.ShiftRight ? 1 : 0);
-    fantasma.pos.y += sube * FANTASMA_VEL * 0.7 * dt;
-    fantasma.pos.set(Math.min(LAB.x1, Math.max(LAB.x0, fantasma.pos.x)), Math.min(ALTO - 1, Math.max(PISO_SUBSUELO - 0.5, fantasma.pos.y)), Math.min(LAB.z1, Math.max(LAB.z0, fantasma.pos.z)));
-    // el fantasmita flota (sube y baja un poquito) y mira hacia donde vuela
-    fantasmaObj.position.set(fantasma.pos.x, fantasma.pos.y + Math.sin(t * 2.2) * 0.1, fantasma.pos.z);
-    fantasmaObj.rotation.y = fantasma.giro;
+    if (fantasma.amigo) { const f = red.otros.get(fantasma.amigo); if (!f || f.obj.position.distanceTo(ps.pos) > 6) { fantasma.amigo = null; pintarFantasma(); } }   // te alejaste de él
   }
   document.getElementById('fantAnt').addEventListener('click', e => { cambiarFantasma(-1); e.currentTarget.blur(); });
   document.getElementById('fantSig').addEventListener('click', e => { cambiarFantasma(1); e.currentTarget.blur(); });
   document.getElementById('fantLobby').addEventListener('click', e => { e.currentTarget.blur(); salirFantasma(null); });
+
+  // ---------- 🔐 La puerta secreta del Panic Hole: el código 2026 en el cartel KEEP CALM ----------
+  // Detrás del cartel hay una puerta que SOLO se abre en tu pantalla (tus amigos la siguen viendo cerrada, y los dragones no entran).
+  // Adentro está el álbum secreto: "fotos" de cada dragón, sacadas con una cámara de verdad en un escenario chiquito
+  const CODIGO_SECRETO = '2026';
+  const codigoPanel = document.getElementById('codigoPanel'), codigoPantalla = document.getElementById('codigoPantalla');
+  const secreto = (() => {
+    const AP = 3, z0 = 10.9, z1 = 13.1;   // la puerta: del alto de las del refugio, justo detrás del cartel
+    const hoja = new THREE.Mesh(new THREE.BoxGeometry(0.6, AP, z1 - z0), lambert(0x97817c, { map: texPared }));
+    hoja.position.set(-34, AP / 2, (z0 + z1) / 2); scene.add(hoja); bloqueanCamara.push(hoja);
+    const solido = { x: -34, z: (z0 + z1) / 2, hw: 0.3, hd: (z1 - z0) / 2, top: AP, bottom: 0 };
+    platforms.push(solido);
+    return { hoja, solido, abierta: false, k: 0, z: (z0 + z1) / 2, escrito: '', fotos: false };
+  })();
+  const cercaCalma = () => !secreto.abierta && !fantasma && ps.pos.y < 1.5 && ps.pos.x < -31.8 && ps.pos.x > -34 && Math.abs(ps.pos.z - 12) < 1.7;
+  // E junto a la puerta secreta: abierta → la cierras (si no estás parado en el hueco). Cerrada y tú ADENTRO → se abre sin código
+  const enHuecoSecreto = () => Math.abs(ps.pos.x + 34) < 0.75 && Math.abs(ps.pos.z - secreto.z) < 1.3;
+  function puertaSecretaCerca() {
+    if (fantasma || ps.pos.y > 1.5 || Math.abs(ps.pos.z - secreto.z) > 1.8 || Math.abs(ps.pos.x + 34) > 2.2) return null;
+    if (secreto.abierta && !enHuecoSecreto()) return { texto: tr('usar.cerrarSecreta'), hacer: () => { secreto.abierta = false; } };
+    if (!secreto.abierta && ps.pos.x < -34) return { texto: tr('usar.abrirSecreta'), hacer: () => { secreto.abierta = true; } };
+    return null;
+  }
+  function pintarCodigo() { codigoPantalla.textContent = (secreto.escrito + '····').slice(0, 4); }
+  function abrirCodigo() { secreto.escrito = ''; codigoPantalla.classList.remove('mal'); pintarCodigo(); codigoPanel.hidden = false; }
+  function escribirCodigo(d) {
+    if (d === 'borrar') secreto.escrito = secreto.escrito.slice(0, -1);
+    else if (d === 'ok' || secreto.escrito.length >= 4) return probarCodigo();
+    else secreto.escrito += d;
+    codigoPantalla.classList.remove('mal'); pintarCodigo();
+    if (secreto.escrito.length === 4) setTimeout(probarCodigo, 180);
+  }
+  function probarCodigo() {
+    if (secreto.escrito === CODIGO_SECRETO) {
+      codigoPanel.hidden = true; secreto.abierta = true; sacarFotos();
+      showToast(tr('toast.secreto'), false, 3500);
+      return;
+    }
+    secreto.escrito = ''; codigoPantalla.textContent = tr('codigo.mal').replace('❌ ', '').slice(0, 10);
+    codigoPantalla.classList.remove('mal'); void codigoPantalla.offsetWidth; codigoPantalla.classList.add('mal');
+    setTimeout(pintarCodigo, 900);
+  }
+  function teclaCodigo(e) {
+    if (/^(Digit|Numpad)[0-9]$/.test(e.code)) escribirCodigo(e.code.slice(-1));
+    else if (e.code === 'Backspace') escribirCodigo('borrar');
+    else if (e.code === 'Enter' || e.code === 'NumpadEnter') escribirCodigo('ok');
+    else if (e.code === 'Escape') codigoPanel.hidden = true;
+    e.preventDefault();
+  }
+  for (const d of ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'borrar', '0', 'ok']) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = d === 'borrar' ? '⌫' : d === 'ok' ? 'OK' : d;
+    if (d === 'ok') b.className = 'ok';
+    b.addEventListener('click', e => { escribirCodigo(d); e.currentTarget.blur(); });
+    document.getElementById('codigoTeclas').appendChild(b);
+  }
+  codigoPanel.querySelector('.cerrar').addEventListener('click', () => { codigoPanel.hidden = true; });
+  // La puerta se corre hacia un lado (dentro de la pared), y el cartel KEEP CALM se va con ella
+  function updateSecreto(dt) {
+    if (!codigoPanel.hidden && !cercaCalma()) codigoPanel.hidden = true;
+    const meta = secreto.abierta ? 1 : 0;
+    if (secreto.k === meta) return;
+    secreto.k = Math.max(0, Math.min(1, secreto.k + Math.sign(meta - secreto.k) * dt * 0.6));
+    const dz = secreto.k * 2.4;
+    secreto.hoja.position.z = secreto.z + dz;
+    if (cartelCalma) cartelCalma.position.z = 12 + dz;
+    secreto.solido.top = secreto.k > 0.85 ? -100 : 3;   // (abierta se puede pasar; cerrándose vuelve a ser pared)
+  }
+
+  // 📸 El álbum: 4 marcos tipo polaroid en las paredes del cuarto secreto. Las fotos se "sacan" la primera vez que abres la puerta
+  const SEC = SALAS.find(q => q.id === 'secreto');
+  const marcos = [];
+  [['yellow', -41.66, 9, 'e'], ['grey', -41.66, 15, 'e'], ['red', -38, 6.34, 's'], ['white', -38, 17.66, 'n']].forEach(([id, x, z, lado]) => {
+    const g = new THREE.Group();
+    const papel = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.25), lambert(0xf6f2ea)); g.add(papel);
+    const foto = new THREE.Mesh(new THREE.PlaneGeometry(1.92, 1.44), new THREE.MeshBasicMaterial({ color: 0x222222 })); foto.position.set(0, 0.28, 0.01); g.add(foto);
+    const pie = cartel(512, 96, 2, 0.38, (gg, w, h) => {
+      gg.clearRect(0, 0, w, h); let tam = 30;
+      do { gg.font = `${tam}px system-ui, sans-serif`; tam -= 2; } while (tam > 14 && gg.measureText(tr('foto.' + id)).width > w - 24);   // los textos largos se achican para caber
+      letras(gg, tr('foto.' + id), w / 2, h / 2 + 2, tam + 2, '#2b2b2b', 'system-ui, sans-serif');
+    });
+    scene.remove(pie); pie.position.set(0, -0.72, 0.01); g.add(pie);
+    enPared(g, x, 1.65, z, lado); scene.add(g);
+    marcos.push({ id, foto });
+  });
+  const titulo = cartel(1024, 128, 5, 0.62, (g, w, h) => {
+    g.clearRect(0, 0, w, h); let tam = 76;
+    do { g.font = `${tam}px Impact, "Arial Narrow Bold", sans-serif`; tam -= 2; } while (tam > 30 && g.measureText(tr('secreto.titulo')).width > w - 30);
+    letras(g, tr('secreto.titulo'), w / 2, h / 2 + 4, tam + 2, '#ffd76a');
+  });
+  enPared(titulo, -41.66, 3.12, 12, 'e');
+  bloque(-38.9, -37.1, 0, 0.45, 11.3, 12.7, lambert(0x6e4d36));   // un banquito en el medio, para mirar las fotos
+
+  // Saca una foto: arma un escenario chiquito (con su piso, su fondo y sus luces), lo filma con una cámara y lo guarda como imagen
+  function sacarFoto(armar, fondo, piso) {
+    const esc = new THREE.Scene(); esc.background = new THREE.Color(fondo);
+    esc.add(new THREE.HemisphereLight(0xffffff, 0x554433, 0.75));
+    const sol = new THREE.DirectionalLight(0xffffff, 0.65); sol.position.set(2, 5, 6); esc.add(sol);
+    const suelo = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshLambertMaterial({ color: piso })); suelo.rotation.x = -Math.PI / 2; esc.add(suelo);
+    const sujeto = new THREE.Group(); esc.add(sujeto);
+    const cam = new THREE.PerspectiveCamera(35, 4 / 3, 0.1, 100);
+    armar(sujeto, esc);
+    // Encuadre automático: la cámara se aleja lo justo para que entre todo
+    const caja = new THREE.Box3().setFromObject(sujeto), centro = caja.getCenter(new THREE.Vector3()), tam = caja.getSize(new THREE.Vector3());
+    const dist = Math.max(tam.y / (2 * Math.tan(THREE.MathUtils.degToRad(35) / 2)), tam.x / (2 * Math.tan(THREE.MathUtils.degToRad(35) / 2)) / (4 / 3)) * 1.35 + tam.z / 2;
+    // de tres cuartos y un poquito desde arriba (como una foto de verdad, no de frente plano)
+    cam.position.set(centro.x + dist * 0.25, centro.y + dist * 0.22, centro.z + dist * 0.97); cam.lookAt(centro);
+    // con bordes suaves (multisample) y en buena resolución
+    const rt = THREE.WebGLMultisampleRenderTarget && renderer.capabilities.isWebGL2 ? new THREE.WebGLMultisampleRenderTarget(1024, 768) : new THREE.WebGLRenderTarget(1024, 768);
+    renderer.setRenderTarget(rt); renderer.render(esc, cam); renderer.setRenderTarget(null);
+    return rt.texture;
+  }
+  const FOTOS = {
+    // 🟡 Yellow sentado (las patitas para adelante) esperando su plato de comida
+    yellow: () => sacarFoto(g => {
+      const c = crearDragon('yellow'); g.add(c.obj);
+      for (const p of c.patas) p.cadera.rotation.x = -1.35;
+      c.bola.position.y = 0.62; c.bola.rotation.x = -0.12;
+      const plato = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.35, 0.12, 24), new THREE.MeshLambertMaterial({ color: 0xd8d8d8 })); plato.position.set(1.3, 0.06, 0.6); g.add(plato);
+      const comida = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0xc9772e })); comida.position.set(1.3, 0.12, 0.6); g.add(comida);
+    }, 0xf0e0a8, 0x9a8a5a),
+    // ⚫ Grey buscando (con la cabeza girada) y Yellow escondido detrás de una caja… pero se asoma
+    grey: () => sacarFoto(g => {
+      const c = crearDragon('grey'); c.obj.scale.setScalar(1.15); c.obj.position.set(-1.1, 0, 0.3); c.obj.rotation.y = 0.6; c.cabeza.rotation.y = 0.45; g.add(c.obj);
+      const caja = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.9, 1.4), new THREE.MeshLambertMaterial({ color: 0xa57a4a })); caja.position.set(1.6, 0.95, 0); g.add(caja);
+      // Yellow escondido detrás de la caja, asomando un ojo (¡pero se le ven las púas!)
+      const y = crearDragon('yellow'); y.obj.scale.setScalar(0.8); y.obj.position.set(2.45, 0, -0.9); y.obj.rotation.y = -0.9; g.add(y.obj);
+    }, 0xc9ccd0, 0x6a6e72),
+    // 🔴 Red acostado, dormido (ojos cerrados) con sus zzz
+    red: () => sacarFoto(g => {
+      const c = crearDragon('red'); c.obj.rotation.order = 'YZX'; c.obj.rotation.set(0, -0.35, Math.PI / 2); c.obj.position.y = 0.9; g.add(c.obj);
+      for (const o of c.ojos) { o.blanco.scale.y *= 0.12; o.pupila.visible = false; }
+      const zzz = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.2), new THREE.MeshBasicMaterial({ transparent: true, map: lienzo(256, 192, (gg, w, h) => { gg.clearRect(0, 0, w, h); letras(gg, 'z', 60, 150, 60, '#ffffff'); letras(gg, 'z', 120, 100, 80, '#ffffff'); letras(gg, 'Z', 195, 50, 100, '#ffffff'); }) }));
+      zzz.position.set(-1.2, 2.6, 0.5); g.add(zzz);
+    }, 0x3a3f5c, 0x55504c),
+    // ⚪ White sonriendo para la cámara: ¡la boca enorme! (como en su susto, pero feliz)
+    white: () => sacarFoto(g => {
+      const c = crearDragon('white'); g.add(c.obj);
+      c.boca.scale.set(1.9, 1.15, 1);
+    }, 0xffe1ef, 0xb69aa8),
+  };
+  function sacarFotos() {
+    if (secreto.fotos) return;
+    secreto.fotos = true;
+    for (const m of marcos) {
+      try { m.foto.material = new THREE.MeshBasicMaterial({ map: FOTOS[m.id]() }); }
+      catch (e) { console.warn('foto', m.id, e); }
+    }
+  }
 
   // ---------- 💀 Los sustos: la cámara salta a la cara del dragón, grita y tiembla la pantalla ----------
   let susto = null, audio = null;
@@ -1648,7 +1782,12 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     enCaja = false; ps.vel.set(0, 0, 0);
     // El dragón se gira hacia ti: así la cámara (que va delante de su cara) queda de tu lado, donde no hay pared
     const giro = Math.atan2(ps.pos.x - c.obj.position.x, ps.pos.z - c.obj.position.z);
-    susto = { c, id, nombre, alSeguir, alPerder, t: 0, fase: 'susto', base: c.obj.position.clone(), giroX: c.obj.rotation.x, giro };
+    susto = { c, id, nombre, alSeguir, alPerder, t: 0, fase: 'susto', base: c.obj.position.clone(), giroX: c.obj.rotation.x, giro, embiste: 4.6 };
+    if (id === 'yellow') {   // 🟡 el embiste se frena antes de una pared (si no, Yellow la atravesaba)
+      camRay.set(new THREE.Vector3(c.obj.position.x, c.obj.position.y + 1, c.obj.position.z), new THREE.Vector3(Math.sin(giro), 0, Math.cos(giro))); camRay.far = 4.6;
+      const pared = camRay.intersectObjects(bloqueanCamara, false)[0];
+      if (pared) susto.embiste = Math.max(0, pared.distance - 1);
+    }
     sustoFlash.hidden = false; sustoFlash.style.animation = 'none'; void sustoFlash.offsetWidth; sustoFlash.style.animation = '';
     gritar();
   }
@@ -1701,7 +1840,7 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
       // Yellow: la cámara queda quieta y él viene corriendo de frente
       const cara0 = enMundo(c.bola);
       cam = new THREE.Vector3(cara0.x + fx * 6, cara0.y, cara0.z + fz * 6);
-      const embiste = k(0.25, 0.6); o.position.x += fx * 4.6 * embiste; o.position.z += fz * 4.6 * embiste;
+      const embiste = k(0.25, 0.6); o.position.x += fx * susto.embiste * embiste; o.position.z += fz * susto.embiste * embiste;
       mira = enMundo(c.bola);
       const cae = k(0.6, 0.9);   // ¡PUM! te tira al suelo: la cámara cae y queda mirando hacia arriba
       cam.y = cam.y - (cam.y - o.position.y - 0.3) * cae; mira.y += 1.5 * cae;
@@ -1724,6 +1863,7 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
   function terminarSusto() {
     if (susto) { susto.c.obj.position.copy(susto.base); susto.c.obj.rotation.x = susto.giroX; if (susto.id === 'grey') susto.c.cabeza.rotation.x = 0; }
     susto = null; perdisteEl.hidden = true; sustoFlash.hidden = true; sustoNegro.style.opacity = 0;
+    inmuneHasta = performance.now() + 3000;
   }
   pagarBtn.addEventListener('click', e => {
     e.currentTarget.blur();
@@ -1761,6 +1901,10 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
       const quien = m.jugador === red.id ? 'yo' : m.jugador;
       if (m.que === 'alerta') alertaSobre(quien);
       else if (m.que === 'atrapado' && quien === 'yo') atrapado(m.dragon);
+      else if (m.que === 'atrapado' && red.otros.has(quien) && !red.ignorarNoche) {   // 💀 a un amigo lo atraparon: te avisa (y le sale la alerta encima)
+        const def = DRAGONES.find(d => d.id === m.dragon);
+        showToast(tr('toast.amigoAtrapado', { nombre: red.otros.get(quien).nombre, dragon: def ? def.nombre : tr('dragon.alguien') }), true, 3000); alertaSobre(quien);
+      }
       else if (m.que === 'despierta') showToast(tr('toast.yellowHambre'), true, 3500);
     }
   }
@@ -2251,6 +2395,41 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
   const yoMascota = {};
   // Si dos mascotas quedan encimadas (al girar), se empujan un poquito cada una hacia su lado
   const SEPARACION = 0.75;
+  // 🐉 Las mascotas le tienen miedo a los dragones: si uno se acerca, se esconden detrás de ti (del lado contrario al dragón).
+  // (Si no, Red tocaba a tu mascota justo cuando sus brazos ya te alcanzaban a TI, y parecía que la mascota te había hecho perder)
+  const MIEDO = 3.2;
+  // 🎥 Tus mascotas no se ponen entre la cámara y tú: si quedan en esa línea, se corren de lado (así nunca te tapan)
+  function apartarDeLaCamara(lista) {
+    if (!lista.length || firstPerson) return;
+    const cx = camera.position.x, cz = camera.position.z, px = ps.pos.x, pz = ps.pos.z;
+    const lx = px - cx, lz = pz - cz, L2 = lx * lx + lz * lz;
+    if (L2 < 0.01) return;
+    for (const m of lista) {
+      const t = ((m.position.x - cx) * lx + (m.position.z - cz) * lz) / L2;
+      if (t < 0.4 || t > 1.02) continue;   // (solo las que están entre la cámara y tú)
+      const qx = cx + lx * t, qz = cz + lz * t, dx = m.position.x - qx, dz = m.position.z - qz, d = Math.hypot(dx, dz);
+      if (d >= 0.8) continue;
+      // se corre hacia su lado (o hacia la derecha si quedó justo en el medio)
+      const L = Math.sqrt(L2), nx = d > 0.01 ? dx / d : -lz / L, nz = d > 0.01 ? dz / d : lx / L;
+      m.position.x += nx * (0.8 - d) * 0.35; m.position.z += nz * (0.8 - d) * 0.35;
+    }
+  }
+  function huirDeDragones(lista, dueno) {
+    if (!lista.length) return;
+    for (const c of cuerposDragon.values()) {
+      if (!c.obj.visible) continue;
+      const d = c.obj.position;
+      if (Math.abs(d.y - dueno.y) > 3 || Math.hypot(d.x - dueno.x, d.z - dueno.z) > MIEDO + 3) continue;
+      for (const m of lista) {
+        const dx = m.position.x - d.x, dz = m.position.z - d.z, dist = Math.hypot(dx, dz);
+        if (dist >= MIEDO) continue;
+        // se va hacia el lado de su dueño que queda lejos del dragón
+        const ux = dueno.x - d.x, uz = dueno.z - d.z, ul = Math.hypot(ux, uz) || 1;
+        const metaX = dueno.x + (ux / ul) * 0.9, metaZ = dueno.z + (uz / ul) * 0.9;
+        m.position.x += (metaX - m.position.x) * 0.25; m.position.z += (metaZ - m.position.z) * 0.25;
+      }
+    }
+  }
   function separarMascotas(lista) {
     for (let a = 0; a < lista.length; a++) for (let b = a + 1; b < lista.length; b++) {
       const p = lista[a].position, q = lista[b].position, dx = q.x - p.x, dz = q.z - p.z, d = Math.hypot(dx, dz);
@@ -2261,12 +2440,16 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
   }
   function updateMascotas(dt) {
     ponerMascotasA(yoMascota, loginEl.hidden ? epicasPrimero(mascotasQueLlevas(cuenta)) : []);
-    yoMascota.mascotasObjs.forEach((m, i) => { m.visible = !escondido && !fantasma; seguirDueno(m, ps.pos.x, ps.pos.y, ps.pos.z, ps.facing, dt, t, i); });
+    yoMascota.mascotasObjs.forEach((m, i) => { m.visible = !escondido && !fantasma && !susto; seguirDueno(m, ps.pos.x, ps.pos.y, ps.pos.z, ps.facing, dt, t, i); });
     separarMascotas(yoMascota.mascotasObjs);
+    huirDeDragones(yoMascota.mascotasObjs, ps.pos);
+    apartarDeLaCamara(yoMascota.mascotasObjs);
+    separarMascotas(yoMascota.mascotasObjs);   // (otra vez: al correrse de la cámara no deben quedar encimadas)
     for (const f of red.otros.values()) {
       ponerMascotasA(f, epicasPrimero(f.mascotas || []));
       f.mascotasObjs.forEach((m, i) => { m.visible = !f.oculto; seguirDueno(m, f.obj.position.x, f.obj.position.y, f.obj.position.z, f.look ? f.look.rotation.y : 0, dt, t, i); });
       separarMascotas(f.mascotasObjs);
+      huirDeDragones(f.mascotasObjs, f.obj.position);
     }
     // el huevo del pedestal gira, y tiembla cuando abres uno
     huevoPedestal.rotation.y += dt * 0.8;
@@ -2821,7 +3004,7 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
 
   const clock = new THREE.Clock();
   let t = 0;
-  // La cámara de tercera persona, detrás de alguien (de ti, o del amigo que miras de fantasma)
+  // La cámara de tercera persona, detrás de ti
   const _cabeza = new THREE.Vector3(), _atras = new THREE.Vector3();
   function camaraDetras(q, dt) {
     const camYaw = vistaYaw, camPitch = vistaPitch;
@@ -2894,7 +3077,7 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
       if (firstPerson) fpPitch = Math.min(1.3, Math.max(-1.3, fpPitch - camJoy.y * 1.6 * sg * dt));
       else camPitch = Math.min(1.2, Math.max(0.1, camPitch + camJoy.y * 1.2 * sg * dt));
     }
-    const busy = !loginEl.hidden || !!escondido || !!susto || !!fantasma || !!(fiesta && ['intro', 'choque', 'hat', 'fin'].includes(fiesta.fase)) || !!(noche && noche.fase === 'intro');
+    const busy = !loginEl.hidden || !!escondido || !!susto || !!(fiesta && ['intro', 'choque', 'hat', 'fin'].includes(fiesta.fase)) || !!(noche && noche.fase === 'intro');
     if (busy) fx = fz = 0; // eligiendo usuario (o metido en el armario) no te mueves
     const len = Math.hypot(fx, fz);
     let moving = false;
@@ -2954,7 +3137,8 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     moverTraductor();
     if (!traductorPanel.hidden && (!enLobby || Math.hypot(ps.pos.x - TRADUCTOR.x, ps.pos.z - TRADUCTOR.z) > 3.5)) traductorPanel.hidden = true;
     updateSusto(dt);
-    updateFantasma(dt);
+    updateFantasma();
+    updateSecreto(dt);
     updatePuertas(dt, [ps.pos, ...[...red.otros.values()].map(f => f.obj.position), ...[...cuerposDragon.values()].map(c => c.obj.position)]);
 
     // pequeño rebote al caminar
@@ -2967,15 +3151,12 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     const p = player.position;
     suavizarVista(dt);
     if (camaraSusto()) {
-      // 💀 (el susto maneja la cámara)
+      // 💀 (el susto maneja la cámara; tu cuerpo se esconde para no tapar al dragón)
+      player.visible = false;
     } else if (fiestaCamara) {
       // 🎬 (las cutscenes de la noche final manejan la cámara)
     } else if (camaraIntro()) {
       // 🎥 (la intro de la noche maneja la cámara)
-    } else if (fantasma && fantasmaFoco()) {
-      // 👻 Volando de fantasma: la misma cámara de tercera persona, detrás de tu fantasmita
-      camaraDetras(fantasmaFoco(), dt);
-      player.visible = false;
     } else if (escondido) {
       const camYaw = vistaYaw, fpPitch = vistaFp;
       // 📦 Dentro de la caja: miras desde adentro (por la rendija), y puedes girar para ver quién viene
@@ -3001,7 +3182,7 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     // 🔧 (solo con ?debug) cámara libre para revisar cosas: cd.libre = { x, y, z, mx, my, mz }
     if (window.cd && cd.libre) { const L = cd.libre; camera.position.set(L.x, L.y, L.z); camera.lookAt(L.mx, L.my, L.mz); }
     apuntarLinterna();
-    moverFocos((fantasma && fantasmaFoco()) || ps.pos);   // (de fantasma, las luces se prenden donde vuelas)
+    moverFocos(ps.pos);
     sonarZona(dt);
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
@@ -3022,7 +3203,7 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     if (!amb) return;
     const def = noche && nocheDe(noche.n);
     amb.zona(zonaSonora({ jugando: loginEl.hidden, enLobby, fiesta: !!fiesta, apagon: !!(def && def.apagon), intro: !!(noche && noche.fase === 'intro'),
-      sala: (q => salaEn(q.x, q.y, q.z))((fantasma && fantasmaFoco()) || ps.pos), anterior: amb.actual }));
+      sala: salaEn(ps.pos.x, ps.pos.y, ps.pos.z), anterior: amb.actual }));
     if (agachado !== !!susto) { agachado = !!susto; amb.agachar(agachado); }   // en un susto la música se hace a un lado
     amb.tick(dt);
   }

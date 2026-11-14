@@ -6,7 +6,7 @@
 //   perseguir → te vio: corre derecho hacia ti
 //   buscar    → te perdió de vista: va a donde te vio por última vez
 //   caja      → te vio meterte en tu caja: la sigue aunque te muevas (y sobre tu caja sale un "!")
-import { SALAS, ESCOTILLAS, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, delLab } from './laboratorio.js?v=18';
+import { SALAS, ESCOTILLAS, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, delLab } from './laboratorio.js?v=19';
 import { MUEBLES } from './muebles.js?v=18';
 import { collideWalls } from './logic.js?v=18';
 
@@ -31,7 +31,7 @@ export const GIRO = 5;                // qué tan rápido gira (radianes por seg
 const salaPorId = id => SALAS.find(s => s.id === id);
 // 😐 Los refugios: el Panic Hole (sus puertas de metal no dejan pasar a los dragones, ni verte a través) y 🌞 el Spawn
 // (ahí apareces: ningún dragón entra ni te atrapa adentro, así nadie te "remata" al volver)
-export const REFUGIOS = ['panico', 'spawn'];
+export const REFUGIOS = ['panico', 'spawn', 'secreto'];   // (+ 🔐 el cuarto secreto: ahí tampoco entran)
 // 🌞 Al Spawn (y a sus escaleras) no van a pasear: así al empezar (o al volver después de que te atrapen) tienes tiempo
 export const LEJOS_DEL_SPAWN = ['spawn', 'escaleras'];
 
