@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, COSTO_SEGUIR, pagarParaSeguir, CAJAS, PALETA, COLOR_INICIAL, MONEDAS_POR_NOCHE, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, leerCuenta } from '../src/tienda.js';
+import { MASCOTAS, PRECIO_HUEVO, sacarMascota, abrirHuevo, venderRepetida, llevarMascota, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, COSTO_SEGUIR, pagarParaSeguir, CAJAS, PALETA, COLOR_INICIAL, MONEDAS_POR_NOCHE, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, leerCuenta } from '../src/tienda.js';
 
 describe('🪙 monedas', () => {
   it('empiezas con 0 monedas, verde y con la caja de cartón', () => {
-    expect(nuevaCuenta()).toEqual({ monedas: 0, color: COLOR_INICIAL, cajas: ['carton'], caja: 'carton', caminos: [], camino: null });
+    expect(nuevaCuenta()).toEqual({ monedas: 0, color: COLOR_INICIAL, cajas: ['carton'], caja: 'carton', caminos: [], camino: null, mascotas: {}, mascota: null });
   });
   it('cada noche ganada da 10', () => {
     let c = nuevaCuenta();
@@ -52,7 +52,7 @@ describe('🛒 tienda de cajas', () => {
 
 describe('💾 leer la cuenta guardada', () => {
   it('un guardado bueno se lee igual', () => {
-    const c = { monedas: 35, color: PALETA[2], cajas: ['carton', 'espacial'], caja: 'espacial', caminos: ['fuego'], camino: 'fuego' };
+    const c = { monedas: 35, color: PALETA[2], cajas: ['carton', 'espacial'], caja: 'espacial', caminos: ['fuego'], camino: 'fuego', mascotas: { oso: 2 }, mascota: 'oso' };
     expect(leerCuenta(c)).toEqual(c);
   });
   it('un guardado raro no rompe nada', () => {
@@ -90,5 +90,46 @@ describe('✨ caminos (trails)', () => {
     expect(ponerCamino(c, null).camino).toBe(null);
     expect(ponerCamino(ponerCamino(c, null), 'amarillo').camino).toBe('amarillo');
     expect(ponerCamino(c, 'fuego').camino).toBe('amarillo');   // (el de fuego no lo tiene)
+  });
+});
+
+describe('🥚 mascotas', () => {
+  it('son 6, y las probabilidades suman 100%', () => {
+    expect(MASCOTAS.length).toBe(6);
+    expect(MASCOTAS.reduce((n, m) => n + m.prob, 0)).toBe(100);
+  });
+  it('las 3 primeras (comunes) tienen más probabilidad que las 3 raras', () => {
+    const comunes = MASCOTAS.filter(m => !m.rara), raras = MASCOTAS.filter(m => m.rara);
+    expect(comunes.map(m => m.id)).toEqual(['ganso', 'oso', 'planta']);
+    expect(Math.min(...comunes.map(m => m.prob))).toBeGreaterThan(Math.max(...raras.map(m => m.prob)));
+  });
+  it('el azar cae en el pedazo correcto', () => {
+    expect(sacarMascota(() => 0)).toBe('ganso');        // 0
+    expect(sacarMascota(() => 0.31)).toBe('oso');       // 31
+    expect(sacarMascota(() => 0.85)).toBe('fantasma');  // 85
+    expect(sacarMascota(() => 0.995)).toBe('arcoiris'); // 99,5
+  });
+  it('en 10.000 huevos, el ganso sale más o menos el 30% de las veces', () => {
+    let semilla = 11; const azar = () => ((semilla = (semilla * 16807) % 2147483647) / 2147483647);
+    let gansos = 0; for (let i = 0; i < 10000; i++) if (sacarMascota(azar) === 'ganso') gansos++;
+    expect(gansos / 10000).toBeGreaterThan(0.27); expect(gansos / 10000).toBeLessThan(0.33);
+  });
+  it('abrir un huevo cuesta 10 y te da la mascota (y te la pone si no llevabas ninguna)', () => {
+    const r = abrirHuevo({ ...nuevaCuenta(), monedas: 15 }, () => 0.31);
+    expect(PRECIO_HUEVO).toBe(10);
+    expect(r).toMatchObject({ ok: true, id: 'oso', nueva: true, cuenta: { monedas: 5, mascotas: { oso: 1 }, mascota: 'oso' } });
+  });
+  it('sin monedas no se abre', () => expect(abrirHuevo({ ...nuevaCuenta(), monedas: 9 })).toMatchObject({ ok: false }));
+  it('vender una repetida: te quedas con una y te dan monedas', () => {
+    const c = { ...nuevaCuenta(), monedas: 0, mascotas: { ganso: 2 } };
+    const r = venderRepetida(c, 'ganso');
+    expect(r).toMatchObject({ ok: true, cuenta: { monedas: 3, mascotas: { ganso: 1 } } });
+    expect(venderRepetida(r.cuenta, 'ganso').ok).toBe(false);   // la última no se vende
+  });
+  it('solo llevas mascotas que tienes', () => {
+    const c = { ...nuevaCuenta(), mascotas: { oso: 1 } };
+    expect(llevarMascota(c, 'oso').mascota).toBe('oso');
+    expect(llevarMascota(c, 'arcoiris').mascota).toBe(null);
+    expect(llevarMascota(llevarMascota(c, 'oso'), null).mascota).toBe(null);
   });
 });

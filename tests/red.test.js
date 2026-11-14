@@ -17,7 +17,7 @@ describe('mensajes', () => {
   });
   it('lee una posición', () => {
     const m = leerMensaje(JSON.stringify({ tipo: 'pos', x: 1, y: 0, z: 2, rot: 0.5, color: 5, t: 100 }));
-    expect(m).toEqual({ tipo: 'pos', x: 1, y: 0, z: 2, rot: 0.5, color: 5, oculto: 0, camino: null, t: 100 });
+    expect(m).toEqual({ tipo: 'pos', x: 1, y: 0, z: 2, rot: 0.5, color: 5, oculto: 0, camino: null, mascota: null, t: 100 });
   });
   it('escondido en una caja: solo 1 cuenta como escondido', () => {
     const pos = o => leerMensaje(JSON.stringify({ tipo: 'pos', x: 0, y: 0, z: 0, rot: 0, oculto: o })).oculto;
@@ -67,3 +67,7 @@ describe('✨ el camino viaja con tu posición', () => {
   it('uno inventado no pasa', () => expect(leer2(JSON.stringify({ tipo: 'pos', x: 1, y: 0, z: 2, rot: 0, camino: 'arcoiris' })).camino).toBe(null));
   it('los caminos válidos son los de la tienda', () => expect(CAMINOS.map(c => c.id)).toEqual(['amarillo', 'fuego', 'electrico']));
 });
+
+import { MASCOTAS_VALIDAS } from '../src/red.js';
+import { MASCOTAS } from '../src/tienda.js';
+it('🥚 las mascotas válidas de la red son las de la tienda', () => expect(MASCOTAS_VALIDAS).toEqual(MASCOTAS.map(m => m.id)));

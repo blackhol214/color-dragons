@@ -89,6 +89,8 @@
   .panelLobby h2 { margin:0 0 10px; font:400 22px/1 "ADLaM Display", Impact, sans-serif; letter-spacing:.03em; }
   .panelLobby .cerrar { position:absolute; right:10px; top:8px; border:0; background:none; color:#fff; font-size:24px; cursor:pointer; }
   .botonesIdioma { display:flex; gap:10px; } .botonesIdioma button { flex:1; border:0; border-radius:12px; padding:14px 10px; font:700 17px/1 system-ui, sans-serif; color:#fff; background:#2d5f9a; cursor:pointer; } .botonesIdioma button.elegido { box-shadow:inset 0 0 0 3px #ffd60a; }
+  #mascotasLista { max-height:56vh; overflow:auto; } .probas { font:600 12px/1.5 system-ui, sans-serif; color:#b9c6c9; margin:4px 0 8px; } .probas b { color:#ffd76a; } .subtitulo { margin:10px 0 2px; font:800 13px system-ui, sans-serif; color:#9fe3c8; letter-spacing:.04em; }
+  .itemTienda .botones2 { display:flex; gap:6px; } .itemTienda button.vender { background:#a8741a; }
   #paletaColores { display:grid; grid-template-columns:repeat(6, 1fr); gap:6px; max-height:52vh; overflow:auto; }
   #paletaColores button { aspect-ratio:1; border-radius:12px; border:3px solid rgba(255,255,255,.25); cursor:pointer; }
   #paletaColores button.puesto { border-color:#fff; box-shadow:0 0 0 2px #000 inset; }
@@ -162,6 +164,7 @@
 <div id="sustoFlash" hidden></div>
 <div id="perdiste" class="panelLobby" hidden><h2 data-t="perdiste.titulo">💀 ¡PERDISTE LA NOCHE!</h2><p id="perdisteTexto" style="margin:0"></p><div class="botones"><button type="button" id="pagarBtn"></button><button type="button" id="lobbyBtn" data-t="perdiste.lobby">🏠 Volver al lobby</button></div></div>
 <div id="traductorPanel" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 data-t="traductor.titulo">🌍 Idioma · Language</h2><div class="botonesIdioma"><button type="button" data-idioma="es">🇪🇸 Español</button><button type="button" data-idioma="en">🇬🇧 English</button></div></div>
+<div id="mascotasPanel" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 data-t="mascotas.titulo">🥚 Tienda de mascotas</h2><p id="mascotasMonedas" style="margin:0 0 6px"></p><div id="mascotasLista"></div></div>
 <div id="paleta" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 data-t="paleta.titulo">🎨 Elige tu color</h2><div id="paletaColores"></div></div>
 <div id="tienda" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 id="tiendaTitulo">🛒 Tienda de cajas</h2><p id="tiendaMonedas" style="margin:0 0 6px"></p><div id="tiendaCajas"></div></div>
 <div id="contador" hidden><b id="contadorNoche">NOCHE 1</b><span id="contadorTexto"></span></div>
@@ -177,15 +180,15 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=17';
-import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=17';
-import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=17';
-import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=17';
-import { crearDragon, animarDragon } from './src/criaturas.js?v=17';
-import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=17';
-import { CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=17';
-import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=17';
-import * as F from './src/fiesta.js?v=17';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
+import { alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=18';
+import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=18';
+import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=18';
+import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=18';
+import { crearDragon, animarDragon } from './src/criaturas.js?v=18';
+import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=18';
+import { MASCOTAS, PRECIO_HUEVO, mascotaDe, abrirHuevo, venderRepetida, llevarMascota, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=18';
+import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=18';
+import * as F from './src/fiesta.js?v=18';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
 (() => {
   // iPhone ignora user-scalable=no: aquí se bloquea el zoom con dos dedos y el doble toque
   for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
@@ -1142,6 +1145,7 @@ import * as F from './src/fiesta.js?v=17';   // cambiar ?v= al cambiar estos arc
     if (iObj >= 0) return { texto: tr('usar.agarrar', { emoji: OBJETOS[nocheDe(noche.n).objeto].emoji }), hacer: () => agarrar(iObj) };
     if (cercaComedero() && !platoLleno) return { texto: tr('usar.comida'), hacer: () => { if (red.id !== null) enviar({ tipo: 'alimentar' }); else servirComida(); } };
     if (enLobby && Math.hypot(ps.pos.x - BALDE.x, ps.pos.z - BALDE.z) < 2) return { texto: tr('usar.pintarte'), hacer: abrirPaleta };
+    if (enLobby && Math.hypot(ps.pos.x - PEDESTAL.x, ps.pos.z - PEDESTAL.z) < 2.4) return { texto: tr('usar.mascotas'), hacer: abrirMascotas };
     if (enLobby && Math.hypot(ps.pos.x - TRADUCTOR.x, ps.pos.z - TRADUCTOR.z) < 2.2) return { texto: tr('usar.traductor'), hacer: abrirTraductor };
     const a = esconditeCerca(ps.pos.x, ps.pos.y, ps.pos.z, escondites, 2.4);
     if (a) return { texto: tr(a.abierto ? 'usar.cerrarArmario' : 'usar.abrirArmario'), hacer: () => { a.abierto = !a.abierto; } };
@@ -1150,7 +1154,7 @@ import * as F from './src/fiesta.js?v=17';   // cambiar ?v= al cambiar estos arc
   function usarE() { const u = queUsar(); if (u) u.hacer(); }
   usarBtn.addEventListener('click', e => { usarE(); e.currentTarget.blur(); });
   // 🔧 Para probar: con ?debug en el link, la consola puede ver y mover al jugador (window.cd)
-  if (new URLSearchParams(location.search).has('debug')) window.cd = { ps, camera, salaEn, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; }, get escondido() { return escondido; }, get enCaja() { return enCaja; }, get dragones() { return dragones; }, get cuerpos() { return cuerposDragon; }, get noche() { return noche; }, get fiesta() { return fiesta; }, get red() { return red; }, platforms, atrapar: id => atrapado(id), get susto() { return susto; }, renderer, scene, bloqueanCamara, get camPitch() { return camPitch; } };
+  if (new URLSearchParams(location.search).has('debug')) window.cd = { ps, camera, salaEn, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; }, get escondido() { return escondido; }, get enCaja() { return enCaja; }, get dragones() { return dragones; }, get cuerpos() { return cuerposDragon; }, get noche() { return noche; }, get fiesta() { return fiesta; }, get red() { return red; }, platforms, atrapar: id => atrapado(id), get susto() { return susto; }, renderer, scene, bloqueanCamara, get camPitch() { return camPitch; }, crearMascota: id => crearMascota(id) };
   // La caja puesta: las solapas se cierran, y al caminar se bambolea un poquito
   function moverCaja(caja, puesta, caminando, dt, t) {
     caja.obj.visible = puesta;
@@ -1299,6 +1303,8 @@ import * as F from './src/fiesta.js?v=17';   // cambiar ?v= al cambiar estos arc
     return s;
   }
   // Un amigo: rectángulo de su color con ojos, igual que tú
+  // Cuando un amigo se va: también se van su mascota y su cinta
+  function quitarExtras(f) { if (f.mascotaObj) scene.remove(f.mascotaObj); if (f.cinta) scene.remove(f.cinta.m); f.mascotaObj = f.cinta = null; }
   function addFriend(j) {
     const obj = new THREE.Group(), look = new THREE.Group();   // look: el rectángulo con ojos (se esconde si está en su caja)
     const b = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), new THREE.MeshLambertMaterial({ color: j.color }));
@@ -1343,10 +1349,10 @@ import * as F from './src/fiesta.js?v=17';   // cambiar ?v= al cambiar estos arc
         addFriend(m); showToast(tr('toast.entro', { nombre: m.nombre }));
       } else if (m.tipo === 'pos') {
         const f = red.otros.get(m.id);
-        if (f) { f.body.material.color.setHex(m.color); f.oculto = !!m.oculto; f.camino = m.camino || null; agregarMuestra(f.suave, [m.x, m.y, m.z, m.rot], m.t, performance.now()); }
+        if (f) { f.body.material.color.setHex(m.color); f.oculto = !!m.oculto; f.camino = m.camino || null; f.mascota = m.mascota || null; agregarMuestra(f.suave, [m.x, m.y, m.z, m.rot], m.t, performance.now()); }
       } else if (m.tipo === 'sale') {
         const f = red.otros.get(m.id);
-        if (f) { explode(f); red.otros.delete(m.id); }
+        if (f) { explode(f); quitarExtras(f); red.otros.delete(m.id); }
         showToast(tr('toast.salio', { nombre: m.nombre }), true, 3000);
       } else if (m.tipo === 'dragones' || m.tipo === 'dragonEvento') {
         mensajeDragones(m);
@@ -1360,7 +1366,7 @@ import * as F from './src/fiesta.js?v=17';   // cambiar ?v= al cambiar estos arc
     ws.onclose = () => {
       // Si nunca llegó la bienvenida, la sala no existe o el servidor está apagado
       if (red.id === null) { red.ws = null; if (!red.error) showToast(tr('toast.sinSala'), true, 5000); red.error = false; if (!noche && !fiesta) irAlLobby(); return; }
-      for (const f of red.otros.values()) scene.remove(f.obj);
+      for (const f of red.otros.values()) { scene.remove(f.obj); quitarExtras(f); }
       red.otros.clear(); red.ws = null; red.id = null; red.dragones = false;   // (sin servidor, tu compu vuelve a mover a los dragones)
       showToast(tr('toast.cortado'), true, 4000);
     };
@@ -1370,7 +1376,7 @@ import * as F from './src/fiesta.js?v=17';   // cambiar ?v= al cambiar estos arc
     if (red.id !== null && (red.envio -= dt) <= 0) {
       red.envio = Math.max(red.envio + 1 / ENVIOS_POR_SEGUNDO, 0);   // sumar (no reemplazar): así salen 10 por segundo de verdad, no 8
       // Si no te moviste, no hace falta repetirlo 10 veces por segundo: basta una vez por segundo (para que el servidor sepa que sigues ahí)
-      const pos = { tipo: 'pos', x: corto(ps.pos.x), y: corto(ps.pos.y), z: corto(ps.pos.z), rot: corto(ps.facing), color: body.material.color.getHex(), oculto: oculto() ? 1 : 0, camino: cuenta.camino };
+      const pos = { tipo: 'pos', x: corto(ps.pos.x), y: corto(ps.pos.y), z: corto(ps.pos.z), rot: corto(ps.facing), color: body.material.color.getHex(), oculto: oculto() ? 1 : 0, camino: cuenta.camino, mascota: cuenta.mascota };
       const txt = JSON.stringify(pos);
       pos.t = Math.round(performance.now());   // tu hora: los demás la usan para dibujarte suave (va aparte para que "¿te moviste?" no cambie siempre)
       red.quieto = txt === red.ultimaPos ? (red.quieto || 0) + 1 : 0;
@@ -1953,12 +1959,150 @@ import * as F from './src/fiesta.js?v=17';   // cambiar ?v= al cambiar estos arc
   const traductorPanel = document.getElementById('traductorPanel');
   function abrirTraductor() {
     for (const b of traductorPanel.querySelectorAll('[data-idioma]')) b.classList.toggle('elegido', b.dataset.idioma === idioma());
-    traductorPanel.hidden = false; paletaEl.hidden = true; tiendaEl.hidden = true;
+    traductorPanel.hidden = false; paletaEl.hidden = true; tiendaEl.hidden = true; mascotasPanel.hidden = true;
   }
   traductorPanel.querySelector('.cerrar').addEventListener('click', e => { traductorPanel.hidden = true; e.currentTarget.blur(); });
   for (const b of traductorPanel.querySelectorAll('[data-idioma]')) b.addEventListener('click', e => {
     cambiarIdioma(b.dataset.idioma); abrirTraductor(); e.currentTarget.blur(); showToast(tr('traductor.listo'));
   });
+
+  // ---------- 🥚 Las mascotas: un huevo en un pedestal (E abre la tienda) y la que llevas te sigue caminando a tu lado ----------
+  // Modelos (todos chiquitos):
+  //   ganso: como el bot guía (un cubo blanco) pero sin antena y con pico · oso: un cubo café con orejas y nariz de oso
+  //   planta: una macetita con una planta · fantasmita: flota y es medio transparente · mini Yellow: tu Yellow en chiquito
+  //   cubo arcoíris: un cubo que cambia de color todo el tiempo (¡legendario!)
+  function crearMascota(id) {
+    const g = new THREE.Group(), L = 0.5;
+    const ojos = (padre, y, z, sep = 0.11, tam = 0.55) => { for (const ex of [-sep, sep]) { const e = new THREE.Mesh(eyeGeo, eyeMat); e.scale.set(tam, tam, 0.3); e.position.set(ex, y, z); padre.add(e); } };
+    let flota = false, cuerpo = null;
+    if (id === 'ganso') {
+      cuerpo = new THREE.Mesh(new THREE.BoxGeometry(L, L, L), lambert(0xf4f4f0)); cuerpo.position.y = L / 2; g.add(cuerpo);
+      ojos(cuerpo, 0.1, L / 2 + 0.01);
+      const pico = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.22, 4), lambert(0xf2a11f)); pico.rotation.x = Math.PI / 2; pico.position.set(0, -0.04, L / 2 + 0.1); cuerpo.add(pico);
+      for (const lado of [-1, 1]) { const pata = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, 0.16), lambert(0xf2a11f)); pata.position.set(lado * 0.12, -L / 2 - 0.02, 0.04); cuerpo.add(pata); }
+    } else if (id === 'oso') {
+      cuerpo = new THREE.Mesh(new THREE.BoxGeometry(L, L, L), lambert(0x8a5a32)); cuerpo.position.y = L / 2; g.add(cuerpo);
+      ojos(cuerpo, 0.1, L / 2 + 0.01);
+      for (const lado of [-1, 1]) { const oreja = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), lambert(0x6e4526)); oreja.position.set(lado * 0.19, L / 2 + 0.03, 0); cuerpo.add(oreja); }
+      const hocico = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), lambert(0xc49a6c)); hocico.scale.set(1.2, 0.8, 0.6); hocico.position.set(0, -0.07, L / 2 + 0.02); cuerpo.add(hocico);
+      const nariz = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 6), lambert(0x1a1a1a)); nariz.position.set(0, -0.04, L / 2 + 0.08); cuerpo.add(nariz);
+    } else if (id === 'planta') {
+      cuerpo = new THREE.Group(); g.add(cuerpo);
+      const maceta = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.16, 0.34, 14), lambert(0xc06a3c)); maceta.position.y = 0.17; cuerpo.add(maceta);
+      const borde = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.06, 14), lambert(0xa85a30)); borde.position.y = 0.34; cuerpo.add(borde);
+      ojos(cuerpo, 0.2, 0.2, 0.08, 0.45);
+      const tallo = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.025, 0.3, 6), lambert(0x3f8a3a)); tallo.position.y = 0.5; cuerpo.add(tallo);
+      for (const [a, y] of [[0, 0.52], [2.1, 0.58], [4.2, 0.64]]) { const hoja = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), lambert(0x5fbf4a)); hoja.scale.set(1.4, 0.4, 0.8); hoja.position.set(Math.cos(a) * 0.09, y, Math.sin(a) * 0.09); hoja.rotation.y = -a; cuerpo.add(hoja); }
+      const flor = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), lambert(0xff7fb0)); flor.position.y = 0.68; cuerpo.add(flor);
+    } else if (id === 'fantasma') {
+      flota = true; cuerpo = new THREE.Group(); g.add(cuerpo);
+      const mat = new THREE.MeshLambertMaterial({ color: 0xf2f6ff, transparent: true, opacity: 0.8, emissive: 0x222833 });
+      const cabeza = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat); cabeza.position.y = 0.5; cuerpo.add(cabeza);
+      const sabana = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.3, 0.32, 16, 1, true), mat); sabana.position.y = 0.34; cuerpo.add(sabana);
+      for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2, pico = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.12, 6), mat); pico.rotation.x = Math.PI; pico.position.set(Math.cos(a) * 0.24, 0.12, Math.sin(a) * 0.24); cuerpo.add(pico); }
+      const boca = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 6), new THREE.MeshBasicMaterial({ color: 0x222222 })); boca.scale.y = 1.6; boca.position.set(0, 0.42, 0.27); cuerpo.add(boca);
+      ojos(cuerpo, 0.54, 0.24, 0.09, 0.5);
+    } else if (id === 'miniYellow') {
+      const y = crearDragon('yellow'); y.obj.scale.multiplyScalar(0.22); g.add(y.obj); cuerpo = y.obj; g.userData.dragon = y;
+    } else {   // arcoiris
+      flota = true;
+      cuerpo = new THREE.Mesh(new THREE.BoxGeometry(L, L, L), new THREE.MeshLambertMaterial({ color: 0xff0000, emissive: 0x222222 })); cuerpo.position.y = 0.45; g.add(cuerpo);
+      ojos(cuerpo, 0.1, L / 2 + 0.01);
+      g.userData.arcoiris = cuerpo.material;
+    }
+    g.userData.flota = flota; g.userData.cuerpo = cuerpo;
+    scene.add(g);
+    return g;
+  }
+  // Mueve una mascota hacia su lugar (al lado de su dueño, un poquito atrás), saltando al caminar o flotando
+  const _meta = new THREE.Vector3();
+  function seguirDueno(m, x, y, z, rot, dt, t) {
+    const atrasX = -Math.sin(rot), atrasZ = -Math.cos(rot), ladoX = Math.cos(rot), ladoZ = -Math.sin(rot);
+    _meta.set(x + ladoX * 0.95 + atrasX * 0.6, y, z + ladoZ * 0.95 + atrasZ * 0.6);
+    const lejos = m.position.distanceTo(_meta);
+    if (lejos > 20) m.position.copy(_meta); else m.position.lerp(_meta, Math.min(1, dt * 6));
+    const camina = lejos > 0.15;
+    m.rotation.y += Math.atan2(Math.sin(rot - m.rotation.y), Math.cos(rot - m.rotation.y)) * Math.min(1, dt * 6);
+    const c = m.userData.cuerpo;
+    if (m.userData.flota) m.position.y = y + 0.5 + Math.sin(t * 2.2) * 0.12;
+    else if (c) c.position.y = (c.userData.y0 ?? (c.userData.y0 = c.position.y)) + (camina ? Math.abs(Math.sin(t * 11)) * 0.12 : 0);   // saltitos al caminar
+    if (m.userData.arcoiris) m.userData.arcoiris.color.setHSL((t * 0.25) % 1, 0.85, 0.55);
+    if (m.userData.dragon) animarDragon(m.userData.dragon, dt, { vel: camina ? 3 : 0 });
+  }
+  // Tu mascota (y las de tus amigos): se crea o se cambia cuando cambia cuál llevas
+  function ponerMascotaA(quien, id) {
+    if (quien.mascotaId === id) return;
+    if (quien.mascotaObj) scene.remove(quien.mascotaObj);
+    quien.mascotaObj = id ? crearMascota(id) : null; quien.mascotaId = id;
+  }
+  const yoMascota = {};
+  function updateMascotas(dt) {
+    ponerMascotaA(yoMascota, loginEl.hidden ? cuenta.mascota : null);
+    if (yoMascota.mascotaObj) { yoMascota.mascotaObj.visible = !escondido; seguirDueno(yoMascota.mascotaObj, ps.pos.x, ps.pos.y, ps.pos.z, ps.facing, dt, t); }
+    for (const f of red.otros.values()) { ponerMascotaA(f, f.mascota || null); if (f.mascotaObj) seguirDueno(f.mascotaObj, f.obj.position.x, f.obj.position.y, f.obj.position.z, f.look ? f.look.rotation.y : 0, dt, t); }
+    // el huevo del pedestal gira, y tiembla cuando abres uno
+    huevoPedestal.rotation.y += dt * 0.8;
+    if (huevoTiembla > 0) { huevoTiembla -= dt; huevoPedestal.rotation.z = Math.sin(huevoTiembla * 40) * 0.25; } else huevoPedestal.rotation.z = 0;
+  }
+  // El pedestal con el huevo (a la derecha del lobby)
+  const PEDESTAL = { x: 124.4, z: -3 };
+  let huevoTiembla = 0;
+  const huevoPedestal = (() => {
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.85, 0.9, 20), lambert(0x6f5a8a)); base.position.set(PEDESTAL.x, 0.45, PEDESTAL.z); scene.add(base);
+    const huevo = new THREE.Mesh(new THREE.SphereGeometry(0.45, 20, 16), new THREE.MeshPhongMaterial({ color: 0xf3ead2, shininess: 50, map: lienzo(128, 64, (g, w, h) => {
+      g.fillStyle = '#f3ead2'; g.fillRect(0, 0, w, h);
+      const manchas = ['#ff7fb0', '#5ad1ff', '#ffd23f', '#7ad37a', '#b17ae8'];
+      for (let i = 0; i < 18; i++) { g.fillStyle = manchas[i % 5]; g.beginPath(); g.arc((i * 37) % w, (i * 23) % h, 4 + (i % 3) * 2, 0, Math.PI * 2); g.fill(); }
+    }) }));
+    huevo.scale.y = 1.3; huevo.position.set(PEDESTAL.x, 1.5, PEDESTAL.z); scene.add(huevo);
+    const letrero = cartel(256, 64, 1.8, 0.45, (g, w, h) => { g.fillStyle = '#3d2f55'; g.fillRect(0, 0, w, h); letras(g, tr('letrero.mascotas') + ' 🥚', w / 2, h / 2 + 2, 38, '#ffd76a'); });
+    enPared(letrero, LOBBY.x1 - 0.32, 3.2, PEDESTAL.z, 'w');
+    return huevo;
+  })();
+  const mascotasPanel = document.getElementById('mascotasPanel');
+  function abrirMascotas() { pintarMascotas(); mascotasPanel.hidden = false; paletaEl.hidden = true; tiendaEl.hidden = true; traductorPanel.hidden = true; }
+  mascotasPanel.querySelector('.cerrar').addEventListener('click', e => { mascotasPanel.hidden = true; e.currentTarget.blur(); });
+  function pintarMascotas() {
+    document.getElementById('mascotasMonedas').textContent = tr('tienda.tienes', { n: cuenta.monedas });
+    const lista = document.getElementById('mascotasLista'); lista.innerHTML = '';
+    // el huevo
+    const fila = document.createElement('div'); fila.className = 'itemTienda';
+    const m = document.createElement('div'); m.className = 'muestra'; m.style.background = 'radial-gradient(ellipse at 50% 55%, #f3ead2 0 45%, transparent 47%), radial-gradient(circle at 30% 40%, #ff7fb0 0 3px, transparent 4px), #3d2f55';
+    const n = document.createElement('div'); n.className = 'nombre'; n.textContent = tr('mascotas.huevo', { precio: PRECIO_HUEVO });
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = tr('mascotas.abrir');
+    b.addEventListener('click', () => {
+      const r = abrirHuevo(cuenta); b.blur();
+      if (!r.ok) { showToast(tr('tienda.noAlcanza'), true); return; }
+      cuenta = r.cuenta; autoguardar(); huevoTiembla = 0.6;
+      const nombre = tr('mascota.' + r.id);
+      showToast(mascotaDe(r.id).rara ? tr('mascotas.salioRara', { nombre }) : tr('mascotas.salio', { nombre }), false, 3000);
+      pintarMascotas();
+    });
+    fila.append(m, n, b); lista.appendChild(fila);
+    const p = document.createElement('p'); p.className = 'probas';
+    p.innerHTML = tr('mascotas.probabilidades') + ': ' + MASCOTAS.map(x => (x.rara ? `<b>${tr('mascota.' + x.id)} ${x.prob}%</b>` : `${tr('mascota.' + x.id)} ${x.prob}%`)).join(' · ');
+    lista.appendChild(p);
+    // las tuyas
+    const sub = document.createElement('p'); sub.className = 'subtitulo'; sub.textContent = tr('mascotas.tuyas'); lista.appendChild(sub);
+    const tengo = MASCOTAS.filter(x => cuenta.mascotas[x.id]);
+    if (!tengo.length) { const v = document.createElement('p'); v.className = 'probas'; v.textContent = tr('mascotas.ninguna'); lista.appendChild(v); }
+    for (const x of tengo) {
+      const f = document.createElement('div'); f.className = 'itemTienda';
+      const mm = document.createElement('div'); mm.className = 'muestra'; mm.style.background = { ganso: '#f4f4f0', oso: '#8a5a32', planta: 'linear-gradient(#5fbf4a 0 45%, #c06a3c 45%)', fantasma: '#e6ecff', miniYellow: '#e2bd3c', arcoiris: 'linear-gradient(135deg, #ff4d4d, #ffd23f, #5ad16a, #4d9bff, #b14dff)' }[x.id];
+      const nn = document.createElement('div'); nn.className = 'nombre'; nn.textContent = `${tr('mascota.' + x.id)} ×${cuenta.mascotas[x.id]}`;
+      const bs = document.createElement('div'); bs.className = 'botones2';
+      const llevar = document.createElement('button'); llevar.type = 'button'; const la = cuenta.mascota === x.id;
+      llevar.textContent = tr(la ? 'mascotas.llevando' : 'mascotas.llevar');
+      llevar.addEventListener('click', () => { cuenta = llevarMascota(cuenta, la ? null : x.id); autoguardar(); pintarMascotas(); llevar.blur(); });
+      bs.appendChild(llevar);
+      if (cuenta.mascotas[x.id] > 1) {
+        const vender = document.createElement('button'); vender.type = 'button'; vender.className = 'vender'; vender.textContent = tr('mascotas.vender', { n: x.venta });
+        vender.addEventListener('click', () => { const r = venderRepetida(cuenta, x.id); if (r.ok) { cuenta = r.cuenta; autoguardar(); showToast(tr('mascotas.vendiste', { nombre: tr('mascota.' + x.id), n: x.venta })); pintarMascotas(); } vender.blur(); });
+        bs.appendChild(vender);
+      }
+      f.append(mm, nn, bs); lista.appendChild(f);
+    }
+  }
 
   // ---------- 🛒 La tienda de cajas (en el rincón del lobby). Si no te alcanza, ¡te echan volando! ----------
   const TIENDA = { x0: LOBBY.x0, x1: 105, z0: LOBBY.z0, z1: -8 };
@@ -2040,7 +2184,7 @@ import * as F from './src/fiesta.js?v=17';   // cambiar ?v= al cambiar estos arc
     if (tiendaMuestra) tiendaMuestra.rotation.y += dt;
     const dentro = dentroDe(TIENDA) ? 'cajas' : dentroDe(TIENDA_CAMINOS) ? 'caminos' : null;
     if (dentro && dentro !== enTienda) {
-      if (dentro === 'cajas' ? puedeEntrar(cuenta) : puedeEntrarCaminos(cuenta)) { tiendaModo = dentro; pintarTienda(); tiendaEl.hidden = false; paletaEl.hidden = true; traductorPanel.hidden = true; }   // (una sola ventana a la vez)
+      if (dentro === 'cajas' ? puedeEntrar(cuenta) : puedeEntrarCaminos(cuenta)) { tiendaModo = dentro; pintarTienda(); tiendaEl.hidden = false; paletaEl.hidden = true; traductorPanel.hidden = true; mascotasPanel.hidden = true; }   // (una sola ventana a la vez)
       else {
         ps.vel.x = 15; ps.vel.z = dentro === 'cajas' ? 11 : 0; ps.vel.y = 9; ps.onGround = false;   // ¡FUERA! (sales volando unos metros)
         showToast(tr('tienda.fuera'), true, 2600);
@@ -2510,6 +2654,8 @@ import * as F from './src/fiesta.js?v=17';   // cambiar ?v= al cambiar estos arc
     revisarPuertaLobby();
     revisarTienda(dt);
     updateCaminos(dt);
+    updateMascotas(dt);
+    if (!mascotasPanel.hidden && (!enLobby || Math.hypot(ps.pos.x - PEDESTAL.x, ps.pos.z - PEDESTAL.z) > 3.5)) mascotasPanel.hidden = true;
     moverTraductor();
     if (!traductorPanel.hidden && (!enLobby || Math.hypot(ps.pos.x - TRADUCTOR.x, ps.pos.z - TRADUCTOR.z) > 3.5)) traductorPanel.hidden = true;
     updateSusto(dt);
@@ -2574,6 +2720,7 @@ import * as F from './src/fiesta.js?v=17';   // cambiar ?v= al cambiar estos arc
     repintarLetreros(); pintarPantallaLobby();
     escapasteEl.innerHTML = [...tr('escapaste')].map(l => (l === ' ' ? '<span>&nbsp;</span>' : `<span>${l}</span>`)).join('');
     if (!tiendaEl.hidden) pintarTienda();
+    if (!mascotasPanel.hidden) pintarMascotas();
   }
   function cambiarIdioma(i) { ponerIdioma(i); try { localStorage.setItem('color-dragons:idioma', i); } catch (e) {} aplicarIdioma(); }
   try { ponerIdioma(localStorage.getItem('color-dragons:idioma') || 'es'); } catch (e) {}

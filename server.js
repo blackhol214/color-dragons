@@ -114,7 +114,7 @@ const servidor = Bun.serve({
       if (m.tipo === 'pos') {
         yo.x = dentro(m.x, BORDE); yo.y = dentro(m.y, 200); yo.z = dentro(m.z, BORDE); yo.rot = m.rot; yo.oculto = m.oculto;
         if (m.color !== null) yo.color = m.color;
-        ws.publish('juego', JSON.stringify({ tipo: 'pos', id: yo.id, x: yo.x, y: yo.y, z: yo.z, rot: yo.rot, color: yo.color, oculto: yo.oculto, camino: m.camino, t: m.t }));   // t: su hora, para dibujarlo suave
+        ws.publish('juego', JSON.stringify({ tipo: 'pos', id: yo.id, x: yo.x, y: yo.y, z: yo.z, rot: yo.rot, color: yo.color, oculto: yo.oculto, camino: m.camino, mascota: m.mascota, t: m.t }));   // t: su hora, para dibujarlo suave
       }
     },
     close(ws) {

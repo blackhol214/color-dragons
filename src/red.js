@@ -2,6 +2,7 @@
 
 export const PUERTO = 8080;
 export const CAMINOS_VALIDOS = ['amarillo', 'fuego', 'electrico'];   // (los mismos de src/tienda.js)
+export const MASCOTAS_VALIDAS = ['ganso', 'oso', 'planta', 'fantasma', 'miniYellow', 'arcoiris'];
 export const OFICIAL = 'https://blackhol214.github.io/color-dragons/';   // el único juego oficial
 
 // La sala es el nombre del túnel de Cloudflare (lo de antes de .trycloudflare.com). Solo letras, números y guiones,
@@ -45,7 +46,7 @@ export function leerMensaje(texto) {
     if (![m.x, m.y, m.z, m.rot].every(esNumero)) return null;
     // oculto: 1 si estás metido en una caja (tus amigos no te ven)
     // camino: el trail que lleva puesto (solo uno de los que existen; si no, ninguno)
-    return { tipo: 'pos', x: m.x, y: m.y, z: m.z, rot: m.rot, color: esNumero(m.color) ? m.color : null, oculto: m.oculto === 1 ? 1 : 0, camino: CAMINOS_VALIDOS.includes(m.camino) ? m.camino : null, t: horaDe(m.t) };
+    return { tipo: 'pos', x: m.x, y: m.y, z: m.z, rot: m.rot, color: esNumero(m.color) ? m.color : null, oculto: m.oculto === 1 ? 1 : 0, camino: CAMINOS_VALIDOS.includes(m.camino) ? m.camino : null, mascota: MASCOTAS_VALIDAS.includes(m.mascota) ? m.mascota : null, t: horaDe(m.t) };
   }
   // 🌙 Las noches: agarrar el objeto número i (E), entregar lo que llevas en el Center Lab, servirle comida a Yellow
   if (m.tipo === 'recoger') return Number.isInteger(m.i) && m.i >= 0 && m.i < 100 ? { tipo: 'recoger', i: m.i } : null;

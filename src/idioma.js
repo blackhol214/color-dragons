@@ -78,6 +78,12 @@ export const TEXTOS = {
     'sala.fSpawn': 'Inicio de la fiesta', 'sala.fSalon': 'Salón de la fiesta', 'sala.fRampa': 'La rampa', 'sala.fBloques': 'Cuarto de las cajas', 'sala.fBajo': 'Cuarto de abajo',
     'sala.fPasillo': 'Pasillo de la fiesta', 'sala.fVent1': 'Ventilación', 'sala.fVent2': 'Ventilación', 'sala.fVent3': 'Ventilación final', 'sala.fVentA': 'Ventilación (sin salida)',
     'sala.fVentB': 'Ventilación (sin salida)', 'sala.fVentC': 'Ventilación (sin salida)', 'sala.fSalida': 'Afuera',
+    // Mascotas
+    'mascotas.titulo': '🥚 Tienda de mascotas', 'mascotas.huevo': 'Huevo misterioso · {precio} 🪙', 'mascotas.abrir': 'Abrir', 'mascotas.salio': '🥚 ¡Te salió: {nombre}!',
+    'mascotas.salioRara': '🌟 ¡WOW! ¡Te salió una rara: {nombre}!', 'mascotas.tuyas': 'Tus mascotas', 'mascotas.ninguna': 'Todavía no tienes mascotas: ¡abre un huevo!',
+    'mascotas.llevar': 'Llevar', 'mascotas.llevando': 'Contigo ✓', 'mascotas.vender': 'Vender 1 (+{n} 🪙)', 'mascotas.vendiste': '🪙 Vendiste un {nombre} repetido (+{n})',
+    'mascotas.probabilidades': 'Puede salir', 'usar.mascotas': 'ver las mascotas 🥚', 'letrero.mascotas': 'MASCOTAS',
+    'mascota.ganso': 'Ganso', 'mascota.oso': 'Oso', 'mascota.planta': 'Mini planta', 'mascota.fantasma': 'Fantasmita', 'mascota.miniYellow': 'Mini Yellow', 'mascota.arcoiris': 'Cubo arcoíris',
   },
   en: {
     'login.usuario': 'Your username', 'login.placeholder': 'the human', 'login.jugar': 'Play',
@@ -132,6 +138,11 @@ export const TEXTOS = {
     'sala.fSpawn': 'Party spawn', 'sala.fSalon': 'Party hall', 'sala.fRampa': 'The ramp', 'sala.fBloques': 'Box room', 'sala.fBajo': 'Room below',
     'sala.fPasillo': 'Party hallway', 'sala.fVent1': 'Vent', 'sala.fVent2': 'Vent', 'sala.fVent3': 'Final vent', 'sala.fVentA': 'Vent (dead end)',
     'sala.fVentB': 'Vent (dead end)', 'sala.fVentC': 'Vent (dead end)', 'sala.fSalida': 'Outside',
+    'mascotas.titulo': '🥚 Pet shop', 'mascotas.huevo': 'Mystery egg · {precio} 🪙', 'mascotas.abrir': 'Open', 'mascotas.salio': '🥚 You got: {nombre}!',
+    'mascotas.salioRara': '🌟 WOW! You got a rare one: {nombre}!', 'mascotas.tuyas': 'Your pets', 'mascotas.ninguna': "You don't have pets yet: open an egg!",
+    'mascotas.llevar': 'Take', 'mascotas.llevando': 'With you ✓', 'mascotas.vender': 'Sell 1 (+{n} 🪙)', 'mascotas.vendiste': '🪙 You sold a duplicate {nombre} (+{n})',
+    'mascotas.probabilidades': 'Can hatch', 'usar.mascotas': 'see the pets 🥚', 'letrero.mascotas': 'PETS',
+    'mascota.ganso': 'Goose', 'mascota.oso': 'Bear', 'mascota.planta': 'Mini plant', 'mascota.fantasma': 'Little ghost', 'mascota.miniYellow': 'Mini Yellow', 'mascota.arcoiris': 'Rainbow cube',
   },
 };
 // Inglés: "battery" → "batteries" (por eso 'toast.baterias' usa {ies})
