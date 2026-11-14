@@ -41,7 +41,7 @@ describe('🛒 tienda de cajas', () => {
     expect(comprar(una, 'espacial')).toMatchObject({ ok: false, motivo: 'ya-la-tienes' });
   });
   it('si ya tienes todas las cajas, entras a elegir aunque tengas 0', () => {
-    const todas = { ...nuevaCuenta(), cajas: ['carton', 'espacial'] };
+    const todas = { ...nuevaCuenta(), cajas: CAJAS.map(c => c.id) };
     expect(puedeEntrar(todas)).toBe(true);
   });
   it('solo te puedes poner cajas que tienes', () => {
@@ -65,4 +65,13 @@ describe('💀 pagar para seguir en la noche', () => {
   it('cuesta 20', () => expect(COSTO_SEGUIR).toBe(20));
   it('con 25 pagas y te quedan 5', () => expect(pagarParaSeguir({ ...nuevaCuenta(), monedas: 25 })).toMatchObject({ ok: true, cuenta: { monedas: 5 } }));
   it('con 19 no puedes (y no te quita nada)', () => expect(pagarParaSeguir({ ...nuevaCuenta(), monedas: 19 })).toMatchObject({ ok: false, cuenta: { monedas: 19 } }));
+});
+
+describe('📦 las cajas nuevas', () => {
+  it('están la de Navidad, la mojada y la piedra mascota', () => { for (const id of ['regalo', 'playa', 'piedra']) expect(CAJAS.map(c => c.id)).toContain(id); });
+  it('con 30 monedas compras la piedra y te la pones', () => {
+    const r = comprar({ ...nuevaCuenta(), monedas: 30 }, 'piedra');
+    expect(r).toMatchObject({ ok: true, cuenta: { monedas: 0, caja: 'piedra' } });
+  });
+  it('un guardado con la caja de Navidad se lee bien', () => expect(leerCuenta({ monedas: 3, cajas: ['carton', 'regalo'], caja: 'regalo' }).caja).toBe('regalo'));
 });

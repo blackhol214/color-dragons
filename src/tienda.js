@@ -8,6 +8,9 @@ export const MONEDAS_POR_NOCHE = 10;
 export const CAJAS = [
   { id: 'carton', nombre: 'Caja de cartón', precio: 0 },
   { id: 'espacial', nombre: 'Caja espacial', precio: 15 },
+  { id: 'regalo', nombre: 'Caja de Navidad', precio: 20 },     // 🎁 papel rojo con cinta dorada y moño
+  { id: 'playa', nombre: 'Caja mojada', precio: 20 },          // 🏖️ como una playa (y brilla de mojada)
+  { id: 'piedra', nombre: 'Piedra mascota', precio: 30 },      // 🪨 pixelada, con ojos de punto (para "Raise a Pet Rock", el próximo juego)
 ];
 export const cajaDe = id => CAJAS.find(c => c.id === id) || null;
 

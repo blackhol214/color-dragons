@@ -175,14 +175,14 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COMO, textoQueHago, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=15';
-import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=15';
-import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=15';
-import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=15';
-import { crearDragon, animarDragon } from './src/criaturas.js?v=15';
-import { CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=15';
-import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=15';
-import * as F from './src/fiesta.js?v=15';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
+import { alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COMO, textoQueHago, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=16';
+import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=16';
+import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=16';
+import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=16';
+import { crearDragon, animarDragon } from './src/criaturas.js?v=16';
+import { CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=16';
+import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=16';
+import * as F from './src/fiesta.js?v=16';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
 (() => {
   // iPhone ignora user-scalable=no: aquí se bloquea el zoom con dos dedos y el doble toque
   for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
@@ -192,7 +192,7 @@ import * as F from './src/fiesta.js?v=15';   // cambiar ?v= al cambiar estos arc
   const IS_TOUCH = matchMedia('(pointer:coarse)').matches;
   const canvas = document.getElementById('game');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, IS_TOUCH ? 1.5 : 2));   // en el celular, menos píxeles extra (igual se ve nítido)
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));   // (más de 1,5 casi no se nota y hace que todo vaya más lento)   // en el celular, menos píxeles extra (igual se ve nítido)
   // (Sin sombras del sol: el laboratorio tiene techo. Debajo de cada personaje va una sombrita redonda)
 
   const scene = new THREE.Scene();
@@ -259,10 +259,11 @@ import * as F from './src/fiesta.js?v=15';   // cambiar ?v= al cambiar estos arc
   const VIDRIO = new THREE.MeshLambertMaterial({ color: 0xa9c3c4, transparent: true, opacity: 0.22, depthWrite: false });
 
   // Una caja (mueble, pared…). solido: la física choca con ella · camara: la cámara no la atraviesa
-  function bloque(x0, x1, y0, y1, z0, z1, mat, { solido = true, camara = false } = {}) {
+  // movil: se mueve después (como la compuerta): esa no se junta con las demás
+  function bloque(x0, x1, y0, y1, z0, z1, mat, { solido = true, camara = false, movil = false } = {}) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0), mat);
     m.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
-    scene.add(m);
+    scene.add(m); if (!movil) quietos.push(m);
     if (solido) platforms.push({ x: (x0 + x1) / 2, z: (z0 + z1) / 2, hw: (x1 - x0) / 2, hd: (z1 - z0) / 2, top: y1, bottom: y0 });
     if (camara) bloqueanCamara.push(m);
     return m;
@@ -275,8 +276,42 @@ import * as F from './src/fiesta.js?v=15';   // cambiar ?v= al cambiar estos arc
     g.setIndex(haciaAbajo ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2]);
     g.computeVertexNormals();
     const m = new THREE.Mesh(g, mat);
-    scene.add(m); bloqueanCamara.push(m);
+    scene.add(m); bloqueanCamara.push(m); quietos.push(m);
     return m;
+  }
+  // ⚡ Contra el LAG: las paredes, pisos y muebles que nunca se mueven se juntan en pocas piezas grandes (una por material).
+  // La compu dibuja ~1700 piezas sueltas mucho más lento que unas pocas grandes (aunque sean los mismos triángulos)
+  const quietos = [];
+  function juntarQuietos() {
+    scene.updateMatrixWorld(true);
+    const porMaterial = new Map();
+    for (const m of quietos) {
+      if (m.parent !== scene || m.children.length || !m.visible || Array.isArray(m.material) || m.material.transparent) continue;
+      if (!porMaterial.has(m.material)) porMaterial.set(m.material, []);
+      porMaterial.get(m.material).push(m);
+    }
+    let antes = 0, despues = 0;
+    for (const [mat, lista] of porMaterial) {
+      if (lista.length < 2) continue;
+      const partes = lista.map(m => { const g = (m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone()); g.applyMatrix4(m.matrixWorld); return g; });
+      const total = partes.reduce((n, g) => n + g.attributes.position.count, 0);
+      const pos = new Float32Array(total * 3), nor = new Float32Array(total * 3), uv = new Float32Array(total * 2);
+      let o = 0;
+      for (const g of partes) {
+        const n = g.attributes.position.count;
+        pos.set(g.attributes.position.array, o * 3);
+        if (g.attributes.normal) nor.set(g.attributes.normal.array, o * 3);
+        if (g.attributes.uv) uv.set(g.attributes.uv.array, o * 2);
+        o += n; g.dispose();
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+      geo.computeBoundingSphere();
+      scene.add(new THREE.Mesh(geo, mat));
+      for (const m of lista) scene.remove(m);   // (siguen en bloqueanCamara: la cámara choca igual con ellas)
+      antes += lista.length; despues++;
+    }
+    return { antes, despues };
   }
   // Un rectángulo menos los hoyos (las escotillas): quedan hasta 4 pedazos alrededor de cada hoyo
   function restarHoyos(r, hoyos) {
@@ -440,15 +475,20 @@ import * as F from './src/fiesta.js?v=15';   // cambiar ?v= al cambiar estos arc
     return null;
   };
 
-  // Focos de luz (pocos, para que el juego vaya fluido): uno en cada sala grande
-  const focos = {};
+  // Focos de luz: cada sala grande tiene el suyo, pero se prenden solo LOS 4 MÁS CERCANOS a ti (4 luces de verdad que se mueven
+  // de sala en sala). Con 20 luces prendidas a la vez, las compus más lentas se ponían a 20 cuadros por segundo: ¡ese era el LAG!
+  const focos = {}, FOCOS_PRENDIDOS = 4;
   for (const [id, color, k] of [['spawn', 0xe8eee8, 1], ['testLab', 0xd6ece6, 1], ['salon', 0xe6e8ee, 1.1], ['centerLab', 0xe2eaf0, 1.2], ['banos', 0xeef0e6, 0.9],
     ['lockers', 0xe0eadb, 0.9], ['panico', 0xf0d6cf, 0.8], ['greyCove', 0xc9ccd0, 0.9], ['yellowRoom', 0xf0e0a8, 0.9], ['tunelCentro', 0xd8d0b0, 0.6],
     ['lobby', 0xf2f6f6, 1.4], ['fSalon', 0xf6d8ee, 1.2], ['fSpawn', 0xe8dcf6, 1], ['fRampa', 0xdfe2f6, 1], ['fBloques', 0xe6eadb, 1], ['fPasillo', 0xd8dde8, 0.9], ['fVent1', 0xc8d2d8, 0.4], ['fVent2', 0xc8d2d8, 0.5], ['fVent3', 0xc8d2d8, 0.5], ['fSalida', 0x9fb4d8, 0.5]]) {
     const s = SALAS.find(q => q.id === id);
-    const luz = new THREE.PointLight(color, k * 1.15, 30, 1.3);   // (un poco más fuertes: el techo ahora está más alto)
-    luz.position.set((s.x0 + s.x1) / 2, s.y + altoDe(s.y) - 0.6, (s.z0 + s.z1) / 2);
-    luz.userData.k = luz.intensity; scene.add(luz); focos[id] = luz;
+    focos[id] = { x: (s.x0 + s.x1) / 2, y: s.y + altoDe(s.y) - 0.6, z: (s.z0 + s.z1) / 2, color, k: k * 1.15 };   // (solo el dato: dónde va y de qué color)
+  }
+  const lucesReales = Array.from({ length: FOCOS_PRENDIDOS }, () => { const l = new THREE.PointLight(0xffffff, 0, 30, 1.3); scene.add(l); return l; });
+  let focosApagados = false;
+  function moverFocos(p) {
+    const cerca = Object.values(focos).sort((a, b) => Math.hypot(a.x - p.x, (a.y - p.y) * 3, a.z - p.z) - Math.hypot(b.x - p.x, (b.y - p.y) * 3, b.z - p.z));
+    lucesReales.forEach((l, i) => { const f = cerca[i]; l.position.set(f.x, f.y, f.z); l.color.setHex(f.color); l.intensity = focosApagados ? 0 : f.k; });
   }
 
   // ---------- Las escotillas: un hoyo con borde de peligro, la tapa abierta y una escalera de mano hasta el subsuelo ----------
@@ -607,11 +647,72 @@ import * as F from './src/fiesta.js?v=15';   // cambiar ?v= al cambiar estos arc
     return new THREE.CanvasTexture(c);
   })();
   const ESPACIAL = new THREE.MeshLambertMaterial({ map: texEspacio, emissive: 0x111122 });
+  // 🎁 Caja de Navidad: papel rojo con una cinta dorada (en los lados una franja; arriba, una cruz) y un moño encima
+  const texRegalo = (arriba) => lienzo(128, 128, (g, w, h) => {
+    g.fillStyle = '#c3202b'; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(255,255,255,.18)'; for (let i = 0; i < 14; i++) { g.beginPath(); g.arc((i * 37) % w, (i * 53) % h, 3, 0, Math.PI * 2); g.fill(); }   // copitos de nieve
+    g.fillStyle = '#e8bf3a'; g.fillRect(w / 2 - 10, 0, 20, h); if (arriba) g.fillRect(0, h / 2 - 10, w, 20);
+  });
+  const REGALO_LADO = lambert(0xffffff, { map: texRegalo(false) }), REGALO_ARRIBA = lambert(0xffffff, { map: texRegalo(true) });
+  // 🏖️ Caja mojada: cielo, mar con olas y arena (con una estrella de mar). Brilla porque está mojada
+  const texPlaya = lienzo(128, 128, (g, w, h) => {
+    g.fillStyle = '#9fd8f2'; g.fillRect(0, 0, w, h * 0.35);
+    g.fillStyle = '#ffe27a'; g.beginPath(); g.arc(w * 0.8, h * 0.14, 9, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#2f8fd0'; g.fillRect(0, h * 0.35, w, h * 0.27);
+    g.strokeStyle = '#ffffff'; g.lineWidth = 3; g.beginPath(); for (let x = 0; x <= w; x += 4) g.lineTo(x, h * 0.6 + Math.sin(x / 8) * 3); g.stroke();
+    g.fillStyle = '#e9cf8f'; g.fillRect(0, h * 0.62, w, h * 0.38);
+    g.fillStyle = '#e8735a'; g.beginPath(); for (let k = 0; k < 10; k++) { const a = k * Math.PI / 5 - Math.PI / 2, r = k % 2 ? 4 : 10; g.lineTo(w * 0.3 + Math.cos(a) * r, h * 0.82 + Math.sin(a) * r); } g.fill();
+  });
+  const texArena = lienzo(64, 64, (g, w, h) => { g.fillStyle = '#e9cf8f'; g.fillRect(0, 0, w, h); g.fillStyle = '#d4b874'; for (let i = 0; i < 40; i++) g.fillRect((i * 29) % w, (i * 17) % h, 2, 2); });
+  const PLAYA = new THREE.MeshPhongMaterial({ map: texPlaya, shininess: 90, specular: 0x88aacc }), ARENA = new THREE.MeshPhongMaterial({ map: texArena, shininess: 90, specular: 0x88aacc });
   // Viste una caja con el estilo que compraste
   function vestirCaja(caja, id) {
-    const espacial = id === 'espacial';
-    caja.cuerpo.material = espacial ? ESPACIAL : [CARTON_LADO, CARTON_LADO, CARTON_ARRIBA, CARTON_ARRIBA, CARTON_LADO, CARTON_LADO];
-    for (const s of caja.solapas) s.children[0].material = espacial ? ESPACIAL : CARTON_ARRIBA;
+    const lados = { carton: CARTON_LADO, espacial: ESPACIAL, regalo: REGALO_LADO, playa: PLAYA }[id] || CARTON_LADO;
+    const arriba = { carton: CARTON_ARRIBA, espacial: ESPACIAL, regalo: REGALO_ARRIBA, playa: ARENA }[id] || CARTON_ARRIBA;
+    caja.cuerpo.material = [lados, lados, arriba, arriba, lados, lados];
+    for (const s of caja.solapas) s.children[0].material = arriba;
+    // Las cosas extra de algunas cajas (se hacen la primera vez que hacen falta)
+    if (!caja.extras) {
+      const { w, h } = CAJA;
+      // el moño del regalo
+      const mono = new THREE.Group(); mono.position.y = h + 0.05;
+      const dorado = new THREE.MeshPhongMaterial({ color: 0xe8bf3a, shininess: 70 });
+      for (const lado of [-1, 1]) { const lazo = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.05, 8, 16), dorado); lazo.position.set(lado * 0.15, 0.12, 0); lazo.rotation.y = Math.PI / 2; lazo.rotation.x = lado * 0.5; mono.add(lazo); }
+      mono.add(new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 8), dorado));
+      caja.obj.add(mono);
+      // 🪨 la piedra mascota: medio círculo pixelado (pocas caras, como un juego viejito) con dos ojitos de punto
+      const piedra = new THREE.Group();
+      // estilo Nintendo 64: un medio círculo con POCAS caras (se notan los triángulos) y un poquito chueco, como piedra de verdad
+      const geoRoca = new THREE.SphereGeometry(1.15, 9, 4, 0, Math.PI * 2, 0, Math.PI / 2);
+      const pos = geoRoca.attributes.position;
+      for (let k = 0; k < pos.count; k++) {
+        const y = pos.getY(k); if (y < 0.05) continue;   // (la base queda plana, apoyada en el piso)
+        // cada punto un poco más afuera o más adentro (según DÓNDE está, no su número: así los puntos repetidos de la costura
+        // se mueven igual y no queda una rendija transparente)
+        const r = 1 + Math.sin(Math.round(pos.getX(k) * 100) * 0.37 + Math.round(y * 100) * 0.71 + Math.round(pos.getZ(k) * 100) * 0.53) * 0.07;
+        pos.setXYZ(k, pos.getX(k) * r, y * r, pos.getZ(k) * r);
+      }
+      geoRoca.computeVertexNormals();
+      // la textura: azul violeta, llena de puntitos de colores (azules, morados y algo de verde), como en la referencia de Mathias
+      const texRoca = lienzo(256, 128, (g, w, h) => {
+        g.fillStyle = '#5c64a6'; g.fillRect(0, 0, w, h);
+        const motas = ['#3c4380', '#7d86cf', '#2c3163', '#8f72c2', '#5f8f73', '#9aa3e0', '#463c7a'];
+        for (let i = 0; i < 2600; i++) { g.fillStyle = motas[i % motas.length]; const t = 1 + (i % 3); g.fillRect(Math.random() * w, Math.random() * h, t, t); }
+        for (let i = 0; i < 18; i++) { g.fillStyle = 'rgba(40,44,90,.25)'; g.beginPath(); g.arc(Math.random() * w, Math.random() * h, 6 + Math.random() * 14, 0, Math.PI * 2); g.fill(); }   // manchas más oscuras
+      });
+      texRoca.magFilter = THREE.NearestFilter;   // (los puntitos se ven como píxeles, estilo retro)
+      const roca = new THREE.Mesh(geoRoca, new THREE.MeshLambertMaterial({ map: texRoca, flatShading: true }));
+      roca.scale.y = 0.95; piedra.add(roca);
+      const base = new THREE.Mesh(new THREE.CircleGeometry(1.15, 9), roca.material); base.rotation.x = Math.PI / 2; base.position.y = 0.01; piedra.add(base);   // (tapada por abajo)
+      for (const lado of [-1, 1]) { const ojo = new THREE.Mesh(new THREE.SphereGeometry(0.075, 8, 6), new THREE.MeshBasicMaterial({ color: 0x111111 })); ojo.position.set(lado * 0.28, 0.62, 0.92); piedra.add(ojo); }   // ojitos de punto
+      caja.obj.add(piedra);
+      caja.extras = { mono, piedra };
+    }
+    const esPiedra = id === 'piedra';
+    caja.extras.mono.visible = id === 'regalo';
+    caja.extras.piedra.visible = esPiedra;
+    caja.cuerpo.visible = !esPiedra;
+    for (const s of caja.solapas) s.visible = !esPiedra;
   }
   // El armario de Yellow: hueco por dentro (oscuro), con una puerta que empieza abierta. E la cierra y la abre
   function armario(e) {
@@ -993,7 +1094,8 @@ import * as F from './src/fiesta.js?v=15';   // cambiar ?v= al cambiar estos arc
   const sombra = new THREE.Mesh(new THREE.CircleGeometry(0.6, 24), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35, depthWrite: false }));
   sombra.rotation.x = -Math.PI / 2; scene.add(sombra);
   const camRay = new THREE.Raycaster();
-  let camDist = 9;
+  let camDist = 6, camQuiere = 6;   // camQuiere: lo lejos que TÚ quieres la cámara (rueda del ratón: de 3 a 10 m)
+  addEventListener('wheel', e => { if (loginEl.hidden) camQuiere = Math.min(10, Math.max(3, camQuiere + Math.sign(e.deltaY) * 0.8)); }, { passive: true });
 
   // ---------- 📦 Tu caja: B (o el botón 📦) te la pone encima y te puedes mover con ella. Cerca del armario, B te mete en el armario ----------
   // Metido en tu caja (o en el armario) los dragones no te ven… a menos que te vean meterte: ahí sale un "!" encima de tu caja
@@ -1040,7 +1142,7 @@ import * as F from './src/fiesta.js?v=15';   // cambiar ?v= al cambiar estos arc
   function usarE() { const u = queUsar(); if (u) u.hacer(); }
   usarBtn.addEventListener('click', e => { usarE(); e.currentTarget.blur(); });
   // 🔧 Para probar: con ?debug en el link, la consola puede ver y mover al jugador (window.cd)
-  if (new URLSearchParams(location.search).has('debug')) window.cd = { ps, camera, salaEn, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; }, get escondido() { return escondido; }, get enCaja() { return enCaja; }, get dragones() { return dragones; }, get cuerpos() { return cuerposDragon; }, get noche() { return noche; }, get fiesta() { return fiesta; }, get red() { return red; }, platforms, atrapar: id => atrapado(id), get susto() { return susto; } };
+  if (new URLSearchParams(location.search).has('debug')) window.cd = { ps, camera, salaEn, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; }, get escondido() { return escondido; }, get enCaja() { return enCaja; }, get dragones() { return dragones; }, get cuerpos() { return cuerposDragon; }, get noche() { return noche; }, get fiesta() { return fiesta; }, get red() { return red; }, platforms, atrapar: id => atrapado(id), get susto() { return susto; }, renderer, scene, bloqueanCamara, get camPitch() { return camPitch; } };
   // La caja puesta: las solapas se cierran, y al caminar se bambolea un poquito
   function moverCaja(caja, puesta, caminando, dt, t) {
     caja.obj.visible = puesta;
@@ -1591,7 +1693,7 @@ import * as F from './src/fiesta.js?v=15';   // cambiar ?v= al cambiar estos arc
   const cercaMesaLinternas = () => Math.abs(ps.pos.y - MESA_LINTERNAS.y) < 2 && Math.hypot(ps.pos.x - MESA_LINTERNAS.x, ps.pos.z - MESA_LINTERNAS.z) < MESA_LINTERNAS.radio;
   function agarrarLinterna() { tengoLinterna = true; linterna.intensity = 4; enMano.visible = true; showToast('🔦 ¡Agarraste una linterna!', false, 1800); }
   function apagon(on) {
-    for (const id in focos) focos[id].intensity = on ? 0 : focos[id].userData.k;
+    focosApagados = on;
     luzCielo.intensity = on ? 0.16 : 0.55; luzAmbiente.intensity = on ? 0.08 : 0.12;   // (en el apagón queda una penumbra: se ven las siluetas)
     for (const m of lamparas) m.color.setHex(on ? 0x1a1a1a : m.userData.color);
     mesaLinternas.visible = on; tengoLinterna = false; enMano.visible = false;
@@ -1834,7 +1936,12 @@ import * as F from './src/fiesta.js?v=15';   // cambiar ?v= al cambiar estos arc
       const tengo = cuenta.cajas.includes(c.id), puesta = cuenta.caja === c.id;
       const fila = document.createElement('div'); fila.className = 'itemTienda';
       const m = document.createElement('div'); m.className = 'muestra';
-      m.style.background = c.id === 'espacial' ? 'radial-gradient(circle at 30% 30%, #fff 0 2px, transparent 3px), radial-gradient(circle at 70% 60%, #fff6c8 0 3px, transparent 4px), radial-gradient(circle at 45% 80%, #cfe3ff 0 1.5px, transparent 2.5px), #05050a' : '#b58a55';
+      m.style.background = {
+        espacial: 'radial-gradient(circle at 30% 30%, #fff 0 2px, transparent 3px), radial-gradient(circle at 70% 60%, #fff6c8 0 3px, transparent 4px), radial-gradient(circle at 45% 80%, #cfe3ff 0 1.5px, transparent 2.5px), #05050a',
+        regalo: 'linear-gradient(90deg, transparent 42%, #e8bf3a 42% 58%, transparent 58%), linear-gradient(transparent 42%, #e8bf3a 42% 58%, transparent 58%), #c3202b',
+        playa: 'linear-gradient(#9fd8f2 0 35%, #2f8fd0 35% 62%, #e9cf8f 62%)',
+        piedra: 'radial-gradient(circle at 38% 52%, #111 0 2.5px, transparent 3px), radial-gradient(circle at 62% 52%, #111 0 2.5px, transparent 3px), radial-gradient(ellipse at 50% 100%, #5c64a6 0 62%, transparent 63%)',
+      }[c.id] || '#b58a55';
       const n = document.createElement('div'); n.className = 'nombre'; n.textContent = c.nombre + (c.precio ? ` · ${c.precio} 🪙` : '');
       const b = document.createElement('button'); b.type = 'button';
       b.textContent = puesta ? 'Puesta ✓' : tengo ? 'Ponértela' : 'Comprar'; b.disabled = puesta;
@@ -1955,7 +2062,7 @@ import * as F from './src/fiesta.js?v=15';   // cambiar ?v= al cambiar estos arc
   const globoQueCae = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 12), new THREE.MeshPhongMaterial({ color: 0xe85d75, shininess: 90 }));
   globoQueCae.scale.y = 1.2; globoQueCae.position.set(F.SOMBRERO_FIESTA.x, 5.5, F.SOMBRERO_FIESTA.z); scene.add(globoQueCae);
   // Puertas que se mueven: la compuerta del cuarto de los bloques, la rampa-escotilla, la puerta por donde entra Grey y la de la salida
-  const compuerta = bloque(203.85, 204.15, 3, 6, -11.5, -8.5, lambert(0x5d6266), { camara: true });
+  const compuerta = bloque(203.85, 204.15, 3, 6, -11.5, -8.5, lambert(0x5d6266), { camara: true, movil: true });
   const solidoCompuerta = platforms[platforms.length - 1];   // (justo después de la compuerta: si no, agarraría la pared de arriba y la compuerta nunca se abriría)
   bloque(203.8, 204.2, 6, 9, -11.5, -8.5, lambert(0x8a8f86), { camara: true });   // la pared de arriba de la compuerta (así no queda un hueco para mirar)
   // 📦 La escotilla del piso del cuarto de las cajas: una tapa (sólida) con bisagra al oeste. Cuando Grey la abre,
@@ -1966,7 +2073,7 @@ import * as F from './src/fiesta.js?v=15';   // cambiar ?v= al cambiar estos arc
   const solidoTapa = { x: (EF.x0 + EF.x1) / 2, z: (EF.z0 + EF.z1) / 2, hw: (EF.x1 - EF.x0) / 2, hd: (EF.z1 - EF.z0) / 2, top: 3, bottom: 2.85 }; platforms.push(solidoTapa);
   const escalonesBajada = [];   // la rampa por dentro: escalones invisibles (de 3 m a 0), para poder bajar caminando
   for (let i = 0; i < 7; i++) { const w = (EF.x1 - EF.x0) / 7; escalonesBajada.push({ x: EF.x0 + w * (i + 0.5), z: (EF.z0 + EF.z1) / 2, hw: w / 2, hd: (EF.z1 - EF.z0) / 2, top: 3 - (i + 1) * 3 / 7.5, bottom: -1000 }); }
-  const puertaSalida = bloque(232, 236, 0, 2.8, 53.85, 54.15, lambert(0x5d6266), { camara: true });
+  const puertaSalida = bloque(232, 236, 0, 2.8, 53.85, 54.15, lambert(0x5d6266), { camara: true, movil: true });
   const solidoSalida = platforms[platforms.length - 1]; solidoSalida.top = -1000; solidoSalida.bottom = -1001;   // empieza abierta
   puertaSalida.position.y = 2.8 + 1.4;
   // Los bloques gigantes y sus marcas
@@ -2269,10 +2376,10 @@ import * as F from './src/fiesta.js?v=15';   // cambiar ?v= al cambiar estos arc
       const head = new THREE.Vector3(p.x, p.y + 1.2, p.z);
       const back = new THREE.Vector3(Math.sin(camYaw) * Math.cos(camPitch), Math.sin(camPitch), Math.cos(camYaw) * Math.cos(camPitch));
       // Si una pared (o el techo) queda en medio, la cámara se acerca enseguida; cuando ya no, se aleja suavemente
-      camRay.set(head, back); camRay.far = 9;
+      camRay.set(head, back); camRay.far = camQuiere;
       const choque = camRay.intersectObjects(bloqueanCamara, false)[0];
-      const quiere = choque ? Math.max(0.6, choque.distance - 0.3) : 9;
-      camDist = quiere < camDist ? quiere : camDist + (quiere - camDist) * Math.min(1, dt * 4);
+      const quiere = choque ? Math.max(1.2, choque.distance - 0.3) : camQuiere;
+      camDist += (quiere - camDist) * Math.min(1, dt * (quiere < camDist ? 14 : 4));   // se acerca rápido pero suave (no de golpe) y se aleja despacio
       camera.position.copy(head).addScaledVector(back, camDist);
       camera.lookAt(head);
       player.visible = camDist > 1.3;   // si la cámara queda pegada a ti, te escondes para no tapar la vista
@@ -2281,9 +2388,12 @@ import * as F from './src/fiesta.js?v=15';   // cambiar ?v= al cambiar estos arc
     // 🔧 (solo con ?debug) cámara libre para revisar cosas: cd.libre = { x, y, z, mx, my, mz }
     if (window.cd && cd.libre) { const L = cd.libre; camera.position.set(L.x, L.y, L.z); camera.lookAt(L.mx, L.my, L.mz); }
     apuntarLinterna();
+    moverFocos(ps.pos);
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
   }
+  const juntadas = juntarQuietos();
+  if (window.cd) cd.juntadas = juntadas;
   tick();
 })();
 </script>
