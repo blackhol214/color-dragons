@@ -64,10 +64,10 @@ describe('🎚️ ajustes de volumen', () => {
     expect(leerAjustes(JSON.stringify({ musica: 5, ambiente: -1, silencio: 'si' }))).toEqual({ musica: 1, ambiente: 0, silencio: false });
     expect(leerAjustes(JSON.stringify({ musica: 'x' })).musica).toBe(AJUSTES_INICIALES.musica);
   });
-  it('silencio = todo a cero', () => expect(volumenes({ musica: 1, ambiente: 1, silencio: true })).toEqual({ musica: 0, ambiente: 0, efectos: 0 }));
+  it('silencio = todo a cero', () => expect(volumenes({ musica: 1, ambiente: 1, silencio: true })).toEqual({ musica: 0, ambiente: 0, efectos: 0, escena: 0 }));
   it('al 100 % nunca pasa del volumen máximo, y la mitad suena a un cuarto', () => {
     expect(volumenes({ musica: 1, ambiente: 1, silencio: false }).musica).toBe(VOLUMEN_MAXIMO);
-    expect(volumenes({ musica: 0.5, ambiente: 0, silencio: false })).toEqual({ musica: VOLUMEN_MAXIMO / 4, ambiente: 0, efectos: 0 });
+    expect(volumenes({ musica: 0.5, ambiente: 0, silencio: false })).toEqual({ musica: VOLUMEN_MAXIMO / 4, ambiente: 0, efectos: 0, escena: 0 });
   });
 });
 
@@ -139,4 +139,45 @@ describe('🔊 los pasos se oyen de verdad', () => {
     for (const [id, p] of Object.entries(PASOS)) expect(p.cuerpo, id).toBeGreaterThanOrEqual(140);
   });
   it('a 10 m Red todavía se oye fuerte (más de la mitad)', () => expect(volumenPaso('red', 10)).toBeGreaterThan(0.5));
+});
+
+import { ESCENAS, notaEscena } from '../src/sonido.js';
+import { escenaDe, ESCENAS_SALTABLES, letrasVisibles, TEXTO_TERMINA } from '../src/escenas.js';
+describe('🎬 las escenas y su música', () => {
+  it('cada escena tiene su música, y todas son distintas', () => {
+    for (const id of ESCENAS_SALTABLES) expect(ESCENAS[id], id).toBeTruthy();
+    expect(new Set(Object.values(ESCENAS).map(e => JSON.stringify(e))).size).toBe(Object.keys(ESCENAS).length);
+  });
+  it('nada chillón: ninguna nota pasa de 1200 Hz, y nunca más de 6 notas por segundo', () => {
+    for (const [id, e] of Object.entries(ESCENAS)) {
+      for (let i = 0; i < e.melodia.length; i++) expect(notaEscena(e, i), id).toBeLessThan(1200);
+      expect(e.paso, id).toBeGreaterThanOrEqual(0.16);
+    }
+  });
+  it('la melodía da vueltas', () => { const e = ESCENAS.intro; expect(notaEscena(e, e.melodia.length)).toBe(notaEscena(e, 0)); });
+  it('la música de las escenas suena aunque la música del juego esté apagada (sigue al deslizador de Ambiente)', () => {
+    expect(volumenes({ musica: 0, ambiente: 0.7, silencio: false }).escena).toBeGreaterThan(0);
+    expect(volumenes({ musica: 1, ambiente: 0, silencio: false }).escena).toBe(0);
+  });
+  it('qué escena está pasando', () => {
+    expect(escenaDe({ splash: true, nocheFase: 'intro' })).toBe('splash');
+    expect(escenaDe({ nocheFase: 'intro' })).toBe('intro');
+    expect(escenaDe({ nocheFase: 'intro', apagon: true })).toBe('introApagon');
+    expect(escenaDe({ nocheFase: 'intro', introSaltada: true })).toBe(null);
+    expect(escenaDe({ nocheFase: 'jugando' })).toBe(null);
+    for (const f of ['choque', 'hat', 'fin']) expect(escenaDe({ fiestaFase: f })).toBe(f);
+    expect(escenaDe({ fiestaFase: 'intro' })).toBe('fiestaIntro');
+    expect(escenaDe({ fiestaFase: 'bloques' })).toBe(null);
+    expect(escenaDe()).toBe(null);
+  });
+});
+describe('📜 el texto de las escenas', () => {
+  const texto = 'Hola. No te voy a decir quién soy, pero necesito que encuentres 16 tubos de ensayo que se me cayeron por todas partes.';
+  it('termina de escribirse a la mitad de la escena (y después se queda para leerlo)', () => {
+    expect(letrasVisibles(texto, 28 * TEXTO_TERMINA, 28)).toBe(texto);
+    expect(letrasVisibles(texto, 27, 28)).toBe(texto);
+    expect(letrasVisibles(texto, 28 * TEXTO_TERMINA * 0.5, 28).length).toBeLessThan(texto.length);
+  });
+  it('nunca más lento que 8 letras por segundo', () => expect(letrasVisibles('x'.repeat(100), 1, 1000).length).toBe(8));
+  it('al principio no se ve nada', () => expect(letrasVisibles(texto, 0, 28)).toBe(''));
 });

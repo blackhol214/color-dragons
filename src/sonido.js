@@ -88,6 +88,21 @@ export function ladoDe(dx, dz, camYaw) {
   return Math.max(-1, Math.min(1, (dx * Math.cos(camYaw) - dz * Math.sin(camYaw)) / d));
 }
 
+// ---------- 🎬 La música de cada escena (suena aunque la música del juego esté apagada: es parte de la película) ----------
+// raiz: la nota base (Hz) · acorde: el colchón de fondo (semitonos) · melodia: las notas que se repiten en orden
+// paso: segundos entre nota y nota · onda: el timbre · dura: cuánto se oye cada nota · brillo: filtro del colchón
+export const ESCENAS = {
+  splash: { raiz: 55, acorde: [0, 1, 6], melodia: [12, 13, 12, 18], paso: 0.55, onda: 'sawtooth', dura: 1.4, brillo: 500 },   // 🔴 el susto: grave y chocante
+  intro: { raiz: 220, acorde: [-12, -5, 3], melodia: [0, 3, 7, 12, 15, 12, 7, 3], paso: 0.34, onda: 'sine', dura: 1.1, brillo: 900 },   // 🎩 cajita de música misteriosa (menor)
+  introApagon: { raiz: 196, acorde: [-12, -11, 7], melodia: [0, 1, 7, 8, 12, 8, 7, 1], paso: 0.46, onda: 'sine', dura: 1.4, brillo: 600 },   // 🔦 más oscura (frigia)
+  fiestaIntro: { raiz: 262, acorde: [-12, -8, -5], melodia: [0, 4, 7, 12, 11, 7, 4, 6], paso: 0.26, onda: 'triangle', dura: 0.8, brillo: 1300 },   // 🎈 fiesta… con una nota rara
+  choque: { raiz: 82, acorde: [0, 1], melodia: [0, 0, 1, 0, 0, 1, 0, 6], paso: 0.17, onda: 'triangle', dura: 0.25, brillo: 400 },   // 💥 tensión (latido rápido)
+  hat: { raiz: 175, acorde: [-12, -5, 3, 7], melodia: [0, 7, 12, 15, 14, 12, 7, 3], paso: 0.5, onda: 'sine', dura: 1.6, brillo: 1000 },   // 🎩 Hat habla: lento y emotivo
+  fin: { raiz: 262, acorde: [-12, -8, -5, 0], melodia: [0, 4, 7, 12, 16, 19, 24, 19], paso: 0.22, onda: 'triangle', dura: 0.9, brillo: 1500 },   // 🎉 ¡escapaste! (mayor, contenta)
+};
+// La nota número i de la melodía (da vueltas)
+export const notaEscena = (e, i) => nota(e.raiz, e.melodia[((i % e.melodia.length) + e.melodia.length) % e.melodia.length]);
+
 // ---------- Tus ajustes de volumen (se guardan en este navegador) ----------
 export const CLAVE_AJUSTES = 'color-dragons:sonido-v2';   // (v2: ahora la música viene apagada y se oyen los sonidos de cada zona)
 export const AJUSTES_INICIALES = { musica: 0, ambiente: 0.7, silencio: false };
@@ -102,9 +117,10 @@ export const guardarAjustes = a => JSON.stringify(leerAjustes(JSON.stringify(a))
 // Del deslizador (0 a 1) al volumen real. Al cuadrado porque el oído siente el volumen así: la mitad del deslizador suena "a la mitad"
 // efectos: los pasos de los dragones. Van aparte y más fuertes que el fondo (si no, ¡no se oían!), pero siguen al deslizador de Ambiente
 export const VOLUMEN_EFECTOS = 0.85;
+export const VOLUMEN_ESCENA = 0.45;   // 🎬 la música de las escenas (sigue al deslizador de Ambiente)
 export function volumenes(a) {
-  if (a.silencio) return { musica: 0, ambiente: 0, efectos: 0 };
-  return { musica: a.musica ** 2 * VOLUMEN_MAXIMO, ambiente: a.ambiente ** 2 * VOLUMEN_MAXIMO, efectos: a.ambiente * VOLUMEN_EFECTOS };
+  if (a.silencio) return { musica: 0, ambiente: 0, efectos: 0, escena: 0 };
+  return { musica: a.musica ** 2 * VOLUMEN_MAXIMO, ambiente: a.ambiente ** 2 * VOLUMEN_MAXIMO, efectos: a.ambiente * VOLUMEN_EFECTOS, escena: a.ambiente * VOLUMEN_ESCENA };
 }
 
 // ---------- El motor (solo en el navegador) ----------
@@ -122,7 +138,9 @@ export function crearAmbiente(Ctx = (globalThis.AudioContext || globalThis.webki
   compresor.threshold.value = -18; compresor.knee.value = 10; compresor.ratio.value = 3; compresor.attack.value = 0.003; compresor.release.value = 0.2;
   const empuje = ctx.createGain(); empuje.gain.value = 1.15;   // (después del compresor: lo sube parejo)
   busEfectos.connect(compresor).connect(empuje).connect(maestro);
-  const busGrito = ctx.createGain(); busGrito.gain.value = 0; busGrito.connect(ctx.destination);   // 💀 el grito va aparte (durante el susto lo demás se baja)
+  const busGrito = ctx.createGain(); busGrito.gain.value = 0; busGrito.connect(ctx.destination);
+  const busEscena = ctx.createGain(); busEscena.gain.value = 0; busEscena.connect(ctx.destination);   // 🎬 la música de las escenas
+  let escena = null, escenaId = null, volAmbiente = 0;   // 💀 el grito va aparte (durante el susto lo demás se baja)
   // Un eco suave para las notas sueltas (les da espacio, como una sala grande)
   const eco = ctx.createDelay(2); eco.delayTime.value = 0.42;
   const ecoVuelta = ctx.createGain(); ecoVuelta.gain.value = 0.35;
@@ -262,10 +280,32 @@ export function crearAmbiente(Ctx = (globalThis.AudioContext || globalThis.webki
       tono(g, t0, { onda: 'sawtooth', frecs: [230, 55], dur, vol: 0.65, ataque: 0.04 });
       setTimeout(() => { try { g.disconnect(); } catch (e) {} }, 1600);
     },
-    volumen(ajustes) { const v = volumenes(ajustes); rampa(busMusica.gain, v.musica, 0.3); rampa(busAmbiente.gain, v.ambiente, 0.3); rampa(busEfectos.gain, v.efectos, 0.3); rampa(busGrito.gain, v.efectos, 0.3); },
+    // 🎬 Cambia la música de escena (o null = ninguna). Cruza suave, y mientras suena, el fondo se baja un poco
+    escena(id) {
+      if (id === escenaId || (id && !ESCENAS[id])) return;
+      escenaId = id;
+      if (escena) { const e = escena; rampa(e.sal.gain, 0, 1.2); setTimeout(() => { for (const n of e.nodos) { try { n.stop(); } catch (er) {} n.disconnect(); } e.sal.disconnect(); }, 1500); escena = null; }
+      rampa(busAmbiente.gain, id ? volAmbiente * 0.35 : volAmbiente, 1);
+      if (!id) return;
+      const E = ESCENAS[id], sal = ctx.createGain(), nodos = [];
+      sal.gain.value = 0; sal.connect(busEscena); rampa(sal.gain, 1, 1.2);
+      const filtro = ctx.createBiquadFilter(); filtro.type = 'lowpass'; filtro.frequency.value = E.brillo;
+      const pad = ctx.createGain(); pad.gain.value = 0.16; filtro.connect(pad).connect(sal);
+      for (const semi of E.acorde) for (const des of [-5, 5]) { const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = nota(E.raiz, semi); o.detune.value = des; o.connect(filtro); o.start(); nodos.push(o); }
+      escena = { id, E, sal, nodos, i: 0, espera: 0.3 };
+    },
+    volumen(ajustes) { const v = volumenes(ajustes); rampa(busMusica.gain, v.musica, 0.3); rampa(busAmbiente.gain, v.ambiente, 0.3); rampa(busEfectos.gain, v.efectos, 0.3); rampa(busGrito.gain, v.efectos, 0.3); rampa(busEscena.gain, v.escena, 0.3); volAmbiente = v.ambiente; if (escena) rampa(busAmbiente.gain, v.ambiente * 0.35, 0.3); },
     agachar(si) { rampa(maestro.gain, si ? 0.15 : 1, si ? 0.3 : 2); },
     tick(dt) {
       if (ctx.state === 'suspended') return;
+      if (escena && (escena.espera -= dt) <= 0) {   // 🎬 la siguiente nota de la melodía de la escena
+        const E = escena.E, t = ahora() + 0.02, f = notaEscena(E, escena.i++);
+        const o = ctx.createOscillator(); o.type = E.onda; o.frequency.value = f;
+        const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(E.onda === 'sawtooth' ? 0.05 : 0.14, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + E.dura);
+        const fl = ctx.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = Math.min(4000, f * 4);
+        o.connect(fl).connect(g); g.connect(escena.sal); g.connect(eco); o.start(t); o.stop(t + E.dura + 0.05);
+        escena.espera += E.paso;
+      }
       for (const c of [...capas.values()]) {
         if (c.apagarEn !== null) { if (ahora() >= c.apagarEn) apagar(c); continue; }
         c.espera -= dt;
@@ -279,7 +319,7 @@ export function crearAmbiente(Ctx = (globalThis.AudioContext || globalThis.webki
     reanudar() { if (ctx.state === 'suspended') ctx.resume(); },
     // Qué tan fuerte está sonando ahora (0 = nada · 1 = el máximo posible). Sirve para revisar que nunca suene fuerte
     nivel() {
-      if (!this.medidor) { this.medidor = ctx.createAnalyser(); this.medidor.fftSize = 2048; maestro.connect(this.medidor); busGrito.connect(this.medidor); }   // (todo lo que sale: el juego y el grito)
+      if (!this.medidor) { this.medidor = ctx.createAnalyser(); this.medidor.fftSize = 2048; maestro.connect(this.medidor); busGrito.connect(this.medidor); busEscena.connect(this.medidor); }   // (todo lo que sale: el juego y el grito)
       const d = new Float32Array(this.medidor.fftSize); this.medidor.getFloatTimeDomainData(d);
       let pico = 0, suma = 0; for (const v of d) { pico = Math.max(pico, Math.abs(v)); suma += v * v; }
       return { pico, rms: Math.sqrt(suma / d.length), capas: capas.size };

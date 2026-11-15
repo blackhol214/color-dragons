@@ -28,7 +28,11 @@
   .login-card button { border:0; border-radius:8px; padding:12px; font:700 16px system-ui, sans-serif; background:#2fae4e; color:#fff; cursor:pointer; }
   .login-card button:focus-visible { outline:3px solid #1e6bff; outline-offset:2px; }
   /* 🎬 Durante la pantalla de inicio solo se ve el juego (el canvas) */
-  body.splash > *:not(#game):not(#sustoNegro):not(script) { visibility:hidden; }
+  body.splash > *:not(#game):not(#sustoNegro):not(#saltarBtn):not(script) { visibility:hidden; }
+  /* ⏭ Saltar la escena (abajo a la derecha, bien visible) */
+  #saltarBtn { position:fixed; right:16px; bottom:calc(16px + env(safe-area-inset-bottom,0px)); z-index:62; border:2px solid rgba(255,255,255,.75); border-radius:14px; padding:10px 18px; font:800 17px system-ui, sans-serif; color:#fff; background:rgba(10,10,12,.72); cursor:pointer; touch-action:manipulation; }
+  #saltarBtn:hover { background:rgba(30,30,34,.85); }
+  #saltarBtn[hidden] { display:none; }
   /* 🆕 El aviso de versión nueva */
   #nuevaVersion { position:fixed; left:50%; top:calc(66px + env(safe-area-inset-top,0px)); transform:translateX(-50%); z-index:40; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px 10px; width:max-content; max-width:calc(100% - 32px); padding:10px 14px; border-radius:14px; background:rgba(22,48,31,.94); color:#fff; font:700 15px system-ui, sans-serif; box-shadow:0 8px 24px rgba(0,0,0,.35); }
   #nuevaVersion[hidden] { display:none; }
@@ -201,6 +205,7 @@
 <canvas id="game"></canvas>
 <p id="toast" aria-live="polite"></p>
 <div id="cross"></div>
+<button type="button" id="saltarBtn" hidden data-t="escena.saltar">⏭ Saltar</button>
 <div id="nuevaVersion" hidden role="status"><span data-t="pwa.nueva">🆕 Hay una versión nueva del juego</span><button type="button" id="nuevaVersionBtn" data-t="pwa.actualizar">Actualizar</button><small data-t="pwa.nota">Tus cosas guardadas no se pierden (si no guardaste, pulsa GUARDAR primero)</small></div>
 <div id="sinGraficos" hidden role="alertdialog" aria-labelledby="sinGraficosTitulo"><div class="caja"><p class="marca">COLOR DRAGONS</p><div class="dormido" aria-hidden="true">🐉💤</div><h2 id="sinGraficosTitulo"></h2><p class="explica"></p><ol></ol><button type="button"></button><details><summary></summary><p class="detalle"></p></details></div></div>
 <div id="login">
@@ -277,15 +282,16 @@ import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, 
 import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=19';
 import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=19';
 import { crearDragon, animarDragon } from './src/criaturas.js?v=18';
-import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=31';   // (v=19: textos nuevos del 🔊 sonido)
+import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=32';   // (v=19: textos nuevos del 🔊 sonido)
 import { MASCOTAS, PRECIO_HUEVO, mascotaDe, abrirHuevo, venderRepetida, llevarMascota, TODAS, mascotasQueLlevas, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=19';
 import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=20';
 import * as F from './src/fiesta.js?v=20';
 import { huellaDe, hayVersionNueva, REVISAR_CADA_MS } from './src/pwa.js?v=1';
+import { escenaDe, letrasVisibles } from './src/escenas.js?v=1';
 import { crearRendererSeguro, navegadorDe, pasosSinGraficos } from './src/graficos.js?v=1';
 import { CALIDADES, CLAVE_CALIDAD, CLAVE_CALIDAD_AUTO, leerCalidad, leerNivel, calidadInicial, ratioPara, bajarCalidad, ajustarResolucion } from './src/calidad.js?v=1';
-import { volumenPaso, pasoNumero, ladoDe } from './src/sonido.js?v=27';
-import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES } from './src/sonido.js?v=27';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
+import { volumenPaso, pasoNumero, ladoDe } from './src/sonido.js?v=30';
+import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES } from './src/sonido.js?v=30';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
 // 🖥️ La pantalla de "no se pudieron prender los gráficos 3D": qué pasó y cómo arreglarlo en TU navegador
 function mostrarSinGraficos(errores, enJuego = false) {
   ponerIdioma((() => { try { return localStorage.getItem('color-dragons:idioma') || 'es'; } catch (e) { return 'es'; } })());
@@ -1102,6 +1108,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
     if (e.code === 'KeyB' && !e.repeat) alternarEscondite();          // B: tu caja (o el armario, si estás al lado)
     if (e.code === 'KeyE' && !e.repeat) usarE();                      // E: el botón de la puerta del Panic Hole, o la puerta del armario
     if (e.code === 'Escape' && !guiaEl.hidden) guiaEl.hidden = true;
+    else if (e.code === 'Escape' && !e.repeat) saltarEscena();   // Esc: saltar la escena
     if (e.code === 'KeyO' && !e.repeat) abrirAjustes(ajustesPanel.hidden);   // O: ajustes de cámara
   });
   addEventListener('keyup', e => { keys[e.code] = false; });
@@ -2182,7 +2189,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
   const _mira = new THREE.Vector3();
   let introNegro = false;
   function camaraIntro() {
-    if (!noche || noche.fase !== 'intro') { if (introNegro && !fiesta) { introNegro = false; sustoNegro.style.opacity = 0; } return false; }
+    if (!noche || noche.fase !== 'intro' || noche.saltada) { if (introNegro && !fiesta) { introNegro = false; sustoNegro.style.opacity = 0; } return false; }
     camaraTomas(TOMAS, noche.tiempo, INTRO_SEGUNDOS);
     return true;
   }
@@ -2197,7 +2204,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
     sustoNegro.style.opacity = Math.max(entra, sale); introNegro = true;
   }
   // El texto del sombrero sale a una velocidad que alcanza a leerse: termina al 70 % de la intro (y nunca más rápido que lo necesario)
-  const letrasIntro = (texto, tiempo, total = INTRO_SEGUNDOS) => texto.slice(0, Math.floor(tiempo * Math.max(5, texto.length / (total * 0.7))));
+  const letrasIntro = (texto, tiempo, total = INTRO_SEGUNDOS) => letrasVisibles(texto, tiempo, total);   // (src/escenas.js: sale rápido y se queda para leerlo)
   // 🍽️ Servir comida a Yellow: la comida cae por el tubo hasta el plato
   const bolitas = [];
   function servirComida() {
@@ -2227,7 +2234,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
     if (!noche) return;
     const conServidor = red.id !== null;
     // La intro (con la voz del sombrero)
-    const enIntro = noche.fase === 'intro';
+    const enIntro = noche.fase === 'intro' && !noche.saltada;
     introEl.hidden = !enIntro;
     if (enIntro) introTexto.textContent = letrasIntro(tr('hat.noche' + noche.n), noche.tiempo);   // letra por letra, despacio
     if (!conServidor) {
@@ -3256,6 +3263,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
     updateSusto(dt);
     updateFantasma();
     updateSecreto(dt);
+    updateEscenas();
     updatePuertas(dt, [ps.pos, ...[...red.otros.values()].map(f => f.obj.position), ...[...cuerposDragon.values()].map(c => c.obj.position)]);
 
     // pequeño rebote al caminar
@@ -3316,12 +3324,31 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
     if (window.cd) cd.amb = amb;
   }
   addEventListener('pointerdown', () => { if (amb) amb.reanudar(); });   // (el iPhone a veces pausa el sonido: un toque lo despierta)
+  // ---------- ⏭ Saltar escenas, y la escena que está pasando (para su música) ----------
+  const saltarBtn = document.getElementById('saltarBtn');
+  function escenaActual() {
+    return escenaDe({ splash: !!splash, nocheFase: noche && noche.fase, apagon: !!(noche && nocheDe(noche.n).apagon), introSaltada: !!(noche && noche.saltada), fiestaFase: fiesta && fiesta.fase });
+  }
+  function saltarEscena() {
+    const e = escenaActual();
+    if (!e) return;
+    if (e === 'splash') { if (splash.t < splash.DUR - 0.6) splash.t = splash.DUR - 0.6; return; }
+    if (e === 'intro' || e === 'introApagon') {
+      if (red.id === null) noche.tiempo = INTRO_SEGUNDOS;   // jugando solo: la noche empieza ya
+      else { noche.saltada = true; showToast(tr('toast.introAmigos'), false, 3500); }   // con amigos la noche empieza para todos a la vez: tú solo dejas de verla
+      return;
+    }
+    if (fiesta && F.DURACION[fiesta.fase]) fiesta.tiempo = Math.max(fiesta.tiempo, F.DURACION[fiesta.fase]);   // la noche final: salta al final de esa escena
+  }
+  saltarBtn.addEventListener('click', e => { e.currentTarget.blur(); saltarEscena(); });
+  function updateEscenas() { saltarBtn.hidden = !escenaActual(); }
   function sonarZona(dt) {
     if (!amb) return;
     const def = noche && nocheDe(noche.n);
     amb.zona(zonaSonora({ jugando: loginEl.hidden, enLobby, fiesta: !!fiesta, apagon: !!(def && def.apagon), intro: !!(noche && noche.fase === 'intro'),
       sala: salaEn(ps.pos.x, ps.pos.y, ps.pos.z), anterior: amb.actual }));
     if (agachado !== !!susto) { agachado = !!susto; amb.agachar(agachado); }   // en un susto la música se hace a un lado
+    amb.escena(escenaActual());   // 🎬 la música de la escena que está pasando (o ninguna)
     amb.tick(dt);
   }
   function pintarSonido() {
@@ -3390,6 +3417,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
   const _boca = new THREE.Vector3(), _ojo = new THREE.Vector3();
   function correrSplash(dt) {
     const S = splash; S.t += dt;
+    saltarBtn.hidden = S.t > S.DUR - 0.6;   // ⏭ (también se puede saltar la pantalla de inicio)
     const k = (a, b) => Math.min(1, Math.max(0, (S.t - a) / (b - a))), suave = x => x * x * (3 - 2 * x);
     const { c, yo, cam } = S;
     // 1) caminas hacia la cámara, tranquilo (y te paras de golpe cuando algo se mueve atrás)
@@ -3420,7 +3448,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
     sustoNegro.style.opacity = Math.max(1 - k(0, 0.6), k(S.DUR - 0.6, S.DUR));
     renderer.render(S.esc, cam);
     if (S.t >= S.DUR) {
-      splash = null; document.body.classList.remove('splash');
+      splash = null; document.body.classList.remove('splash'); saltarBtn.hidden = true;
       sustoNegro.style.opacity = 0;
       return false;
     }
