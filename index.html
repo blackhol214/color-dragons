@@ -27,6 +27,13 @@
   .login-card p { margin:0; font:13px/1.4 system-ui, sans-serif; color:#4a5f52; }
   .login-card button { border:0; border-radius:8px; padding:12px; font:700 16px system-ui, sans-serif; background:#2fae4e; color:#fff; cursor:pointer; }
   .login-card button:focus-visible { outline:3px solid #1e6bff; outline-offset:2px; }
+  /* 🎬 Durante la pantalla de inicio solo se ve el juego (el canvas) */
+  body.splash > *:not(#game):not(#sustoNegro):not(script) { visibility:hidden; }
+  /* 🆕 El aviso de versión nueva */
+  #nuevaVersion { position:fixed; left:50%; top:calc(66px + env(safe-area-inset-top,0px)); transform:translateX(-50%); z-index:40; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px 10px; width:max-content; max-width:calc(100% - 32px); padding:10px 14px; border-radius:14px; background:rgba(22,48,31,.94); color:#fff; font:700 15px system-ui, sans-serif; box-shadow:0 8px 24px rgba(0,0,0,.35); }
+  #nuevaVersion[hidden] { display:none; }
+  #nuevaVersion button { border:0; border-radius:10px; padding:8px 14px; background:#2fae4e; color:#fff; font:800 15px system-ui, sans-serif; cursor:pointer; }
+  #nuevaVersion small { flex-basis:100%; text-align:center; font:500 12px system-ui, sans-serif; color:#cfe8d6; }
   /* 🖥️ Si el navegador no deja usar los gráficos 3D */
   #sinGraficos { position:fixed; inset:0; z-index:60; display:flex; padding:16px; overflow:auto; background:radial-gradient(ellipse at 50% 30%, #1f3a2a 0%, #0d1612 70%); }
   #sinGraficos[hidden] { display:none; }
@@ -158,7 +165,17 @@
   #fantasmaBar[hidden] { display:none; }
   #fantasmaBar button { border:0; border-radius:10px; min-width:40px; height:40px; padding:0 10px; background:rgba(255,255,255,.16); color:#fff; font:700 16px system-ui, sans-serif; cursor:pointer; touch-action:manipulation; }
   #fantasmaBar #fantNombre { min-width:140px; text-align:center; }
-  #pagarBtn { background:#c79a1a; } #pagarBtn:disabled { background:#4a5558; cursor:default; } #lobbyBtn { background:#7a2a24; }
+  #pagarBtn { background:#c79a1a; } #lobbyBtn { background:#7a2a24; }
+  #pagarBtn.bloqueado { background:#4a5558; color:#c9d1d3; box-shadow:inset 0 0 0 2px rgba(255,255,255,.18); }   /* 🔒 sin monedas: se ve bloqueado (pero al tocarlo te explica) */
+  /* 🪙 El aviso de "no te alcanzan las monedas": en el centro, grande y legible */
+  #sinMonedas { position:fixed; inset:0; z-index:45; display:grid; place-items:center; padding:16px; background:rgba(0,0,0,.45); }
+  #sinMonedas[hidden] { display:none; }
+  #sinMonedas .caja { width:min(360px, 100%); padding:20px 18px 16px; border-radius:16px; background:#fbfaf5; color:#16301f; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,.45); animation:sinMonedasEntra .22s ease-out; }
+  @keyframes sinMonedasEntra { from { transform:scale(.85); opacity:0; } }
+  #sinMonedas .icono { font-size:44px; line-height:1; }
+  #sinMonedas p { margin:10px 0 14px; font:700 19px/1.35 system-ui, sans-serif; }
+  #sinMonedas p span { display:block; margin-top:4px; font-weight:600; font-size:16px; color:#3f6a4c; }
+  #sinMonedas button { width:100%; border:0; border-radius:12px; padding:12px; font:800 16px system-ui, sans-serif; color:#fff; background:#1f8a3b; cursor:pointer; }
   #dentroCaja { position:fixed; inset:0; z-index:10; pointer-events:none; overflow:hidden; }
   #dentroCaja .rendija { position:absolute; left:50%; top:46%; width:min(62vw, 560px); height:clamp(56px, 11vh, 96px); transform:translate(-50%, -50%); border-radius:999px;
     box-shadow:0 0 0 200vmax rgba(52,37,22,.96), inset 0 0 24px 10px rgba(30,20,10,.85); }
@@ -184,6 +201,7 @@
 <canvas id="game"></canvas>
 <p id="toast" aria-live="polite"></p>
 <div id="cross"></div>
+<div id="nuevaVersion" hidden role="status"><span data-t="pwa.nueva">🆕 Hay una versión nueva del juego</span><button type="button" id="nuevaVersionBtn" data-t="pwa.actualizar">Actualizar</button><small data-t="pwa.nota">Tus cosas guardadas no se pierden (si no guardaste, pulsa GUARDAR primero)</small></div>
 <div id="sinGraficos" hidden role="alertdialog" aria-labelledby="sinGraficosTitulo"><div class="caja"><p class="marca">COLOR DRAGONS</p><div class="dormido" aria-hidden="true">🐉💤</div><h2 id="sinGraficosTitulo"></h2><p class="explica"></p><ol></ol><button type="button"></button><details><summary></summary><p class="detalle"></p></details></div></div>
 <div id="login">
   <form id="loginForm" class="login-card" autocomplete="off">
@@ -213,6 +231,7 @@
 <p id="aviso" hidden></p>
 <div id="sustoNegro"></div>
 <div id="sustoFlash" hidden></div>
+<div id="sinMonedas" hidden role="alertdialog" aria-labelledby="sinMonedasTexto"><div class="caja"><div class="icono" aria-hidden="true">🔒🪙</div><p id="sinMonedasTexto"></p><button type="button" id="sinMonedasOk">OK</button></div></div>
 <div id="perdiste" class="panelLobby" hidden><h2 data-t="perdiste.titulo">💀 ¡PERDISTE LA NOCHE!</h2><p id="perdisteTexto" style="margin:0"></p><div class="botones"><button type="button" id="pagarBtn"></button><button type="button" id="lobbyBtn" data-t="perdiste.lobby">🏠 Volver al lobby</button><button type="button" id="observarBtn" data-t="perdiste.observar" hidden>👻 Observar</button></div></div>
 <div id="traductorPanel" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 data-t="traductor.titulo">🌍 Idioma · Language</h2><div class="botonesIdioma"><button type="button" data-idioma="es">🇪🇸 Español</button><button type="button" data-idioma="en">🇬🇧 English</button></div></div>
 <div id="mascotasPanel" class="panelLobby" hidden><button type="button" class="cerrar" aria-label="Cerrar" data-t-aria="ui.cerrar">×</button><h2 data-t="mascotas.titulo">🥚 Tienda de mascotas</h2><p id="mascotasMonedas" style="margin:0 0 6px"></p><div id="mascotasLista"></div></div>
@@ -258,13 +277,15 @@ import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, 
 import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=19';
 import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=19';
 import { crearDragon, animarDragon } from './src/criaturas.js?v=18';
-import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=29';   // (v=19: textos nuevos del 🔊 sonido)
+import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=31';   // (v=19: textos nuevos del 🔊 sonido)
 import { MASCOTAS, PRECIO_HUEVO, mascotaDe, abrirHuevo, venderRepetida, llevarMascota, TODAS, mascotasQueLlevas, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=19';
 import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=20';
 import * as F from './src/fiesta.js?v=20';
+import { huellaDe, hayVersionNueva, REVISAR_CADA_MS } from './src/pwa.js?v=1';
 import { crearRendererSeguro, navegadorDe, pasosSinGraficos } from './src/graficos.js?v=1';
 import { CALIDADES, CLAVE_CALIDAD, CLAVE_CALIDAD_AUTO, leerCalidad, leerNivel, calidadInicial, ratioPara, bajarCalidad, ajustarResolucion } from './src/calidad.js?v=1';
-import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES } from './src/sonido.js?v=20';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
+import { volumenPaso, pasoNumero, ladoDe } from './src/sonido.js?v=21';
+import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES } from './src/sonido.js?v=21';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
 // 🖥️ La pantalla de "no se pudieron prender los gráficos 3D": qué pasó y cómo arreglarlo en TU navegador
 function mostrarSinGraficos(errores, enJuego = false) {
   ponerIdioma((() => { try { return localStorage.getItem('color-dragons:idioma') || 'es'; } catch (e) { return 'es'; } })());
@@ -1841,7 +1862,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
     if (susto.fase === 'susto' && susto.t > 1.3) {
       susto.fase = 'elegir';
       document.getElementById('perdisteTexto').textContent = tr('perdiste.texto', { nombre: susto.nombre, monedas: cuenta.monedas });
-      pagarBtn.textContent = tr('perdiste.pagar', { costo: COSTO_SEGUIR }); pagarBtn.disabled = cuenta.monedas < COSTO_SEGUIR;
+      pintarPagar();
       observarBtn.hidden = !(susto.alPerder === perderNoche && puedeObservar());   // 👻 solo si quedan amigos vivos en la noche
       perdisteEl.hidden = false;
     }
@@ -1906,14 +1927,31 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
   }
   function terminarSusto() {
     if (susto) { susto.c.obj.position.copy(susto.base); susto.c.obj.rotation.x = susto.giroX; if (susto.id === 'grey') susto.c.cabeza.rotation.x = 0; }
-    susto = null; perdisteEl.hidden = true; sustoFlash.hidden = true; sustoNegro.style.opacity = 0;
+    susto = null; perdisteEl.hidden = true; sinMonedasEl.hidden = true; sustoFlash.hidden = true; sustoNegro.style.opacity = 0;
     inmuneHasta = performance.now() + 3000;
   }
+  // 🪙 Pagar 20 y seguir: si te alcanza, botón normal; si no, se ve bloqueado con 🔒 y al tocarlo te explica cómo ganar monedas
+  const sinMonedasEl = document.getElementById('sinMonedas');
+  function pintarPagar() {
+    const alcanza = cuenta.monedas >= COSTO_SEGUIR;
+    const texto = tr('perdiste.pagar', { costo: COSTO_SEGUIR });
+    pagarBtn.textContent = alcanza ? texto : '🔒 ' + texto.replace('🪙 ', '');   // (bloqueado: el candado en vez de la moneda)
+    pagarBtn.classList.toggle('bloqueado', !alcanza);
+    pagarBtn.setAttribute('aria-disabled', alcanza ? 'false' : 'true');
+  }
+  function avisarSinMonedas() {
+    document.getElementById('sinMonedasTexto').innerHTML = tr('sinMonedas.texto');
+    document.getElementById('sinMonedasOk').textContent = tr('sinMonedas.ok');
+    sinMonedasEl.hidden = false; document.getElementById('sinMonedasOk').focus();
+  }
+  document.getElementById('sinMonedasOk').addEventListener('click', e => { e.currentTarget.blur(); sinMonedasEl.hidden = true; });
+  sinMonedasEl.addEventListener('click', e => { if (e.target === sinMonedasEl) sinMonedasEl.hidden = true; });   // (tocar afuera también lo cierra)
   pagarBtn.addEventListener('click', e => {
     e.currentTarget.blur();
     if (!susto) return;
+    if (cuenta.monedas < COSTO_SEGUIR) { avisarSinMonedas(); return; }
     const r = pagarParaSeguir(cuenta);
-    if (!r.ok) return;
+    if (!r.ok) { avisarSinMonedas(); return; }
     cuenta = r.cuenta; autoguardar();
     const s = susto; terminarSusto(); s.alSeguir();
   });
@@ -1984,6 +2022,13 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
       const cerca = Math.hypot(ps.pos.x - x, ps.pos.z - z) < 22 && Math.abs(ps.pos.y - y) < 3;
       const subio = dt > 0 ? Math.abs(y - (c.antesY ?? y)) / dt : 0; c.antesY = y;
       animarDragon(c, dt, { vel: c.vel, persigue, mirar: persigue && cerca ? miraA.set(ps.pos.x, ps.pos.y + 1.2, ps.pos.z) : null, trepa: !!d.trepando, velTrepa: subio > 8 ? 0 : subio });
+      // 🐾 Sus pasos: cada vez que las piernas dan medio paso, suena (más fuerte si está cerca, y del lado donde está)
+      const n = pasoNumero(c.fase);
+      if (amb && o.visible && n !== c.ultimoPaso && c.paso > 0.15 && c.ultimoPaso !== undefined) {
+        const dist = Math.hypot(ps.pos.x - x, ps.pos.y - y, ps.pos.z - z);
+        amb.paso(d.id, volumenPaso(d.id, dist, Math.abs(ps.pos.y - y) > 3), ladoDe(x - ps.pos.x, z - ps.pos.z, camYaw));
+      }
+      c.ultimoPaso = n;
     }
     // Los "!" flotan sobre la caja (siguiéndola) y se desvanecen
     for (let i = alertas.length - 1; i >= 0; i--) {
@@ -3127,6 +3172,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
   }
   function tick() {
     const raw = clock.getDelta(), dt = Math.min(raw, 0.05);
+    if (splash && correrSplash(dt)) { requestAnimationFrame(tick); return; }   // 🎬 la pantalla de inicio
     autoResolucion(raw);
     t += dt;
 
@@ -3311,6 +3357,102 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
   try { ponerIdioma(localStorage.getItem('color-dragons:idioma') || 'es'); } catch (e) {}
   aplicarIdioma();
   aplicarAjustes();
+  // ---------- 🎬 La pantalla de inicio: tu rectángulo camina tranquilo… Red se levanta detrás, abre la boca y de ella sale COLOR DRAGONS ----------
+  // (Se ve una vez por sesión; un clic o una tecla la salta. Con ?debug no sale, para probar rápido)
+  let splash = (() => {
+    let visto = null; try { visto = sessionStorage.getItem('color-dragons:splash'); } catch (e) {}
+    if (visto || new URLSearchParams(location.search).has('debug') && !new URLSearchParams(location.search).has('splash')) return null;
+    try { sessionStorage.setItem('color-dragons:splash', '1'); } catch (e) {}
+    const esc = new THREE.Scene(); esc.background = new THREE.Color(0x070404); esc.fog = new THREE.Fog(0x070404, 6, 18);
+    esc.add(new THREE.HemisphereLight(0x9aa4a8, 0x1a0c0a, 0.45));
+    const frente = new THREE.DirectionalLight(0xffffff, 0.6); frente.position.set(1, 4, 8); esc.add(frente);
+    const rojo = new THREE.PointLight(0xff3020, 0, 14); rojo.position.set(0, 3.2, 2.2); esc.add(rojo);   // la luz roja que se prende con el susto
+    const piso = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshLambertMaterial({ color: 0x2a2c2e })); piso.rotation.x = -Math.PI / 2; esc.add(piso);
+    const c = crearDragon('red'); esc.add(c.obj);
+    // tu personaje: el rectángulo verde con ojos (caminando hacia la cámara)
+    const yo = new THREE.Group(), cuerpo = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), new THREE.MeshLambertMaterial({ color: 0x2fae4e }));
+    cuerpo.position.y = H / 2; yo.add(cuerpo);
+    for (const ex of [-0.22, 0.22]) { const e = new THREE.Mesh(eyeGeo, eyeMat); e.scale.z = 0.5; e.position.set(ex, H * 0.78, D / 2 + 0.01); yo.add(e); }
+    esc.add(yo);
+    const cam = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.05, 100);
+    const tex = lienzo(1024, 256, (g, w, h) => {
+      g.clearRect(0, 0, w, h); g.font = '400 150px Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.lineJoin = 'round'; g.lineWidth = 18; g.strokeStyle = '#1a0402'; g.strokeText('COLOR DRAGONS', w / 2, h / 2 + 8);
+      g.fillStyle = '#2fd158'; g.fillText('COLOR DRAGONS', w / 2, h / 2 + 8);
+    });
+    const titulo = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, fog: false })); titulo.renderOrder = 10; titulo.visible = false; esc.add(titulo);
+    document.body.classList.add('splash');
+    const saltar = () => { if (splash && splash.t < splash.DUR - 0.6) splash.t = splash.DUR - 0.6; };
+    for (const ev of ['pointerdown', 'keydown']) addEventListener(ev, saltar, { once: true });
+    return { esc, cam, c, yo, rojo, titulo, t: 0, DUR: 5.6 };
+  })();
+  const _boca = new THREE.Vector3(), _ojo = new THREE.Vector3();
+  function correrSplash(dt) {
+    const S = splash; S.t += dt;
+    const k = (a, b) => Math.min(1, Math.max(0, (S.t - a) / (b - a))), suave = x => x * x * (3 - 2 * x);
+    const { c, yo, cam } = S;
+    // 1) caminas hacia la cámara, tranquilo (y te paras de golpe cuando algo se mueve atrás)
+    const camina = 1 - k(1.5, 1.7);
+    yo.position.set(1.6, Math.abs(Math.sin(S.t * 9)) * 0.08 * camina, 1.6 + 1.6 * suave(k(0, 1.7)));   // (a un lado, para no tapar a Red)
+    yo.rotation.y = k(1.9, 2.3) * Math.PI * 0.9;   // …y te das vuelta a mirar
+    // 2) Red abre la boca (la cabeza sube como tapa) y se prende la luz roja
+    const abre = suave(k(1.7, 2.4));
+    c.cabeza.position.y = (0.28 + 0.95 * abre) * c.tamCabeza;
+    S.rojo.intensity = 2.2 * k(1.6, 2.2);
+    animarDragon(c, dt, { vel: 0, persigue: S.t > 1.7 });
+    // 3) la cámara se acerca a la boca
+    _boca.copy(enMundo(c.mandibula)); _boca.y += 0.4 * c.tamCabeza * abre;
+    const acerca = suave(k(2.2, 3.2));
+    cam.position.set(0.3 * (1 - acerca), 1.7 + (_boca.y - 1.7) * acerca, 9 - (9 - (_boca.z + 3.4)) * acerca);
+    _ojo.set(0, 1.3, 2.5).lerp(_boca, acerca); cam.lookAt(_ojo);
+    const tiembla = S.t > 2.3 && S.t < 3 ? 0.05 : 0;
+    cam.position.x += (Math.random() - 0.5) * tiembla; cam.position.y += (Math.random() - 0.5) * tiembla;
+    cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix();
+    // 4) COLOR DRAGONS sale de la boca, creciendo hacia ti
+    const sale = suave(k(2.9, 4.0));
+    S.titulo.visible = S.t > 2.9;
+    S.titulo.position.copy(_boca).lerp(cam.position, 0.72 * sale);
+    const dist = cam.position.distanceTo(S.titulo.position), ancho = 2 * dist * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) * cam.aspect;
+    const w = Math.max(0.05, Math.min(ancho * 0.9, dist * 2.4) * sale);
+    S.titulo.scale.set(w, w / 4, 1);
+    // 5) se funde a negro y empieza el juego
+    sustoNegro.style.opacity = Math.max(1 - k(0, 0.6), k(S.DUR - 0.6, S.DUR));
+    renderer.render(S.esc, cam);
+    if (S.t >= S.DUR) {
+      splash = null; document.body.classList.remove('splash');
+      sustoNegro.style.opacity = 0;
+      return false;
+    }
+    return true;
+  }
+
+  // ---------- 📦 PWA: jugar sin internet (sw.js) y avisar cuando hay una versión nueva ----------
+  (() => {
+    const avisoEl = document.getElementById('nuevaVersion');
+    let esperando = null, recargando = false;
+    document.getElementById('nuevaVersionBtn').addEventListener('click', e => {
+      e.currentTarget.blur(); avisoEl.hidden = true;
+      if (esperando) esperando.postMessage('ACTUALIZAR');   // (el service worker nuevo empieza, y al cambiar se recarga solo)
+      else location.reload();
+    });
+    // ¿Cambió index.html en internet? (compara su huella con la de cuando abriste el juego)
+    let base = null;
+    const huellaActual = () => fetch('./index.html', { cache: 'no-store' }).then(r => (r.ok ? r.text() : null)).then(t => (t ? huellaDe(t) : null)).catch(() => null);
+    const revisar = () => huellaActual().then(h => { if (!base) base = h; else if (hayVersionNueva(base, h)) avisoEl.hidden = false; });
+    if (location.protocol !== 'file:') { revisar(); setInterval(revisar, REVISAR_CADA_MS); document.addEventListener('visibilitychange', () => { if (!document.hidden) revisar(); }); }
+    if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
+    if (new URLSearchParams(location.search).has('sinsw')) {   // (?sinsw en el link: borra todo lo guardado, por si algo se traba)
+      navigator.serviceWorker.getRegistrations().then(rs => Promise.all(rs.map(r => r.unregister()))).then(() => caches.keys()).then(ks => Promise.all(ks.map(k => caches.delete(k)))).catch(() => {});
+      return;
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (recargando || !esperando) return; recargando = true; location.reload(); });
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      const vigilar = sw => { if (!sw) return; const listo = () => { if (sw.state === 'installed' && navigator.serviceWorker.controller) { esperando = sw; avisoEl.hidden = false; } }; listo(); sw.addEventListener('statechange', listo); };
+      vigilar(reg.waiting); vigilar(reg.installing);
+      reg.addEventListener('updatefound', () => vigilar(reg.installing));
+      setInterval(() => reg.update().catch(() => {}), REVISAR_CADA_MS);
+    }).catch(() => {});
+  })();
   const juntadas = juntarQuietos();
   if (window.cd) cd.juntadas = juntadas;
   tick();

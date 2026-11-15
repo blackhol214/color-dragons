@@ -90,3 +90,41 @@ describe('🌧️ los sonidos de cada zona', () => {
     }
   });
 });
+
+import { PASOS, ALCANCE_PASOS, volumenPaso, pasoNumero, ladoDe } from '../src/sonido.js';
+describe('🐾 los pasos de los dragones', () => {
+  it('los 4 dragones tienen su sonido de pasos, y los 4 son distintos', () => {
+    expect(Object.keys(PASOS).sort()).toEqual(['grey', 'red', 'white', 'yellow']);
+    expect(new Set(Object.values(PASOS).map(p => JSON.stringify(p))).size).toBe(4);
+  });
+  it('🔴 Red pisa más fuerte y más grave que todos', () => {
+    for (const id of ['grey', 'yellow', 'white']) { expect(PASOS.red.fuerza, id).toBeGreaterThan(PASOS[id].fuerza); expect(PASOS.red.grave, id).toBeLessThan(PASOS[id].grave); }
+  });
+  it('⚫ Grey: pasos cortitos y agudos (pequeños)', () => {
+    for (const id of ['red', 'yellow', 'white']) { expect(PASOS.grey.dur, id).toBeLessThan(PASOS[id].dur); expect(PASOS.grey.grave, id).toBeGreaterThan(PASOS[id].grave); }
+  });
+  it('🟡 Yellow: suave (de los más bajitos) pero con su sonido amenazante', () => { expect(PASOS.yellow.fuerza).toBeLessThanOrEqual(PASOS.grey.fuerza); expect(PASOS.yellow.extra).toBe('amenaza'); });
+  it('⚪ White queda en el medio entre Red y Yellow', () => {
+    for (const k of ['grave', 'dur', 'fuerza']) {
+      const [a, b] = [PASOS.red[k], PASOS.yellow[k]].sort((x, y) => x - y);
+      expect(PASOS.white[k], k).toBeGreaterThan(a); expect(PASOS.white[k], k).toBeLessThan(b);
+    }
+  });
+  it('más cerca = más fuerte; lejos no se oye; en otro piso, más bajito', () => {
+    expect(volumenPaso('red', 0)).toBe(PASOS.red.fuerza);
+    expect(volumenPaso('red', 5)).toBeGreaterThan(volumenPaso('red', 12));
+    expect(volumenPaso('red', ALCANCE_PASOS)).toBe(0); expect(volumenPaso('red', 99)).toBe(0);
+    expect(volumenPaso('red', 5, true)).toBeLessThan(volumenPaso('red', 5));
+    expect(volumenPaso('nadie', 1)).toBe(0); expect(volumenPaso('red', NaN)).toBe(0);
+  });
+  it('cada media vuelta de las piernas es un paso nuevo', () => {
+    expect(pasoNumero(0)).toBe(0); expect(pasoNumero(Math.PI - 0.01)).toBe(0); expect(pasoNumero(Math.PI + 0.01)).toBe(1); expect(pasoNumero(2 * Math.PI + 0.1)).toBe(2);
+  });
+  it('se oye del lado donde está el dragón (comparado con la cámara)', () => {
+    // la cámara con yaw 0 mira hacia −z: su derecha es +x
+    expect(ladoDe(5, 0, 0)).toBeCloseTo(1); expect(ladoDe(-5, 0, 0)).toBeCloseTo(-1); expect(ladoDe(0, -5, 0)).toBeCloseTo(0);
+    // con la cámara girada media vuelta (mira hacia +z), +x queda a la izquierda
+    expect(ladoDe(5, 0, Math.PI)).toBeCloseTo(-1);
+    expect(ladoDe(0, 0, 0)).toBe(0);
+  });
+});

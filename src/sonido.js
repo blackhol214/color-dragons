@@ -60,6 +60,33 @@ export function proximaNota(p, azar = Math.random) {
   return { frec: nota(p.raiz, semi), espera: min + azar() * (max - min) };
 }
 
+// ---------- 🐾 Los pasos de cada dragón (cada uno suena distinto, y se oyen más fuerte mientras más cerca están) ----------
+// grave: la nota del golpe (Hz) · cae: hasta dónde baja · dur: cuánto dura · fuerza: qué tan fuerte · ruido: el "roce" del pie (0 = nada)
+// filtro: qué tan agudo es ese roce · extra: algo propio de cada uno
+export const PASOS = {
+  red: { grave: 62, cae: 34, dur: 0.42, fuerza: 1, ruido: 0.55, filtro: 260, extra: 'retumbo' },        // 🔴 pisadas FUERTES (retumba el piso)
+  grey: { grave: 210, cae: 150, dur: 0.07, fuerza: 0.32, ruido: 0.35, filtro: 2400, extra: 'uñas' },     // ⚫ pasos rápidos pero pequeños (tic-tic de uñas)
+  yellow: { grave: 118, cae: 82, dur: 0.16, fuerza: 0.3, ruido: 0.12, filtro: 600, extra: 'amenaza' },   // 🟡 pasitos suaves… pero amenazantes (un zumbido grave)
+  white: { grave: 88, cae: 52, dur: 0.26, fuerza: 0.62, ruido: 0.32, filtro: 420, extra: 'gelatina' },   // ⚪ en medio de Red y Yellow (y blandito, como gelatina)
+};
+export const ALCANCE_PASOS = 24;   // más lejos que esto (en metros), no se oyen
+// Qué tan fuerte se oye un paso a esa distancia (0 = nada, 1 = pegado a ti). Baja suave, y en otro piso se oye mucho menos
+export function volumenPaso(id, dist, otroPiso = false) {
+  const p = PASOS[id];
+  if (!p || !(dist >= 0) || dist >= ALCANCE_PASOS) return 0;
+  const cerca = 1 - dist / ALCANCE_PASOS;
+  return p.fuerza * cerca * cerca * (otroPiso ? 0.35 : 1);
+}
+// ¿Dio un paso? Las piernas avanzan con "fase": cada media vuelta (π) es un paso nuevo
+export const pasoNumero = fase => Math.floor(fase / Math.PI);
+// Izquierda (-1) o derecha (+1): según dónde está el dragón comparado con hacia dónde mira la cámara
+export function ladoDe(dx, dz, camYaw) {
+  const d = Math.hypot(dx, dz);
+  if (d < 0.01) return 0;
+  // la derecha de la cámara: la cámara mira hacia (−sin yaw, −cos yaw); su derecha es (cos yaw, −sin yaw)
+  return Math.max(-1, Math.min(1, (dx * Math.cos(camYaw) - dz * Math.sin(camYaw)) / d));
+}
+
 // ---------- Tus ajustes de volumen (se guardan en este navegador) ----------
 export const CLAVE_AJUSTES = 'color-dragons:sonido-v2';   // (v2: ahora la música viene apagada y se oyen los sonidos de cada zona)
 export const AJUSTES_INICIALES = { musica: 0, ambiente: 0.7, silencio: false };
@@ -200,6 +227,21 @@ export function crearAmbiente(Ctx = (globalThis.AudioContext || globalThis.webki
       const c = capas.get(id) || crearCapa(id);   // si volviste rápido, la capa todavía estaba sonando bajito: se reusa
       capas.set(id, c); c.apagarEn = null;
       rampa(c.salM.gain, 1, CRUCE_SEGUNDOS); rampa(c.salA.gain, 1, CRUCE_SEGUNDOS);
+    },
+    // 🐾 Un paso de un dragón: vol de 0 a 1 (ver volumenPaso), lado de -1 (izquierda) a 1 (derecha)
+    paso(id, vol, lado = 0) {
+      const p = PASOS[id];
+      if (!p || vol <= 0.002 || ctx.state !== 'running') return;
+      const t = ahora() + 0.01, salida = ctx.createGain(); salida.gain.value = vol * 0.9;
+      const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+      if (pan) { pan.pan.value = lado * 0.8; salida.connect(pan).connect(busAmbiente); } else salida.connect(busAmbiente);
+      tono(salida, t, { frecs: [p.grave, p.cae], dur: p.dur, vol: 0.5, ataque: 0.004 });   // el golpe
+      if (p.ruido) soplo(salida, t, { buf: blancoBuf, tipo: 'lowpass', frecs: [p.filtro, p.filtro * 0.5], q: 0.8, dur: p.dur * 0.6, vol: p.ruido, ataque: 0.002 });   // el roce
+      if (p.extra === 'retumbo') tono(salida, t + 0.02, { frecs: [31, 24], dur: 0.7, vol: 0.35, ataque: 0.03 });   // 🔴 el piso retumba
+      if (p.extra === 'uñas') soplo(salida, t + 0.015, { buf: blancoBuf, tipo: 'highpass', frecs: [4200], dur: 0.02, vol: 0.18, ataque: 0.001 });   // ⚫ tic de uñas
+      if (p.extra === 'amenaza') { tono(salida, t, { frecs: [58], dur: 0.5, vol: 0.12, ataque: 0.08 }); tono(salida, t, { frecs: [61.5], dur: 0.5, vol: 0.1, ataque: 0.08 }); }   // 🟡 dos notas graves que chocan: da miedito
+      if (p.extra === 'gelatina') tono(salida, t + 0.03, { onda: 'sine', frecs: [180, 120], dur: 0.12, vol: 0.12, ataque: 0.01 });   // ⚪ "blop" blandito
+      setTimeout(() => { try { salida.disconnect(); if (pan) pan.disconnect(); } catch (e) {} }, 1500);
     },
     volumen(ajustes) { const v = volumenes(ajustes); rampa(busMusica.gain, v.musica, 0.3); rampa(busAmbiente.gain, v.ambiente, 0.3); },
     agachar(si) { rampa(maestro.gain, si ? 0.15 : 1, si ? 0.3 : 2); },

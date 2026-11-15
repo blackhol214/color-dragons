@@ -40,7 +40,7 @@ const sinWs = j => ({ id: j.id, nombre: j.nombre, color: j.color, rot: j.rot, oc
 const dentro = (n, max) => Math.max(-max, Math.min(max, n));
 
 // ---------- Archivos que se pueden ver desde internet (solo estos, nada más de tu compu) ----------
-const PERMITIDOS = /^\/(index\.html|manifest\.webmanifest|src\/[a-z]+\.js|iconos\/[a-z0-9-]+\.png)$/;
+const PERMITIDOS = /^\/(index\.html|sw\.js|manifest\.webmanifest|src\/[a-z]+\.js|iconos\/[a-z0-9-]+\.png)$/;   // (sw.js: el service worker, para jugar sin internet)
 const TIPOS = { '.webmanifest': 'application/manifest+json', '.js': 'text/javascript; charset=utf-8', '.html': 'text/html; charset=utf-8', '.png': 'image/png' };
 
 const servidor = Bun.serve({
