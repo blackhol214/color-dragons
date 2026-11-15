@@ -63,19 +63,20 @@ export function proximaNota(p, azar = Math.random) {
 // ---------- 🐾 Los pasos de cada dragón (cada uno suena distinto, y se oyen más fuerte mientras más cerca están) ----------
 // grave: la nota del golpe (Hz) · cae: hasta dónde baja · dur: cuánto dura · fuerza: qué tan fuerte · ruido: el "roce" del pie (0 = nada)
 // filtro: qué tan agudo es ese roce · extra: algo propio de cada uno
+// cuerpo: el "golpe" que SÍ se oye en parlantes chicos (laptop, celular), porque los graves de verdad (< 100 Hz) ahí no suenan
 export const PASOS = {
-  red: { grave: 62, cae: 34, dur: 0.42, fuerza: 1, ruido: 0.55, filtro: 260, extra: 'retumbo' },        // 🔴 pisadas FUERTES (retumba el piso)
-  grey: { grave: 210, cae: 150, dur: 0.07, fuerza: 0.32, ruido: 0.35, filtro: 2400, extra: 'uñas' },     // ⚫ pasos rápidos pero pequeños (tic-tic de uñas)
-  yellow: { grave: 118, cae: 82, dur: 0.16, fuerza: 0.3, ruido: 0.12, filtro: 600, extra: 'amenaza' },   // 🟡 pasitos suaves… pero amenazantes (un zumbido grave)
-  white: { grave: 88, cae: 52, dur: 0.26, fuerza: 0.62, ruido: 0.32, filtro: 420, extra: 'gelatina' },   // ⚪ en medio de Red y Yellow (y blandito, como gelatina)
+  red: { grave: 62, cae: 34, dur: 0.42, fuerza: 1, ruido: 0.9, filtro: 900, cuerpo: 140, extra: 'retumbo' },       // 🔴 pisadas FUERTES (retumba el piso)
+  grey: { grave: 260, cae: 180, dur: 0.07, fuerza: 0.5, ruido: 0.6, filtro: 3200, cuerpo: 520, extra: 'uñas' },    // ⚫ pasos rápidos pero pequeños (tic-tic de uñas)
+  yellow: { grave: 150, cae: 100, dur: 0.16, fuerza: 0.45, ruido: 0.3, filtro: 1100, cuerpo: 300, extra: 'amenaza' },   // 🟡 pasitos suaves… pero amenazantes
+  white: { grave: 96, cae: 60, dur: 0.26, fuerza: 0.72, ruido: 0.6, filtro: 1000, cuerpo: 200, extra: 'gelatina' },   // ⚪ en medio de Red y Yellow (y blandito, como gelatina)
 };
-export const ALCANCE_PASOS = 24;   // más lejos que esto (en metros), no se oyen
+export const ALCANCE_PASOS = 32;   // más lejos que esto (en metros), no se oyen
 // Qué tan fuerte se oye un paso a esa distancia (0 = nada, 1 = pegado a ti). Baja suave, y en otro piso se oye mucho menos
 export function volumenPaso(id, dist, otroPiso = false) {
   const p = PASOS[id];
   if (!p || !(dist >= 0) || dist >= ALCANCE_PASOS) return 0;
   const cerca = 1 - dist / ALCANCE_PASOS;
-  return p.fuerza * cerca * cerca * (otroPiso ? 0.35 : 1);
+  return p.fuerza * cerca ** 1.5 * (otroPiso ? 0.35 : 1);
 }
 // ¿Dio un paso? Las piernas avanzan con "fase": cada media vuelta (π) es un paso nuevo
 export const pasoNumero = fase => Math.floor(fase / Math.PI);
@@ -99,9 +100,11 @@ export function leerAjustes(texto) {
 }
 export const guardarAjustes = a => JSON.stringify(leerAjustes(JSON.stringify(a)));
 // Del deslizador (0 a 1) al volumen real. Al cuadrado porque el oído siente el volumen así: la mitad del deslizador suena "a la mitad"
+// efectos: los pasos de los dragones. Van aparte y más fuertes que el fondo (si no, ¡no se oían!), pero siguen al deslizador de Ambiente
+export const VOLUMEN_EFECTOS = 0.85;
 export function volumenes(a) {
-  if (a.silencio) return { musica: 0, ambiente: 0 };
-  return { musica: a.musica ** 2 * VOLUMEN_MAXIMO, ambiente: a.ambiente ** 2 * VOLUMEN_MAXIMO };
+  if (a.silencio) return { musica: 0, ambiente: 0, efectos: 0 };
+  return { musica: a.musica ** 2 * VOLUMEN_MAXIMO, ambiente: a.ambiente ** 2 * VOLUMEN_MAXIMO, efectos: a.ambiente * VOLUMEN_EFECTOS };
 }
 
 // ---------- El motor (solo en el navegador) ----------
@@ -113,6 +116,13 @@ export function crearAmbiente(Ctx = (globalThis.AudioContext || globalThis.webki
   const busMusica = ctx.createGain(), busAmbiente = ctx.createGain();
   busMusica.gain.value = 0; busAmbiente.gain.value = 0;
   busMusica.connect(maestro); busAmbiente.connect(maestro);
+  // 🐾 los pasos de los dragones: con un "compresor" que sube lo bajito y frena los golpes muy fuertes (así se oyen sin reventar los oídos)
+  const busEfectos = ctx.createGain(); busEfectos.gain.value = 0;
+  const compresor = ctx.createDynamicsCompressor();
+  compresor.threshold.value = -18; compresor.knee.value = 10; compresor.ratio.value = 3; compresor.attack.value = 0.003; compresor.release.value = 0.2;
+  const empuje = ctx.createGain(); empuje.gain.value = 1.15;   // (después del compresor: lo sube parejo)
+  busEfectos.connect(compresor).connect(empuje).connect(maestro);
+  const busGrito = ctx.createGain(); busGrito.gain.value = 0; busGrito.connect(ctx.destination);   // 💀 el grito va aparte (durante el susto lo demás se baja)
   // Un eco suave para las notas sueltas (les da espacio, como una sala grande)
   const eco = ctx.createDelay(2); eco.delayTime.value = 0.42;
   const ecoVuelta = ctx.createGain(); ecoVuelta.gain.value = 0.35;
@@ -232,18 +242,27 @@ export function crearAmbiente(Ctx = (globalThis.AudioContext || globalThis.webki
     paso(id, vol, lado = 0) {
       const p = PASOS[id];
       if (!p || vol <= 0.002 || ctx.state !== 'running') return;
-      const t = ahora() + 0.01, salida = ctx.createGain(); salida.gain.value = vol * 0.9;
+      const t = ahora() + 0.01, salida = ctx.createGain(); salida.gain.value = vol;
       const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
-      if (pan) { pan.pan.value = lado * 0.8; salida.connect(pan).connect(busAmbiente); } else salida.connect(busAmbiente);
-      tono(salida, t, { frecs: [p.grave, p.cae], dur: p.dur, vol: 0.5, ataque: 0.004 });   // el golpe
-      if (p.ruido) soplo(salida, t, { buf: blancoBuf, tipo: 'lowpass', frecs: [p.filtro, p.filtro * 0.5], q: 0.8, dur: p.dur * 0.6, vol: p.ruido, ataque: 0.002 });   // el roce
+      if (pan) { pan.pan.value = lado * 0.8; salida.connect(pan).connect(busEfectos); } else salida.connect(busEfectos);
+      tono(salida, t, { frecs: [p.grave, p.cae], dur: p.dur, vol: 1, ataque: 0.004 });   // el golpe grave (se siente con audífonos o parlantes grandes)
+      tono(salida, t, { onda: 'triangle', frecs: [p.cuerpo, p.cuerpo * 0.6], dur: p.dur * 0.7, vol: 0.9, ataque: 0.003 });   // …y su "cuerpo", que se oye en cualquier parlante
+      if (p.ruido) soplo(salida, t, { buf: blancoBuf, tipo: 'lowpass', frecs: [p.filtro, p.filtro * 0.5], q: 0.8, dur: p.dur * 0.6, vol: p.ruido * 1.3, ataque: 0.002 });   // el roce
       if (p.extra === 'retumbo') tono(salida, t + 0.02, { frecs: [31, 24], dur: 0.7, vol: 0.35, ataque: 0.03 });   // 🔴 el piso retumba
       if (p.extra === 'uñas') soplo(salida, t + 0.015, { buf: blancoBuf, tipo: 'highpass', frecs: [4200], dur: 0.02, vol: 0.18, ataque: 0.001 });   // ⚫ tic de uñas
       if (p.extra === 'amenaza') { tono(salida, t, { frecs: [58], dur: 0.5, vol: 0.12, ataque: 0.08 }); tono(salida, t, { frecs: [61.5], dur: 0.5, vol: 0.1, ataque: 0.08 }); }   // 🟡 dos notas graves que chocan: da miedito
       if (p.extra === 'gelatina') tono(salida, t + 0.03, { onda: 'sine', frecs: [180, 120], dur: 0.12, vol: 0.12, ataque: 0.01 });   // ⚪ "blop" blandito
       setTimeout(() => { try { salida.disconnect(); if (pan) pan.disconnect(); } catch (e) {} }, 1500);
     },
-    volumen(ajustes) { const v = volumenes(ajustes); rampa(busMusica.gain, v.musica, 0.3); rampa(busAmbiente.gain, v.ambiente, 0.3); },
+    // 💀 El grito del susto: fuerte, pero ya no revienta los oídos, y respeta tu volumen (silencio = no suena)
+    grito() {
+      if (ctx.state !== 'running') return;
+      const t0 = ahora(), dur = 1.1, g = ctx.createGain(); g.gain.value = 1; g.connect(busGrito);
+      soplo(g, t0, { buf: blancoBuf, tipo: 'bandpass', frecs: [1900, 450], q: 3, dur, vol: 3, ataque: 0.03 });
+      tono(g, t0, { onda: 'sawtooth', frecs: [230, 55], dur, vol: 0.65, ataque: 0.04 });
+      setTimeout(() => { try { g.disconnect(); } catch (e) {} }, 1600);
+    },
+    volumen(ajustes) { const v = volumenes(ajustes); rampa(busMusica.gain, v.musica, 0.3); rampa(busAmbiente.gain, v.ambiente, 0.3); rampa(busEfectos.gain, v.efectos, 0.3); rampa(busGrito.gain, v.efectos, 0.3); },
     agachar(si) { rampa(maestro.gain, si ? 0.15 : 1, si ? 0.3 : 2); },
     tick(dt) {
       if (ctx.state === 'suspended') return;
@@ -260,7 +279,7 @@ export function crearAmbiente(Ctx = (globalThis.AudioContext || globalThis.webki
     reanudar() { if (ctx.state === 'suspended') ctx.resume(); },
     // Qué tan fuerte está sonando ahora (0 = nada · 1 = el máximo posible). Sirve para revisar que nunca suene fuerte
     nivel() {
-      if (!this.medidor) { this.medidor = ctx.createAnalyser(); this.medidor.fftSize = 2048; maestro.connect(this.medidor); }
+      if (!this.medidor) { this.medidor = ctx.createAnalyser(); this.medidor.fftSize = 2048; maestro.connect(this.medidor); busGrito.connect(this.medidor); }   // (todo lo que sale: el juego y el grito)
       const d = new Float32Array(this.medidor.fftSize); this.medidor.getFloatTimeDomainData(d);
       let pico = 0, suma = 0; for (const v of d) { pico = Math.max(pico, Math.abs(v)); suma += v * v; }
       return { pico, rms: Math.sqrt(suma / d.length), capas: capas.size };

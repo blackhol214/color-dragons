@@ -64,10 +64,10 @@ describe('🎚️ ajustes de volumen', () => {
     expect(leerAjustes(JSON.stringify({ musica: 5, ambiente: -1, silencio: 'si' }))).toEqual({ musica: 1, ambiente: 0, silencio: false });
     expect(leerAjustes(JSON.stringify({ musica: 'x' })).musica).toBe(AJUSTES_INICIALES.musica);
   });
-  it('silencio = todo a cero', () => expect(volumenes({ musica: 1, ambiente: 1, silencio: true })).toEqual({ musica: 0, ambiente: 0 }));
+  it('silencio = todo a cero', () => expect(volumenes({ musica: 1, ambiente: 1, silencio: true })).toEqual({ musica: 0, ambiente: 0, efectos: 0 }));
   it('al 100 % nunca pasa del volumen máximo, y la mitad suena a un cuarto', () => {
     expect(volumenes({ musica: 1, ambiente: 1, silencio: false }).musica).toBe(VOLUMEN_MAXIMO);
-    expect(volumenes({ musica: 0.5, ambiente: 0, silencio: false })).toEqual({ musica: VOLUMEN_MAXIMO / 4, ambiente: 0 });
+    expect(volumenes({ musica: 0.5, ambiente: 0, silencio: false })).toEqual({ musica: VOLUMEN_MAXIMO / 4, ambiente: 0, efectos: 0 });
   });
 });
 
@@ -127,4 +127,16 @@ describe('🐾 los pasos de los dragones', () => {
     expect(ladoDe(5, 0, Math.PI)).toBeCloseTo(-1);
     expect(ladoDe(0, 0, 0)).toBe(0);
   });
+});
+
+describe('🔊 los pasos se oyen de verdad', () => {
+  it('los pasos van más fuertes que el fondo (si no, no se oían)', () => {
+    const v = volumenes({ musica: 0, ambiente: 0.7, silencio: false });
+    expect(v.efectos).toBeGreaterThan(v.ambiente * 3);
+  });
+  it('si bajas Ambiente a 0, los pasos también se callan', () => expect(volumenes({ musica: 1, ambiente: 0, silencio: false }).efectos).toBe(0));
+  it('todos tienen un "cuerpo" de 140 Hz o más (los parlantes de laptop y celular no suenan más grave)', () => {
+    for (const [id, p] of Object.entries(PASOS)) expect(p.cuerpo, id).toBeGreaterThanOrEqual(140);
+  });
+  it('a 10 m Red todavía se oye fuerte (más de la mitad)', () => expect(volumenPaso('red', 10)).toBeGreaterThan(0.5));
 });
