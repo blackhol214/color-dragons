@@ -24,7 +24,7 @@ export const OBJETOS = {
   pieza: { nombre: 'Piezas de rompecabezas', emoji: '🧩' },
   fusible: { nombre: 'Fusibles', emoji: '⚡' },
 };
-export const INTRO_SEGUNDOS = 18;   // lo que dura el recorrido de la cámara (no se puede saltar)
+export const INTRO_SEGUNDOS = 28;   // lo que dura la intro: 5 tomas de cámara tranquilas (no se puede saltar)
 export const FIN_SEGUNDOS = 5;
 // 🔦 Noche 5: las linternas están en una mesa junto al Spawn (se agarran con E)
 export const MESA_LINTERNAS = { x: 2.5, y: 0, z: -27.6, radio: 2.2 };      // lo que dura el cartel de "noche completada"

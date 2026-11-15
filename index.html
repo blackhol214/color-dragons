@@ -27,6 +27,24 @@
   .login-card p { margin:0; font:13px/1.4 system-ui, sans-serif; color:#4a5f52; }
   .login-card button { border:0; border-radius:8px; padding:12px; font:700 16px system-ui, sans-serif; background:#2fae4e; color:#fff; cursor:pointer; }
   .login-card button:focus-visible { outline:3px solid #1e6bff; outline-offset:2px; }
+  /* 🖥️ Si el navegador no deja usar los gráficos 3D */
+  #sinGraficos { position:fixed; inset:0; z-index:60; display:flex; padding:16px; overflow:auto; background:radial-gradient(ellipse at 50% 30%, #1f3a2a 0%, #0d1612 70%); }
+  #sinGraficos[hidden] { display:none; }
+  #sinGraficos .caja { margin:auto; width:min(440px, 100%); display:flex; flex-direction:column; gap:12px; padding:22px; border-radius:16px; background:#fbfaf5; color:#16301f; font:15px/1.45 system-ui, sans-serif; box-shadow:0 20px 50px rgba(0,0,0,.45); text-align:center; }
+  #sinGraficos .marca { margin:0; font:400 22px/1 Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif; color:#1f8a3b; letter-spacing:.04em; }
+  #sinGraficos .dormido { font-size:64px; line-height:1; margin:2px 0 -4px; animation:sgRespira 3s ease-in-out infinite; }
+  @keyframes sgRespira { 50% { transform:scale(1.06) translateY(-2px); } }
+  #sinGraficos h2 { margin:0; font:400 26px/1.1 "ADLaM Display", Impact, sans-serif; color:#16301f; }
+  #sinGraficos .explica { margin:0; color:#4a5f52; }
+  #sinGraficos ol { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px; text-align:left; counter-reset:paso; }
+  #sinGraficos li { counter-increment:paso; display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border-radius:10px; background:#fff; box-shadow:inset 0 0 0 1px #dde5df; font-size:14px; }
+  #sinGraficos li::before { content:counter(paso); flex:none; width:24px; height:24px; border-radius:50%; display:grid; place-items:center; background:#2fae4e; color:#fff; font:700 13px system-ui, sans-serif; }
+  #sinGraficos button { border:0; border-radius:12px; padding:13px; font:700 17px system-ui, sans-serif; color:#fff; background:#1f8a3b; box-shadow:0 4px 0 #0d5a22; cursor:pointer; }
+  #sinGraficos button:active { transform:translateY(3px); box-shadow:0 1px 0 #0d5a22; }
+  #sinGraficos button:focus-visible { outline:3px solid #1e6bff; outline-offset:3px; }
+  #sinGraficos details { text-align:left; font-size:12px; color:#6b7a70; }
+  #sinGraficos summary { cursor:pointer; }
+  #sinGraficos .detalle { margin:6px 0 0; font:12px ui-monospace, monospace; word-break:break-word; }
   #loginError { color:#c0141a; font-weight:600; }
   /* Aviso de guardado */
   #saved { position:fixed; left:50%; top:40%; transform:translate(-50%,-50%) scale(.7); margin:0; z-index:25; font:400 clamp(34px, 8vw, 84px)/1.1 "ADLaM Display", Impact, "Arial Narrow Bold", sans-serif; color:#2fd158; text-shadow:0 4px 0 #0d5a22, 0 8px 18px rgba(0,0,0,.35); white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s; }
@@ -166,6 +184,7 @@
 <canvas id="game"></canvas>
 <p id="toast" aria-live="polite"></p>
 <div id="cross"></div>
+<div id="sinGraficos" hidden role="alertdialog" aria-labelledby="sinGraficosTitulo"><div class="caja"><p class="marca">COLOR DRAGONS</p><div class="dormido" aria-hidden="true">🐉💤</div><h2 id="sinGraficosTitulo"></h2><p class="explica"></p><ol></ol><button type="button"></button><details><summary></summary><p class="detalle"></p></details></div></div>
 <div id="login">
   <form id="loginForm" class="login-card" autocomplete="off">
     <h1>COLOR DRAGONS</h1>
@@ -239,12 +258,29 @@ import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, 
 import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=19';
 import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=19';
 import { crearDragon, animarDragon } from './src/criaturas.js?v=18';
-import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=27';   // (v=19: textos nuevos del 🔊 sonido)
+import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=29';   // (v=19: textos nuevos del 🔊 sonido)
 import { MASCOTAS, PRECIO_HUEVO, mascotaDe, abrirHuevo, venderRepetida, llevarMascota, TODAS, mascotasQueLlevas, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=19';
-import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=19';
-import * as F from './src/fiesta.js?v=19';
+import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=20';
+import * as F from './src/fiesta.js?v=20';
+import { crearRendererSeguro, navegadorDe, pasosSinGraficos } from './src/graficos.js?v=1';
 import { CALIDADES, CLAVE_CALIDAD, CLAVE_CALIDAD_AUTO, leerCalidad, leerNivel, calidadInicial, ratioPara, bajarCalidad, ajustarResolucion } from './src/calidad.js?v=1';
 import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES } from './src/sonido.js?v=20';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
+// 🖥️ La pantalla de "no se pudieron prender los gráficos 3D": qué pasó y cómo arreglarlo en TU navegador
+function mostrarSinGraficos(errores, enJuego = false) {
+  ponerIdioma((() => { try { return localStorage.getItem('color-dragons:idioma') || 'es'; } catch (e) { return 'es'; } })());
+  const el = document.getElementById('sinGraficos');
+  el.querySelector('h2').textContent = tr(enJuego ? 'sinGraficos.perdidos' : 'sinGraficos.titulo');
+  el.querySelector('.explica').textContent = tr('sinGraficos.explica');
+  const lista = el.querySelector('ol'); lista.innerHTML = '';
+  for (const clave of pasosSinGraficos(navegadorDe(navigator.userAgent))) { const li = document.createElement('li'); li.textContent = tr(clave); lista.appendChild(li); }
+  el.querySelector('summary').textContent = tr('sinGraficos.detalles');
+  el.querySelector('.detalle').textContent = `${navegadorDe(navigator.userAgent)} · ${errores.join(' · ')}`;   // (para un adulto, o para mandárselo a Mathias)
+  el.querySelector('button').textContent = tr('sinGraficos.reintentar');
+  el.hidden = false;
+  document.getElementById('login').hidden = true;
+  el.querySelector('button').focus();
+}
+document.querySelector('#sinGraficos button').addEventListener('click', () => location.reload());
 (() => {
   // iPhone ignora user-scalable=no: aquí se bloquea el zoom con dos dedos y el doble toque
   for (const ev of ['gesturestart', 'gesturechange']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
@@ -253,7 +289,15 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
   document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
   const IS_TOUCH = matchMedia('(pointer:coarse)').matches;
   const canvas = document.getElementById('game');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  // 🖥️ Los gráficos 3D (src/graficos.js): si el navegador no deja crear WebGL, prueba con opciones más livianas;
+  // si igual no puede, muestra qué hacer (antes el juego se quedaba roto con "Error creating WebGL context")
+  const arranque = crearRendererSeguro(op => new THREE.WebGLRenderer({ canvas, ...op }));
+  if (!arranque.ok) { mostrarSinGraficos(arranque.errores); return; }
+  const renderer = arranque.renderer;
+  if (arranque.intento > 0) console.warn('🖥️ Gráficos en modo liviano (intento ' + arranque.intento + '):', arranque.errores);
+  // Si el navegador "pierde" los gráficos en medio del juego (pasa si la tarjeta de video se reinicia), avisa en vez de quedar congelado
+  canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); mostrarSinGraficos(['webglcontextlost'], true); });
+  canvas.addEventListener('webglcontextrestored', () => location.reload());
   // ⚙️ La calidad (src/calidad.js): Auto elige según tu compu y tu pantalla, y baja sola si el juego va lento
   const leerLS = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const nivelAuto = () => leerNivel(leerLS(CLAVE_CALIDAD_AUTO)) || calidadInicial({ nucleos: navigator.hardwareConcurrency || 0, memoria: navigator.deviceMemory || 0,
@@ -2071,16 +2115,43 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     document.getElementById('contadorNoche').textContent = tr('noche.n', { n: noche.n }) + (def.apagon ? tr('noche.apagon') : '');
     document.getElementById('contadorTexto').textContent = `${o.emoji} ${tr('obj.' + def.objeto)}: ${k} / ${def.cantidad}` + (lleva ? tr('noche.llevas', { n: lleva, lugar: tr('sala.centerLab') }) : '');
   }
-  // 🎥 La intro: la cámara recorre el laboratorio mientras el sombrero habla (letra por letra)
-  const recorrido = new THREE.CatmullRomCurve3([[-4, 4.5, -27], [-22, 4.5, -24], [-24, 4.5, -6], [-10, 4.5, 4], [6, 4.5, 6], [17, 4.5, 2], [12, 4.5, 22], [24, 4.5, 2], [20, 4.5, -18], [-2, 4.5, -10], [-4, 3, -21]].map(p => new THREE.Vector3(...p)));
+  // 🎥 La intro: "cámaras de seguridad". Varias tomas tranquilas, cada una DENTRO de una sala (así nunca atraviesa paredes),
+  // con un fundido a negro entre toma y toma, mientras el sombrero habla letra por letra (despacio, para que se alcance a leer)
+  // Arma las tomas: en cada sala sale de una esquina y se acerca despacio al centro. La última termina mirando el punto final
+  function tomasDe(ids, final) {
+    return ids.map((id, i) => {
+      const q = SALAS.find(x => x.id === id), alto = altoDe(q.y, q);
+      const sx = i % 2 ? 1 : -1, sz = i % 4 < 2 ? 1 : -1;   // de qué esquina sale (cambia en cada toma)
+      const cx = (q.x0 + q.x1) / 2, cz = (q.z0 + q.z1) / 2;
+      const ex = sx > 0 ? q.x1 - 1.5 : q.x0 + 1.5, ez = sz > 0 ? q.z1 - 1.5 : q.z0 + 1.5;
+      const desde = new THREE.Vector3(ex, q.y + alto * 0.62, ez);
+      const hasta = new THREE.Vector3(ex + (cx - ex) * 0.35, q.y + alto * 0.5, ez + (cz - ez) * 0.35);
+      const mira = new THREE.Vector3(cx, q.y + 1.2, cz);
+      if (i === ids.length - 1) { hasta.set(final.x + 4, final.y + 2.6, final.z + 4.5); mira.set(final.x, final.y + 1, final.z); }   // (ahí apareces)
+      return { desde, hasta, mira };
+    });
+  }
+  const TOMAS = tomasDe(['testLab', 'salon', 'lockers', 'centerLab', 'spawn'], SPAWN);
+  const FUNDIDO = 0.55;   // segundos de negro entre una toma y la otra
   const _mira = new THREE.Vector3();
+  let introNegro = false;
   function camaraIntro() {
-    if (!noche || noche.fase !== 'intro') return false;
-    const u = Math.min(1, noche.tiempo / INTRO_SEGUNDOS);
-    camera.position.copy(recorrido.getPointAt(u));
-    camera.lookAt(recorrido.getPointAt(Math.min(1, u + 0.04), _mira));
+    if (!noche || noche.fase !== 'intro') { if (introNegro && !fiesta) { introNegro = false; sustoNegro.style.opacity = 0; } return false; }
+    camaraTomas(TOMAS, noche.tiempo, INTRO_SEGUNDOS);
     return true;
   }
+  function camaraTomas(TOMAS, tiempo, total) {
+    const dur = total / TOMAS.length, tt = Math.min(tiempo, total - 0.001);
+    const n = Math.floor(tt / dur), en = tt - n * dur, toma = TOMAS[n], u = en / dur;
+    const k = u * u * (3 - 2 * u);   // suave al empezar y al terminar
+    camera.position.lerpVectors(toma.desde, toma.hasta, k);
+    camera.lookAt(toma.mira);
+    // fundido: entra desde negro, y sale a negro (menos la última toma, que termina en el juego)
+    const entra = n === 0 ? 0 : Math.max(0, 1 - en / FUNDIDO), sale = n === TOMAS.length - 1 ? 0 : Math.max(0, (en - (dur - FUNDIDO)) / FUNDIDO);
+    sustoNegro.style.opacity = Math.max(entra, sale); introNegro = true;
+  }
+  // El texto del sombrero sale a una velocidad que alcanza a leerse: termina al 70 % de la intro (y nunca más rápido que lo necesario)
+  const letrasIntro = (texto, tiempo, total = INTRO_SEGUNDOS) => texto.slice(0, Math.floor(tiempo * Math.max(5, texto.length / (total * 0.7))));
   // 🍽️ Servir comida a Yellow: la comida cae por el tubo hasta el plato
   const bolitas = [];
   function servirComida() {
@@ -2112,7 +2183,7 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     // La intro (con la voz del sombrero)
     const enIntro = noche.fase === 'intro';
     introEl.hidden = !enIntro;
-    if (enIntro) introTexto.textContent = tr('hat.noche' + noche.n).slice(0, Math.floor(noche.tiempo * 9));   // letra por letra, despacito
+    if (enIntro) introTexto.textContent = letrasIntro(tr('hat.noche' + noche.n), noche.tiempo);   // letra por letra, despacio
     if (!conServidor) {
       const antes = noche.fase;
       tickNoche(noche, dt);
@@ -2876,7 +2947,7 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     greyFiesta.obj.visible = true; hat.g.visible = false;
   }
   let cayendo = -1, bajandoRampa = -1, compuertaCerrada = false;
-  const camaraFinal = new THREE.CatmullRomCurve3([[163, 3, 6], [166, 3.5, -10], [175, 4, -6], [186, 4.5, 0], [192, 4, -9], [199, 4, 4], [199, 6, -10], [210, 6.5, -8], [164, 2.8, 6]].map(p => new THREE.Vector3(...p)));
+  const TOMAS_FINAL = tomasDe(['fSalon', 'fRampa', 'fBloques', 'fPasillo', 'fSpawn'], FIESTA_SPAWN);
   const bonk = () => showToast(tr('toast.bonk'), true, 1200);
   // Cada cuadro de la noche final
   function updateFiesta(dt) {
@@ -2899,10 +2970,9 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     if (g.modo === 'dormir') cg.abajo.rotation.x = 0;
     // Las etapas
     if (f.fase === 'intro') {
-      introEl.hidden = false; introTexto.textContent = tr('hat.inicio').slice(0, Math.floor(f.tiempo * 9));
-      const u = Math.min(1, f.tiempo / F.DURACION.intro);
-      camera.position.copy(camaraFinal.getPointAt(u)); camera.lookAt(camaraFinal.getPointAt(Math.min(1, u + 0.04), _mira));
-      if (f.tiempo >= F.DURACION.intro) { f.fase = 'fiesta'; f.tiempo = 0; introEl.hidden = true; }
+      introEl.hidden = false; introTexto.textContent = letrasIntro(tr('hat.inicio'), f.tiempo, F.DURACION.intro);
+      camaraTomas(TOMAS_FINAL, f.tiempo, F.DURACION.intro);   // 🎥 las mismas tomas tranquilas, en la fiesta
+      if (f.tiempo >= F.DURACION.intro) { f.fase = 'fiesta'; f.tiempo = 0; introEl.hidden = true; sustoNegro.style.opacity = 0; introNegro = false; }
       return true;   // (la cámara la manejamos aquí)
     }
     if (['fiesta', 'bloques', 'escape'].includes(f.fase)) {
@@ -2953,7 +3023,7 @@ import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES }
     }
     if (f.fase === 'hat') {
       // 🎩 Hat aparece completo y habla
-      introEl.hidden = false; introTexto.textContent = tr('hat.final').slice(0, Math.floor(f.tiempo * 9));
+      introEl.hidden = false; introTexto.textContent = letrasIntro(tr('hat.final'), f.tiempo, F.DURACION.hat);
       animarDragon(hat.g.userData.amarillo, dt, { vel: 0 });
       const [izq, der] = hat.g.userData.brazos;
       izq.rotation.x = Math.sin(t * 1.3) * 0.15; izq.rotation.z = -0.05 - Math.sin(t * 0.9) * 0.05;   // el izquierdo se mece

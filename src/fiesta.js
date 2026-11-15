@@ -14,7 +14,7 @@ import { SALAS, tramosDePared, salaEn } from './laboratorio.js?v=19';
 
 export const MENSAJE_INICIO = "Now this is the final night. I've decided to invite you to the goodbye celebration.";
 export const MENSAJE_FINAL = "I'm still not done with you. Things are going to get a lot more EPIC.";
-export const DURACION = { intro: 14, choque: 4, hat: 11, fin: 5 };
+export const DURACION = { intro: 22, choque: 4, hat: 15, fin: 5 };   // (la intro y lo que dice Hat duran más: así se alcanza a leer)
 
 // Grey duerme aquí (en el salón), con su sombrero de fiesta
 export const CAMA_GREY = { x: 181, z: -8.5 };
