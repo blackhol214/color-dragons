@@ -284,7 +284,7 @@ import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/drag
 import { crearDragon, animarDragon } from './src/criaturas.js?v=18';
 import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=32';   // (v=19: textos nuevos del 🔊 sonido)
 import { MASCOTAS, PRECIO_HUEVO, mascotaDe, abrirHuevo, venderRepetida, llevarMascota, TODAS, mascotasQueLlevas, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=19';
-import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, tickNoche, siguienteNoche } from './src/noches.js?v=20';
+import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, cercaDeMesa, MESA_CENTRAL, tickNoche, siguienteNoche } from './src/noches.js?v=21';
 import * as F from './src/fiesta.js?v=20';
 import { huellaDe, hayVersionNueva, REVISAR_CADA_MS } from './src/pwa.js?v=1';
 import { escenaDe, letrasVisibles } from './src/escenas.js?v=1';
@@ -2226,7 +2226,22 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
     }
   }
   const cercaComedero = () => maquinaComida && Math.abs(ps.pos.y - maquinaComida.y) < 2 && Math.hypot(ps.pos.x - maquinaComida.x, ps.pos.z - maquinaComida.z) < 2.4;
+  // 🍽️ Lo que se ve en la mesa central. Noche 1: los tubos entregados se apilan acostados como una PIRÁMIDE de troncos:
+  // filas de 5, 4, 3, 2 y 1, y cada fila se acomoda en los huecos de la de abajo. El tubo 16 queda apoyado de costado
+  const TOPE_MESA = 0.86;   // (la altura de la mesa central)
+  const pilaTubos = (() => {
+    const filas = [5, 4, 3, 2, 1], D = 0.2, ALTO_FILA = D * 0.87, tubos = [];
+    const poner = (t, z, y, giro = 0) => { t.rotation.set(giro, 0.05 * (Math.random() - 0.5), Math.PI / 2); t.position.set(MESA_CENTRAL.x + (Math.random() - 0.5) * 0.06, y, z); t.visible = false; scene.add(t); tubos.push(t); };
+    filas.forEach((n, f) => { for (let i = 0; i < n; i++) poner(modeloObjeto('tubo'), MESA_CENTRAL.z + (i - (n - 1) / 2) * D, TOPE_MESA + D / 2 + f * ALTO_FILA); });
+    poner(modeloObjeto('tubo'), MESA_CENTRAL.z + 2.5 * D + 0.12, TOPE_MESA + 0.22, -0.9);   // el número 16: apoyado contra la pila
+    return tubos;
+  })();
+  function mostrarMesa() {
+    const tubos = noche && nocheDe(noche.n).objeto === 'tubo' ? entregados(noche) : 0;
+    pilaTubos.forEach((t, i) => { t.visible = i < tubos; });
+  }
   function updateNoches(dt) {
+    mostrarMesa();
     // Las bolitas de comida: bajan por el tubo y caen al plato
     for (let i = bolitas.length - 1; i >= 0; i--) {
       const q = bolitas[i];
@@ -2261,7 +2276,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
     if (conServidor) noche.tiempo += dt;
     contornos(noche.tiempo > PISTA_SEGUNDOS);   // ✨ ¿tardaste mucho? contornos blancos
     // 🎩 Al llegar a la máquina del Center Lab con objetos, se entregan (en la noche 3: se conectan las baterías)
-    if (llevaDe(noche, miId()) && cercaDeMaquina(ps.pos)) {
+    if (llevaDe(noche, miId()) && cercaDeMesa(ps.pos)) {
       if (conServidor) { if (!red.esperandoEntrega) { red.esperandoEntrega = true; enviar({ tipo: 'entregar' }); } }
       else { const k = entregar(noche, ps.pos); avisoEntrega(k); pintarContador(); }
     }

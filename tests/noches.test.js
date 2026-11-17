@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { NOCHES, OBJETOS, nocheDe, lugaresObjetos, nuevaNoche, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, nocheCompleta, tickNoche, siguienteNoche, INTRO_SEGUNDOS, MAQUINA } from '../src/noches.js';
+import { NOCHES, OBJETOS, nocheDe, lugaresObjetos, nuevaNoche, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, nocheCompleta, tickNoche, siguienteNoche, INTRO_SEGUNDOS, MAQUINA, MESA_CENTRAL, cercaDeMesa } from '../src/noches.js';
 import { DRAGONES } from '../src/dragones.js';
 import { salaEn } from '../src/laboratorio.js';
 
@@ -67,13 +67,13 @@ describe('jugar una noche', () => {
     const q = empezada(1);
     recoger(q, 0, q.objetos[0]); recoger(q, 1, q.objetos[1]);
     expect(entregar(q, { x: 0, y: 0, z: 0 })).toBe(0);
-    expect(entregar(q, MAQUINA)).toBe(2);
+    expect(entregar(q, MESA_CENTRAL)).toBe(2);
     expect(entregados(q)).toBe(2); expect(llevaDe(q, 'yo')).toBe(0);
   });
   it('cada uno entrega solo lo que lleva él', () => {
     const q = empezada(1);
     recoger(q, 0, q.objetos[0], 'ana'); recoger(q, 1, q.objetos[1], 'beto');
-    expect(entregar(q, MAQUINA, 'ana')).toBe(1);
+    expect(entregar(q, MESA_CENTRAL, 'ana')).toBe(1);
     expect(llevaDe(q, 'beto')).toBe(1);
   });
   it('🐉 si te atrapan, lo que llevabas vuelve a su lugar', () => {
@@ -87,8 +87,15 @@ describe('jugar una noche', () => {
     const q = empezada(3);
     q.objetos.forEach((o, i) => recoger(q, i, o));
     expect(nocheCompleta(q)).toBe(false);   // las llevas, pero falta conectarlas en la máquina
-    entregar(q, MAQUINA);
+    entregar(q, MESA_CENTRAL);
     expect(tickNoche(q, 0.1)).toBe(true);
     expect(q.fase).toBe('ganada');
   });
+});
+
+describe('🍽️ se entrega en la mesa central', () => {
+  const borde = { x: MESA_CENTRAL.x + MESA_CENTRAL.medioX + 1, y: 0, z: MESA_CENTRAL.z };   // parado al lado de la mesa
+  it('al lado de la mesa: cuenta como cerca', () => expect(cercaDeMesa(borde)).toBe(true));
+  it('en la máquina vieja de la esquina: ya no', () => expect(cercaDeMesa(MAQUINA)).toBe(false));
+  it('en otro piso (justo abajo): no', () => expect(cercaDeMesa({ ...borde, y: -7 })).toBe(false));
 });

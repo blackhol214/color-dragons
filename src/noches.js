@@ -32,6 +32,9 @@ export const PISTA_SEGUNDOS = 90;    // si tardas más que esto, los objetos que
 export const RADIO_RECOGER = 1.5;   // qué tan cerca tienes que pasar para agarrar un objeto
 // 🎩 La máquina del sombrero (en el Center Lab): ahí se entregan los objetos (y en la noche 3 se conectan las baterías)
 export const MAQUINA = { x: 24, y: 0, z: 29.5, radio: 2.6 };
+// 🍽️ La mesa central del Center Lab (la grande del medio): ahí se entregan los objetos y se ven (idea de Mathias)
+// x, z: el centro · medioX, medioZ: la mitad del largo y del ancho · alto: la altura de la mesa · margen: qué tan cerca hay que llegar
+export const MESA_CENTRAL = { x: 10, y: 0, z: 24, medioX: 8, medioZ: 3, alto: 0.9, margen: 1.6 };
 
 export const nocheDe = n => NOCHES.find(q => q.n === n) || null;
 
@@ -73,10 +76,12 @@ export function recoger(noche, i, pos, quien = 'yo') {
   o.estado = 'llevado'; o.quien = quien;
   return true;
 }
-// 🧪 Al llegar a la máquina del Center Lab se entregan todos los que llevas. Devuelve cuántos entregó
+// 🧪 Al tocar la mesa central se entregan todos los que llevas. Devuelve cuántos entregó
 export const cercaDeMaquina = pos => Math.abs(pos.y - MAQUINA.y) < 2 && Math.hypot(pos.x - MAQUINA.x, pos.z - MAQUINA.z) < MAQUINA.radio;
+const M = MESA_CENTRAL;
+export const cercaDeMesa = pos => Math.abs(pos.y - M.y) < 2 && Math.abs(pos.x - M.x) < M.medioX + M.margen && Math.abs(pos.z - M.z) < M.medioZ + M.margen;
 export function entregar(noche, pos, quien = 'yo') {
-  if (noche.fase !== 'jugando' || !cercaDeMaquina(pos)) return 0;
+  if (noche.fase !== 'jugando' || !cercaDeMesa(pos)) return 0;
   let k = 0;
   for (const o of noche.objetos) if (o.estado === 'llevado' && o.quien === quien) { o.estado = 'entregado'; k++; }
   return k;
