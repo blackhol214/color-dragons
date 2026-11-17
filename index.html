@@ -290,8 +290,8 @@ import { huellaDe, hayVersionNueva, REVISAR_CADA_MS } from './src/pwa.js?v=1';
 import { escenaDe, letrasVisibles } from './src/escenas.js?v=1';
 import { crearRendererSeguro, navegadorDe, pasosSinGraficos } from './src/graficos.js?v=1';
 import { CALIDADES, CLAVE_CALIDAD, CLAVE_CALIDAD_AUTO, leerCalidad, leerNivel, calidadInicial, ratioPara, bajarCalidad, ajustarResolucion } from './src/calidad.js?v=1';
-import { volumenPaso, pasoNumero, ladoDe, intervaloPasos } from './src/sonido.js?v=32';
-import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES } from './src/sonido.js?v=32';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
+import { volumenPaso, pasoNumero, ladoDe, intervaloPasos, volumenPuerta } from './src/sonido.js?v=35';
+import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES } from './src/sonido.js?v=35';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
 // 🖥️ La pantalla de "no se pudieron prender los gráficos 3D": qué pasó y cómo arreglarlo en TU navegador
 function mostrarSinGraficos(errores, enJuego = false) {
   ponerIdioma((() => { try { return localStorage.getItem('color-dragons:idioma') || 'es'; } catch (e) { return 'es'; } })());
@@ -534,7 +534,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
   const MAT_PUERTA = new THREE.MeshLambertMaterial({ map: texPuerta });
   const P = SALAS.find(s => s.id === 'panico');
   const tocaPanico = (x, z) => x >= P.x0 && x <= P.x1 && z >= P.z0 && z <= P.z1;
-  const puertas = [], corredizas = [], vistas = new Set();
+  const puertas = [], corredizas = [], automaticas = [], vistas = new Set();
   for (const s of SALAS) {
     if (s.id.startsWith('tunel') || s.zona) continue;   // (en los túneles, el lobby y la fiesta no hay puertas cafés)
     for (const lado of Object.keys(s.puertas)) for (const [a, b] of s.puertas[lado]) {
@@ -571,20 +571,15 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
         corredizas.push(puerta);
         continue;
       }
-      // Puerta café de bisagra: una sola hoja, gruesa y pesada
-      const hojas = [[a, 1]], anchoHoja = ancho;
-      for (const [desde, dir] of hojas) {
-        const bisagra = new THREE.Group();
-        bisagra.position.set(horizontal ? desde : linea, s.y, horizontal ? linea : desde);
-        const r0 = horizontal ? (dir > 0 ? 0 : Math.PI) : (dir > 0 ? -Math.PI / 2 : Math.PI / 2);
-        bisagra.rotation.y = r0;
-        const AP = puertaDe(s.y) - 0.05;
-        const hoja = new THREE.Mesh(new THREE.BoxGeometry(anchoHoja - 0.04, AP, 0.16), MAT_PUERTA);
-        hoja.position.set(anchoHoja / 2, AP / 2, 0); bisagra.add(hoja); scene.add(bisagra);
-        // Para qué lado gira para alejarse de quien empuja (depende de cómo quedó la bisagra)
-        const giroHacia = horizontal ? Math.sign(Math.cos(r0)) : Math.sign(Math.sin(r0));
-        puertas.push({ bisagra, r0, giroHacia, ang: 0, cx, cz, y: s.y, horizontal, linea, medio: ancho / 2 });
-      }
+      // 🚪 Puerta automática de metal (como las del Hoyo del Pánico, pero sin botón): si alguien pasa casi pegado
+      // (tú, tus amigos o un dragón), se abre de lado; cuando ya no hay nadie, se cierra rápido. Suena al abrir y al cerrar
+      const AP = puertaDe(s.y) - 0.05;
+      const hoja = new THREE.Mesh(new THREE.BoxGeometry(horizontal ? ancho : 0.16, AP, horizontal ? 0.16 : ancho), lambert(0x6a7074));
+      for (let i = 0; i < 4; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(horizontal ? ancho * 0.98 : 0.18, 0.12, horizontal ? 0.18 : ancho * 0.98), new THREE.MeshLambertMaterial({ map: texPeligro })); f.position.y = -AP / 2 + 0.3 + i * (AP - 0.6) / 3; hoja.add(f); }
+      hoja.position.set(cx, s.y + AP / 2, cz); scene.add(hoja);
+      const solido = { x: cx, z: cz, hw: horizontal ? ancho / 2 : 0.1, hd: horizontal ? 0.1 : ancho / 2, top: s.y + AP, bottom: s.y };
+      platforms.push(solido);
+      automaticas.push({ hoja, solido, abierta: false, k: 0, cx, cz, y: s.y, horizontal, ancho, alto: AP, linea, medio: ancho / 2 });
     }
   }
   // Cada cuadro: ¿alguien está empujando la puerta? (tú, tus amigos o un dragón)
@@ -600,6 +595,20 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
       const quiere = lado ? (Math.abs(p.ang) > 0.2 ? Math.sign(p.ang) * 1.5 : lado * p.giroHacia * 1.5) : 0;
       p.ang += (quiere - p.ang) * Math.min(1, dt * (lado ? 2 : 0.7));   // pesada: abre lento y cierra más lento todavía
       p.bisagra.rotation.y = p.r0 + p.ang;
+    }
+    // 🚪 Las automáticas: ¿hay alguien casi pegado? (a lo largo de la puerta y a menos de 1,8 m de ella)
+    for (const c of automaticas) {
+      let alguien = false;
+      for (const q of quienes) {
+        if (Math.abs(q.y - c.y) > 2.5) continue;
+        const a = c.horizontal ? q.x - c.cx : q.z - c.cz, n = c.horizontal ? q.z - c.linea : q.x - c.linea;
+        if (Math.abs(a) < c.medio + 0.5 && Math.abs(n) < 1.8) { alguien = true; break; }
+      }
+      if (alguien !== c.abierta) { c.abierta = alguien; if (amb) amb.puerta(alguien, volumenPuerta(Math.hypot(ps.pos.x - c.cx, ps.pos.z - c.cz), Math.abs(ps.pos.y - c.y) > 3)); }
+      c.k += ((c.abierta ? 1 : 0) - c.k) * Math.min(1, dt * (c.abierta ? 9 : 12));   // abre rápido y cierra todavía más rápido
+      const d = c.k * (c.ancho - 0.2);   // se mete en la pared, de lado
+      c.hoja.position.set(c.cx - (c.horizontal ? d : 0), c.y + c.alto / 2, c.cz - (c.horizontal ? 0 : d));
+      c.solido.top = c.k > 0.6 ? -1000 : c.y + c.alto; c.solido.bottom = c.k > 0.6 ? -1001 : c.y;   // abierta ya no es pared
     }
     for (const c of corredizas) {
       c.k += ((c.abierta ? 1 : 0) - c.k) * Math.min(1, dt * 3);
@@ -1339,7 +1348,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
   function usarE() { if (fantasma) return; const u = queUsar(); if (u) u.hacer(); }
   usarBtn.addEventListener('click', e => { usarE(); e.currentTarget.blur(); });
   // 🔧 Para probar: con ?debug en el link, la consola puede ver y mover al jugador (window.cd)
-  if (new URLSearchParams(location.search).has('debug')) window.cd = { ps, camera, salaEn, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; }, get escondido() { return escondido; }, get enCaja() { return enCaja; }, get dragones() { return dragones; }, get cuerpos() { return cuerposDragon; }, get noche() { return noche; }, get fiesta() { return fiesta; }, get red() { return red; }, platforms, atrapar: id => atrapado(id), get susto() { return susto; }, renderer, scene, bloqueanCamara, get camPitch() { return camPitch; }, crearMascota: id => crearMascota(id) };
+  if (new URLSearchParams(location.search).has('debug')) window.cd = { ps, camera, salaEn, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; }, get escondido() { return escondido; }, get enCaja() { return enCaja; }, get dragones() { return dragones; }, get cuerpos() { return cuerposDragon; }, get noche() { return noche; }, get fiesta() { return fiesta; }, get red() { return red; }, platforms, atrapar: id => atrapado(id), get susto() { return susto; }, renderer, scene, bloqueanCamara, get camPitch() { return camPitch; }, crearMascota: id => crearMascota(id), automaticas };
   // La caja puesta: las solapas se cierran, y al caminar se bambolea un poquito
   function moverCaja(caja, puesta, caminando, dt, t) {
     caja.obj.visible = puesta;

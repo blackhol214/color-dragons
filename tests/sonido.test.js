@@ -189,3 +189,11 @@ describe('👟 tus pasos', () => {
   it('con la caja (6 m/s) los pasos van más espaciados', () => expect(intervalo2(6)).toBeGreaterThan(intervalo2(12)));
   it('tus pasos existen y son más suaves que los de Red', () => expect(PASOS2.jugador.fuerza).toBeLessThan(PASOS2.red.fuerza));
 });
+
+// 🟥→🟩 Jefe rojo de Mathias: lo que DEBE pasar con el sonido de las puertas (los números los decidió él)
+import { volumenPuerta } from '../src/sonido.js';
+describe('🚪 el sonido de las puertas (test de Mathias)', () => {
+  it('una puerta a 30 metros no se oye (volumen 0)', () => expect(volumenPuerta(30)).toBe(0));
+  it('una puerta pegadita suena lo más fuerte (volumen 1)', () => expect(volumenPuerta(0)).toBe(1));
+  it('una puerta en otro piso, justo arriba o abajo, suena más bajito (0.3)', () => expect(volumenPuerta(0, true)).toBeCloseTo(0.3));
+});

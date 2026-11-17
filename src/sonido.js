@@ -72,6 +72,12 @@ export const PASOS = {
   // 👟 TÚ: como en Rectángulo Verde (un "chss" cortito), pero en piso duro: un "toc" seco del taco contra las baldosas
   jugador: { grave: 190, cae: 120, dur: 0.06, fuerza: 0.32, ruido: 0.7, filtro: 4200, cuerpo: 460, extra: 'taco' },
 };
+// 🚪 Qué tan fuerte oyes una puerta automática: pegado, fuerte; a 25 m o más, nada; en otro piso, mucho menos
+export const ALCANCE_PUERTA = 25;
+export function volumenPuerta(dist, otroPiso = false) {
+  if (!(dist >= 0) || dist >= ALCANCE_PUERTA) return 0;
+  return (1 - dist / ALCANCE_PUERTA) ** 1.5 * (otroPiso ? 0.3 : 1);
+}
 // Cada cuánto suena un paso tuyo (segundos): corriendo (12 m/s) cada 0,32 s; más lento, más espaciados (igual que en Rectángulo Verde)
 export const intervaloPasos = rapidez => 0.32 * (12 / Math.max(1, rapidez));
 export const ALCANCE_PASOS = 32;   // más lejos que esto (en metros), no se oyen
@@ -276,6 +282,14 @@ export function crearAmbiente(Ctx = (globalThis.AudioContext || globalThis.webki
       if (p.extra === 'taco') soplo(salida, t, { buf: blancoBuf, tipo: 'bandpass', frecs: [3000 + Math.random() * 1200], q: 1.2, dur: 0.05, vol: 0.5, ataque: 0.001 });   // 👟 el "chss" del zapato (cada paso un poquito distinto)
       if (p.extra === 'gelatina') tono(salida, t + 0.03, { onda: 'sine', frecs: [180, 120], dur: 0.12, vol: 0.12, ataque: 0.01 });   // ⚪ "blop" blandito
       setTimeout(() => { try { salida.disconnect(); if (pan) pan.disconnect(); } catch (e) {} }, 1500);
+    },
+    // 🚪 Puerta de metal: al abrir, un "shhhk" que sube (se desliza); al cerrar, "shhk" + un "clank" metálico
+    puerta(abre, vol) {
+      if (vol <= 0.01 || ctx.state !== 'running') return;
+      const t = ahora() + 0.005, g = ctx.createGain(); g.gain.value = vol * 0.5; g.connect(busEfectos);
+      soplo(g, t, { buf: blancoBuf, tipo: 'bandpass', frecs: abre ? [700, 2200] : [2000, 800], q: 2, dur: abre ? 0.35 : 0.22, vol: 0.5, ataque: 0.03 });
+      if (!abre) { tono(g, t + 0.2, { onda: 'triangle', frecs: [180, 120], dur: 0.15, vol: 0.5, ataque: 0.002 }); tono(g, t + 0.2, { onda: 'square', frecs: [620], dur: 0.05, vol: 0.08, ataque: 0.001 }); }
+      setTimeout(() => { try { g.disconnect(); } catch (e) {} }, 1200);
     },
     // 🦘 Saltar: un "bup" que sube (como en Rectángulo Verde, pero más suave). Aterrizar: un "tunk" contra el piso duro (más fuerte si caes de alto)
     salto() {
