@@ -290,8 +290,8 @@ import { huellaDe, hayVersionNueva, REVISAR_CADA_MS } from './src/pwa.js?v=1';
 import { escenaDe, letrasVisibles } from './src/escenas.js?v=1';
 import { crearRendererSeguro, navegadorDe, pasosSinGraficos } from './src/graficos.js?v=1';
 import { CALIDADES, CLAVE_CALIDAD, CLAVE_CALIDAD_AUTO, leerCalidad, leerNivel, calidadInicial, ratioPara, bajarCalidad, ajustarResolucion } from './src/calidad.js?v=1';
-import { volumenPaso, pasoNumero, ladoDe } from './src/sonido.js?v=30';
-import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES } from './src/sonido.js?v=30';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
+import { volumenPaso, pasoNumero, ladoDe, intervaloPasos } from './src/sonido.js?v=32';
+import { crearAmbiente, zonaSonora, leerAjustes, guardarAjustes, CLAVE_AJUSTES } from './src/sonido.js?v=32';   // cambiar ?v= al cambiar estos archivos: así el navegador nunca usa una copia vieja
 // 🖥️ La pantalla de "no se pudieron prender los gráficos 3D": qué pasó y cómo arreglarlo en TU navegador
 function mostrarSinGraficos(errores, enJuego = false) {
   ponerIdioma((() => { try { return localStorage.getItem('color-dragons:idioma') || 'es'; } catch (e) { return 'es'; } })());
@@ -3242,7 +3242,9 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
         ps.pos.x += ((esc.x0 + esc.x1) / 2 - ps.pos.x) * k; ps.pos.z += ((esc.z0 + esc.z1) / 2 - ps.pos.z) * k;
       } else ps.vel.y = Math.max(ps.vel.y, -6);
     }
+    const enPisoAntes = ps.onGround, alturaAntes = ps.pos.y;
     if (!escondido) physics(ps, dt, keys.Space && !busy && !esc && !enCaja);   // (con la caja puesta no se salta)
+    sonidosDelJugador(dt, moving, enPisoAntes);
     if (esc && ps.pos.y > PISO_PRINCIPAL + 0.5) { ps.pos.y = PISO_PRINCIPAL + 0.5; ps.vel.y = 0; }   // arriba de todo: te bajas caminando
     if (ps.pos.y < PISO_SUBSUELO - 15) { ps.pos.set(spawn.x, spawn.y, spawn.z); ps.vel.set(0, 0, 0); showToast(tr('toast.caiste'), true); }
     bendState(ps, dt);
@@ -3313,6 +3315,21 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
     requestAnimationFrame(tick);
   }
   // ---------- 🔊 Música y sonido ambiente (src/sonido.js): cada zona suena distinto y se cruzan suave ----------
+  // 👟 Tus pasos, tu salto y tu aterrizaje. En tu caja los pasos suenan más bajito (vas a escondidas); en la escalera, nada
+  let pasoTimer = 0, caidaDesde = null;
+  const VOL_PASO = 0.16;   // (más o menos lo fuerte que suena el salto: los pasos de los dragones van más fuertes para que los oigas venir)
+  function sonidosDelJugador(dt, moving, enPisoAntes) {
+    if (!amb || escondido) return;
+    if (enPisoAntes && !ps.onGround && ps.vel.y > 5) amb.salto();                       // ¡despegó!
+    if (!ps.onGround) caidaDesde = Math.max(caidaDesde ?? ps.pos.y, ps.pos.y);          // en el aire: recordar lo MÁS ALTO que llegó
+    if (ps.onGround && !enPisoAntes) {                                                 // ¡tocó el piso!
+      const altura = (caidaDesde ?? ps.pos.y) - ps.pos.y; caidaDesde = null;
+      if (altura > 0.25) amb.aterrizaje(altura / 3); pasoTimer = intervaloPasos(SPEED) * 0.5;
+    }
+    if (moving && ps.onGround) {
+      if ((pasoTimer -= dt) <= 0) { amb.paso('jugador', enCaja ? VOL_PASO * 0.4 : VOL_PASO, 0); pasoTimer = intervaloPasos(enCaja ? VEL_CAJA : SPEED); }
+    } else pasoTimer = 0;   // (al empezar a caminar, el primer paso suena enseguida)
+  }
   let amb = null, ajSonido = { musica: 0, ambiente: 0.7, silencio: false }, agachado = false;
   try { ajSonido = leerAjustes(localStorage.getItem(CLAVE_AJUSTES)); } catch (e) {}
   const sonidoBtn = document.getElementById('sonidoBtn'), sonidoPanel = document.getElementById('sonidoPanel');

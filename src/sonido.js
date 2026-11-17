@@ -69,7 +69,11 @@ export const PASOS = {
   grey: { grave: 260, cae: 180, dur: 0.07, fuerza: 0.5, ruido: 0.6, filtro: 3200, cuerpo: 520, extra: 'uñas' },    // ⚫ pasos rápidos pero pequeños (tic-tic de uñas)
   yellow: { grave: 150, cae: 100, dur: 0.16, fuerza: 0.45, ruido: 0.3, filtro: 1100, cuerpo: 300, extra: 'amenaza' },   // 🟡 pasitos suaves… pero amenazantes
   white: { grave: 96, cae: 60, dur: 0.26, fuerza: 0.72, ruido: 0.6, filtro: 1000, cuerpo: 200, extra: 'gelatina' },   // ⚪ en medio de Red y Yellow (y blandito, como gelatina)
+  // 👟 TÚ: como en Rectángulo Verde (un "chss" cortito), pero en piso duro: un "toc" seco del taco contra las baldosas
+  jugador: { grave: 190, cae: 120, dur: 0.06, fuerza: 0.32, ruido: 0.7, filtro: 4200, cuerpo: 460, extra: 'taco' },
 };
+// Cada cuánto suena un paso tuyo (segundos): corriendo (12 m/s) cada 0,32 s; más lento, más espaciados (igual que en Rectángulo Verde)
+export const intervaloPasos = rapidez => 0.32 * (12 / Math.max(1, rapidez));
 export const ALCANCE_PASOS = 32;   // más lejos que esto (en metros), no se oyen
 // Qué tan fuerte se oye un paso a esa distancia (0 = nada, 1 = pegado a ti). Baja suave, y en otro piso se oye mucho menos
 export function volumenPaso(id, dist, otroPiso = false) {
@@ -269,8 +273,22 @@ export function crearAmbiente(Ctx = (globalThis.AudioContext || globalThis.webki
       if (p.extra === 'retumbo') tono(salida, t + 0.02, { frecs: [31, 24], dur: 0.7, vol: 0.35, ataque: 0.03 });   // 🔴 el piso retumba
       if (p.extra === 'uñas') soplo(salida, t + 0.015, { buf: blancoBuf, tipo: 'highpass', frecs: [4200], dur: 0.02, vol: 0.18, ataque: 0.001 });   // ⚫ tic de uñas
       if (p.extra === 'amenaza') { tono(salida, t, { frecs: [58], dur: 0.5, vol: 0.12, ataque: 0.08 }); tono(salida, t, { frecs: [61.5], dur: 0.5, vol: 0.1, ataque: 0.08 }); }   // 🟡 dos notas graves que chocan: da miedito
+      if (p.extra === 'taco') soplo(salida, t, { buf: blancoBuf, tipo: 'bandpass', frecs: [3000 + Math.random() * 1200], q: 1.2, dur: 0.05, vol: 0.5, ataque: 0.001 });   // 👟 el "chss" del zapato (cada paso un poquito distinto)
       if (p.extra === 'gelatina') tono(salida, t + 0.03, { onda: 'sine', frecs: [180, 120], dur: 0.12, vol: 0.12, ataque: 0.01 });   // ⚪ "blop" blandito
       setTimeout(() => { try { salida.disconnect(); if (pan) pan.disconnect(); } catch (e) {} }, 1500);
+    },
+    // 🦘 Saltar: un "bup" que sube (como en Rectángulo Verde, pero más suave). Aterrizar: un "tunk" contra el piso duro (más fuerte si caes de alto)
+    salto() {
+      if (ctx.state !== 'running') return;
+      const t = ahora() + 0.005;
+      tono(busEfectos, t, { onda: 'triangle', frecs: [300, 680], dur: 0.14, vol: 0.18, ataque: 0.006 });
+    },
+    aterrizaje(fuerza = 0.5) {
+      if (ctx.state !== 'running') return;
+      const t = ahora() + 0.005, v = Math.min(1, Math.max(0.2, fuerza));
+      tono(busEfectos, t, { frecs: [140, 70], dur: 0.12, vol: 0.22 * v, ataque: 0.003 });   // (parecido de fuerte al salto)
+      tono(busEfectos, t, { onda: 'triangle', frecs: [380, 220], dur: 0.08, vol: 0.18 * v, ataque: 0.002 });
+      soplo(busEfectos, t, { buf: blancoBuf, tipo: 'bandpass', frecs: [2600], q: 0.9, dur: 0.07, vol: 0.25 * v, ataque: 0.001 });
     },
     // 💀 El grito del susto: fuerte, pero ya no revienta los oídos, y respeta tu volumen (silencio = no suena)
     grito() {

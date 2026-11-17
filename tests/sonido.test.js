@@ -94,8 +94,9 @@ describe('🌧️ los sonidos de cada zona', () => {
 import { PASOS, ALCANCE_PASOS, volumenPaso, pasoNumero, ladoDe } from '../src/sonido.js';
 describe('🐾 los pasos de los dragones', () => {
   it('los 4 dragones tienen su sonido de pasos, y los 4 son distintos', () => {
-    expect(Object.keys(PASOS).sort()).toEqual(['grey', 'red', 'white', 'yellow']);
-    expect(new Set(Object.values(PASOS).map(p => JSON.stringify(p))).size).toBe(4);
+    const dragones = ['grey', 'red', 'white', 'yellow'];   // (el otro sonido de pasos es el tuyo: 'jugador')
+    expect(Object.keys(PASOS).filter(k => k !== 'jugador').sort()).toEqual(dragones);
+    expect(new Set(dragones.map(id => JSON.stringify(PASOS[id]))).size).toBe(4);
   });
   it('🔴 Red pisa más fuerte y más grave que todos', () => {
     for (const id of ['grey', 'yellow', 'white']) { expect(PASOS.red.fuerza, id).toBeGreaterThan(PASOS[id].fuerza); expect(PASOS.red.grave, id).toBeLessThan(PASOS[id].grave); }
@@ -180,4 +181,11 @@ describe('📜 el texto de las escenas', () => {
   });
   it('nunca más lento que 8 letras por segundo', () => expect(letrasVisibles('x'.repeat(100), 1, 1000).length).toBe(8));
   it('al principio no se ve nada', () => expect(letrasVisibles(texto, 0, 28)).toBe(''));
+});
+
+import { intervaloPasos as intervalo2, PASOS as PASOS2 } from '../src/sonido.js';
+describe('👟 tus pasos', () => {
+  it('corriendo (12 m/s) suena un paso cada 0,32 s', () => expect(intervalo2(12)).toBeCloseTo(0.32));
+  it('con la caja (6 m/s) los pasos van más espaciados', () => expect(intervalo2(6)).toBeGreaterThan(intervalo2(12)));
+  it('tus pasos existen y son más suaves que los de Red', () => expect(PASOS2.jugador.fuerza).toBeLessThan(PASOS2.red.fuerza));
 });
