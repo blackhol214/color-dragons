@@ -43,12 +43,13 @@ export const caminoDe = id => CAMINOS.find(c => c.id === id) || null;
 // las otras 3 son raras. Las repetidas se pueden vender (venta = monedas que te dan). La que llevas te sigue como el bot guía
 export const PRECIO_HUEVO = 10;
 export const MASCOTAS = [
-  { id: 'ganso', prob: 30, rara: false, venta: 3 },
-  { id: 'oso', prob: 25, rara: false, venta: 3 },
-  { id: 'planta', prob: 25, rara: false, venta: 3 },
-  { id: 'fantasma', prob: 10, rara: true, venta: 6 },
-  { id: 'miniYellow', prob: 7, rara: true, venta: 8 },
-  { id: 'arcoiris', prob: 3, rara: true, venta: 15 },   // ¡legendaria!
+  // rapidez: cuánto más rápido te hace correr (en %). Los números los escribió Mathias: todas juntas suman 40
+  { id: 'ganso', prob: 30, rara: false, venta: 3, rapidez: 3 },
+  { id: 'oso', prob: 25, rara: false, venta: 3, rapidez: 3 },
+  { id: 'planta', prob: 25, rara: false, venta: 3, rapidez: 5 },
+  { id: 'fantasma', prob: 10, rara: true, venta: 6, rapidez: 9 },
+  { id: 'miniYellow', prob: 7, rara: true, venta: 8, rapidez: 7 },
+  { id: 'arcoiris', prob: 3, rara: true, venta: 15, rapidez: 13 },   // ¡legendaria!
 ];
 export const mascotaDe = id => MASCOTAS.find(m => m.id === id) || null;
 // Elige una mascota según las probabilidades: un número al azar de 0 a 100 y se ve en qué "pedazo" cae
@@ -74,6 +75,8 @@ export const TODAS = 'todas';
 const tieneAlguna = cuenta => MASCOTAS.some(m => cuenta.mascotas[m.id]);
 export const llevarMascota = (cuenta, id) => (id === null || cuenta.mascotas[id] || (id === TODAS && tieneAlguna(cuenta)) ? { ...cuenta, mascota: id } : cuenta);
 // Las mascotas que te siguen ahora (una lista: vacía, una sola, o todas las que tienes en el orden de la tienda)
+// ⚡ Cuánto más rápido corres con las mascotas que llevas: 1 = normal, 1.13 = 13 % más rápido. Si llevas todas, se suman
+export const multiplicadorRapidez = cuenta => 1 + mascotasQueLlevas(cuenta).reduce((suma, id) => suma + (mascotaDe(id)?.rapidez || 0), 0) / 100;
 export const mascotasQueLlevas = cuenta => (cuenta.mascota === TODAS ? MASCOTAS.filter(m => cuenta.mascotas[m.id]).map(m => m.id) : cuenta.mascota ? [cuenta.mascota] : []);
 
 export const nuevaCuenta = () => ({ monedas: 0, color: COLOR_INICIAL, cajas: ['carton'], caja: 'carton', caminos: [], camino: null, mascotas: {}, mascota: null });

@@ -283,7 +283,7 @@ import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, 
 import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=20';
 import { crearDragon, animarDragon } from './src/criaturas.js?v=18';
 import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=32';   // (v=19: textos nuevos del 🔊 sonido)
-import { MASCOTAS, PRECIO_HUEVO, mascotaDe, abrirHuevo, venderRepetida, llevarMascota, TODAS, mascotasQueLlevas, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=19';
+import { multiplicadorRapidez, MASCOTAS, PRECIO_HUEVO, mascotaDe, abrirHuevo, venderRepetida, llevarMascota, TODAS, mascotasQueLlevas, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=20';
 import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, cercaDeMesa, MESA_CENTRAL, tickNoche, siguienteNoche } from './src/noches.js?v=22';
 import * as F from './src/fiesta.js?v=20';
 import { huellaDe, hayVersionNueva, REVISAR_CADA_MS } from './src/pwa.js?v=1';
@@ -2784,7 +2784,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
     for (const x of tengo) {
       const f = document.createElement('div'); f.className = 'itemTienda';
       const mm = document.createElement('div'); mm.className = 'muestra'; mm.style.background = { ganso: '#f4f4f0', oso: '#8a5a32', planta: 'linear-gradient(#5fbf4a 0 45%, #c06a3c 45%)', fantasma: '#e6ecff', miniYellow: '#e2bd3c', arcoiris: 'linear-gradient(135deg, #ff4d4d, #ffd23f, #5ad16a, #4d9bff, #b14dff)' }[x.id];
-      const nn = document.createElement('div'); nn.className = 'nombre'; nn.textContent = `${tr('mascota.' + x.id)} ×${cuenta.mascotas[x.id]}`;
+      const nn = document.createElement('div'); nn.className = 'nombre'; nn.textContent = `${tr('mascota.' + x.id)} ×${cuenta.mascotas[x.id]} · ⚡+${x.rapidez}%`;   // (cuánto más rápido te hace correr)
       const bs = document.createElement('div'); bs.className = 'botones2';
       const llevar = document.createElement('button'); llevar.type = 'button'; const la = cuenta.mascota === x.id || cuenta.mascota === TODAS;
       llevar.textContent = tr(la ? 'mascotas.llevando' : 'mascotas.llevar');
@@ -3367,7 +3367,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
       // relativo a la cámara
       const s = Math.sin(camYaw), c = Math.cos(camYaw);
       const mx = fx * c + fz * s, mz = -fx * s + fz * c;
-      const rapidez = enCaja ? VEL_CAJA : SPEED;   // con la caja puesta vas más lento
+      const rapidez = (enCaja ? VEL_CAJA : SPEED) * multiplicadorRapidez(cuenta);   // con la caja puesta vas más lento · ⚡ tus mascotas te hacen más rápido
       empujeX = mx; empujeZ = mz;   // (para empujar los bloques de la noche final)
       ps.walkX += mx * rapidez * dt;
       ps.walkZ += mz * rapidez * dt;

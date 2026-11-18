@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MASCOTAS, PRECIO_HUEVO, sacarMascota, abrirHuevo, venderRepetida, llevarMascota, TODAS, mascotasQueLlevas, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, COSTO_SEGUIR, pagarParaSeguir, CAJAS, PALETA, COLOR_INICIAL, MONEDAS_POR_NOCHE, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, leerCuenta } from '../src/tienda.js';
+import { multiplicadorRapidez, TODAS, MASCOTAS, PRECIO_HUEVO, sacarMascota, abrirHuevo, venderRepetida, llevarMascota, TODAS, mascotasQueLlevas, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, COSTO_SEGUIR, pagarParaSeguir, CAJAS, PALETA, COLOR_INICIAL, MONEDAS_POR_NOCHE, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, leerCuenta } from '../src/tienda.js';
 
 describe('🪙 monedas', () => {
   it('empiezas con 0 monedas, verde y con la caja de cartón', () => {
@@ -144,5 +144,19 @@ describe('🐾 llevar todas las mascotas a la vez', () => {
   it('una sola o ninguna', () => {
     expect(mascotasQueLlevas({ ...nuevaCuenta(), mascotas: { oso: 1 }, mascota: 'oso' })).toEqual(['oso']);
     expect(mascotasQueLlevas(nuevaCuenta())).toEqual([]);
+  });
+});
+
+describe('⚡ las mascotas te hacen más rápido (números de Mathias)', () => {
+  it('sin mascota corres normal', () => expect(multiplicadorRapidez(nuevaCuenta())).toBe(1));
+  it('con el cubo arcoíris, 13 % más rápido', () => expect(multiplicadorRapidez({ ...nuevaCuenta(), mascotas: { arcoiris: 1 }, mascota: 'arcoiris' })).toBeCloseTo(1.13));
+  it('con TODAS (si las tienes todas) se suman: 40 %', () => {
+    const todas = Object.fromEntries(MASCOTAS.map(m => [m.id, 1]));
+    expect(multiplicadorRapidez({ ...nuevaCuenta(), mascotas: todas, mascota: TODAS })).toBeCloseTo(1.4);
+  });
+  it('el cubo arcoíris es la más rápida y el ganso y el oso las más lentas', () => {
+    const r = Object.fromEntries(MASCOTAS.map(m => [m.id, m.rapidez]));
+    expect(Math.max(...Object.values(r))).toBe(r.arcoiris);
+    expect(Math.min(...Object.values(r))).toBe(r.ganso); expect(r.oso).toBe(r.ganso);
   });
 });
