@@ -2,7 +2,7 @@
 // Cada noche: primero la cámara recorre el laboratorio mientras la voz del sombrero 🎩 te dice qué buscar;
 // después salen los dragones de esa noche: agarras los objetos con E y los llevas a la máquina del sombrero, en el Center Lab.
 import { SALAS, ESCOTILLAS, PISO_SUBSUELO, delLab } from './laboratorio.js?v=19';
-import { REFUGIOS } from './dragones.js?v=19';
+import { REFUGIOS } from './dragones.js?v=20';
 
 export const NOCHES = [
   { n: 1, dragones: ['red'], objeto: 'tubo', cantidad: 16,

@@ -195,3 +195,22 @@ describe('🪑 los dragones chocan con los muebles', () => {
     expect(d.z).toBeLessThan(24 - 2.94);   // la mesa grande del Center Lab empieza en z ≈ 21
   });
 });
+
+describe('😴 Yellow no se queda dormido a mitad del camino (bug que encontró Mathias)', () => {
+  it('si se queda sin camino lejos de su cama, lo vuelve a calcular y llega a la cama', () => {
+    const y = nuevosDragones().find(d => d.id === 'yellow');
+    Object.assign(y, { x: 36, y: -7, z: 2, modo: 'dormir', ruta: [], hambre: 999 });   // en su cuarto, lejos de la cama, sin camino
+    for (let i = 0; i < 600; i++) tickDragones([y], [], 0.05, () => 0.5, { plato: false });
+    expect(Math.hypot(y.x - CAMA.x, y.z - CAMA.z)).toBeLessThan(0.6);
+  });
+});
+
+describe('😴 Yellow arriba (en el Center Lab) también vuelve a su cama', () => {
+  it('si se cansa de buscar arriba, baja por la escotilla y llega a la cama del subsuelo', () => {
+    const y = nuevosDragones().find(d => d.id === 'yellow');
+    Object.assign(y, { x: 10, y: 0, z: 18, modo: 'pasear', ruta: [], despierto: 0.05, hambre: 999 });   // en el Center Lab, a punto de cansarse
+    let llego = false;   // (después de dormir un rato le da hambre y sale otra vez: eso es normal, así que miramos si llegó en algún momento)
+    for (let i = 0; i < 4000 && !llego; i++) { tickDragones([y], [], 0.05, () => 0.5, { plato: false }); llego = y.y === -7 && Math.hypot(y.x - CAMA.x, y.z - CAMA.z) < 0.6; }
+    expect(llego).toBe(true);
+  });
+});

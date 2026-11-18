@@ -194,7 +194,12 @@ function avanzar(d, vel, dt) {
 function dormilon(d, def, dt, mundo, eventos, azar) {
   if (d.modo === 'dormir') {
     d.vel = 0;
-    if (Math.hypot(d.x - CAMA.x, d.z - CAMA.z) > 0.5) { avanzar(d, def.camina, dt); return true; }   // camina de vuelta a la cama
+    if (Math.hypot(d.x - CAMA.x, d.z - CAMA.z) > 0.5) {   // camina de vuelta a la cama
+      // 🐛 (lo cazó Mathias) si el camino se le acabó antes de llegar (por ejemplo, se trabó con un mueble y se saltó un punto),
+      // se quedaba DORMIDO a mitad del pasillo para siempre. Ahora vuelve a calcular el camino cada medio segundo
+      if (!d.ruta.length && (d.recalcular = (d.recalcular || 0) - dt) <= 0) { d.recalcular = 0.5; irA(d, CAMA, def.piso); }
+      avanzar(d, def.camina, dt); return true;
+    }
     if ((d.hambre -= dt) <= 0) {   // ¡hambre! va al plato
       d.modo = 'comer'; d.ruta = [{ x: PLATO.x + 0.9, z: PLATO.z }]; d.espera = 0;
     }
@@ -220,7 +225,7 @@ function dormilon(d, def, dt, mundo, eventos, azar) {
 }
 function acostarse(d, azar) {
   d.modo = 'dormir'; d.ruta = [];
-  irA(d, CAMA);
+  irA(d, CAMA, DEF.get(d.id).piso);   // 🐛 (lo cazó Mathias) la cama está en el SUBSUELO: si no se lo dices, la busca en el piso donde está y no la encuentra
   d.hambre = HAMBRE.min + azar() * (HAMBRE.max - HAMBRE.min); d.espera = 0; d.objetivo = null;
 }
 

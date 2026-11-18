@@ -280,11 +280,11 @@
 import { alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=18';
 import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=19';
 import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=19';
-import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=19';
+import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=20';
 import { crearDragon, animarDragon } from './src/criaturas.js?v=18';
 import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=32';   // (v=19: textos nuevos del 🔊 sonido)
 import { MASCOTAS, PRECIO_HUEVO, mascotaDe, abrirHuevo, venderRepetida, llevarMascota, TODAS, mascotasQueLlevas, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=19';
-import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, cercaDeMesa, MESA_CENTRAL, tickNoche, siguienteNoche } from './src/noches.js?v=21';
+import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, cercaDeMesa, MESA_CENTRAL, tickNoche, siguienteNoche } from './src/noches.js?v=22';
 import * as F from './src/fiesta.js?v=20';
 import { huellaDe, hayVersionNueva, REVISAR_CADA_MS } from './src/pwa.js?v=1';
 import { escenaDe, letrasVisibles } from './src/escenas.js?v=1';
@@ -1348,7 +1348,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
   function usarE() { if (fantasma) return; const u = queUsar(); if (u) u.hacer(); }
   usarBtn.addEventListener('click', e => { usarE(); e.currentTarget.blur(); });
   // 🔧 Para probar: con ?debug en el link, la consola puede ver y mover al jugador (window.cd)
-  if (new URLSearchParams(location.search).has('debug')) window.cd = { ps, camera, salaEn, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; }, get escondido() { return escondido; }, get enCaja() { return enCaja; }, get dragones() { return dragones; }, get cuerpos() { return cuerposDragon; }, get noche() { return noche; }, get fiesta() { return fiesta; }, get red() { return red; }, platforms, atrapar: id => atrapado(id), get susto() { return susto; }, renderer, scene, bloqueanCamara, get camPitch() { return camPitch; }, crearMascota: id => crearMascota(id), automaticas };
+  if (new URLSearchParams(location.search).has('debug')) window.cd = { ps, camera, salaEn, get camYaw() { return camYaw; }, set camYaw(v) { camYaw = v; }, get escondido() { return escondido; }, get enCaja() { return enCaja; }, get dragones() { return dragones; }, get cuerpos() { return cuerposDragon; }, get noche() { return noche; }, get fiesta() { return fiesta; }, get red() { return red; }, platforms, atrapar: id => atrapado(id), get susto() { return susto; }, renderer, scene, bloqueanCamara, get camPitch() { return camPitch; }, crearMascota: id => crearMascota(id), automaticas, amigoFalso: (id, x, y, z) => { addFriend({ id, nombre: "Prueba", color: 0xff7f50, x, y, z, rot: 0 }); const f = red.otros.get(id); for (let k = 0; k < 3; k++) agregarMuestra(f.suave, [x, y, z, 0], Date.now() - 300 + k * 100, performance.now() - 300 + k * 100); return f; }, escenaAmigo: (id, dragon) => empezarEscenaAmigo(red.otros.get(id), dragon) };
   // La caja puesta: las solapas se cierran, y al caminar se bambolea un poquito
   function moverCaja(caja, puesta, caminando, dt, t) {
     caja.obj.visible = puesta;
@@ -2002,9 +2002,108 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
       else if (m.que === 'atrapado' && quien === 'yo') atrapado(m.dragon);
       else if (m.que === 'atrapado' && red.otros.has(quien) && !red.ignorarNoche) {   // 💀 a un amigo lo atraparon: te avisa (y le sale la alerta encima)
         const def = DRAGONES.find(d => d.id === m.dragon);
-        showToast(tr('toast.amigoAtrapado', { nombre: red.otros.get(quien).nombre, dragon: def ? def.nombre : tr('dragon.alguien') }), true, 3000); alertaSobre(quien);
+        showToast(tr('toast.amigoAtrapado', { nombre: red.otros.get(quien).nombre, dragon: def ? def.nombre : tr('dragon.alguien') }), true, 3000);
+        empezarEscenaAmigo(red.otros.get(quien), m.dragon);   // 🎬 y lo VES: cada dragón se lo come a su manera
       }
       else if (m.que === 'despierta') showToast(tr('toast.yellowHambre'), true, 3500);
+    }
+  }
+  // ---------- 🎬 Cuando atrapan a un AMIGO, lo ves desde afuera (diseño de Mathias) ----------
+  //   🔴 Red: levanta el brazo, lo agarra, lo sube hasta su boca (la cabeza se abre como tapa) y se lo come
+  //   ⚫ Grey: se para en 2 patas, lo tira al suelo y lo muerde; después se va… y el amigo queda tirado ahí
+  //   🟡 Yellow: lo embiste, el amigo sale volando, cae al suelo… y explota
+  //   ⚪ White: su boca se agiganta y el amigo se va metiendo adentro
+  const escenasAmigo = new Map();   // id del amigo → { f, dragon, t, desde }
+  const DURA_ESCENA = { red: 2.4, grey: 3, yellow: 2.6, white: 2.2 };
+  function empezarEscenaAmigo(f, idDragon) {
+    if (!f || !cuerposDragon.get(idDragon) || escenasAmigo.has(f.id)) return;
+    const p = f.obj.position;
+    escenasAmigo.set(f.id, { f, dragon: idDragon, t: 0, desde: p.clone(), exploto: false });
+  }
+  const _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3(), _hombro = new THREE.Vector3();
+  // 🔴 El brazo de Red que se envuelve: mientras dura la escena, su brazo derecho de verdad se esconde y en su lugar se dibuja
+  // un tubo que sale del hombro, llega hasta el amigo y da vueltas en espiral alrededor de su cuerpo (como una serpiente).
+  // cuanto: 0 = brazo normal, 1 = envuelto del todo · tam: qué tan chiquito está el amigo (cuando se lo traga)
+  function brazoQueEnvuelve(e, c, centro, cuanto, tam) {
+    const derecho = c.brazos.find(b => b.lado > 0);
+    if (!e.brazo) { e.brazo = new THREE.Mesh(new THREE.BufferGeometry(), derecho.hombro.children[0].material); scene.add(e.brazo); }
+    derecho.hombro.visible = cuanto <= 0.01; e.brazo.visible = cuanto > 0.01;
+    if (!e.brazo.visible) return;
+    derecho.hombro.getWorldPosition(_hombro);
+    const pts = [_hombro.clone()];
+    const vueltas = 2 * cuanto, n = Math.max(2, Math.round(16 * cuanto));
+    // HORIZONTAL (idea de Mathias): el brazo sale derecho del hombro, baja hasta la panza del amigo y lo rodea con vueltas
+    // planas, como un cinturón (cada vuelta apenas un poquito más abajo que la anterior)
+    const panza = centro.y + 1.05 * tam;
+    pts.push(new THREE.Vector3((_hombro.x * 2 + centro.x) / 3, _hombro.y - 0.1, (_hombro.z * 2 + centro.z) / 3));
+    // la primera vuelta empieza del lado que mira a Red
+    const a0 = Math.atan2(_hombro.z - centro.z, _hombro.x - centro.x);
+    for (let i = 0; i <= n; i++) {
+      const a = a0 + (i / n) * vueltas * Math.PI * 2, r = 0.66 * tam, y = panza + 0.15 * tam - (i / n) * 0.35 * tam;
+      pts.push(new THREE.Vector3(centro.x + Math.cos(a) * r, y, centro.z + Math.sin(a) * r));
+    }
+    e.brazo.geometry.dispose();
+    e.brazo.geometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 48, 0.11, 8, false);
+  }
+  const entre = (t, a, b) => Math.min(1, Math.max(0, (t - a) / (b - a)));   // de 0 a 1 entre el segundo a y el b
+  function updateEscenasAmigos(dt) {
+    for (const [id, e] of escenasAmigo) {
+      const f = e.f, c = cuerposDragon.get(e.dragon), o = c.obj, look = f.look;
+      if (!red.otros.has(id)) { escenasAmigo.delete(id); continue; }   // (se desconectó)
+      e.t += dt;
+      const t = e.t, fin = DURA_ESCENA[e.dragon];
+      // el dragón mira al amigo
+      o.rotation.y = Math.atan2(e.desde.x - o.position.x, e.desde.z - o.position.z);
+      const fx = Math.sin(o.rotation.y), fz = Math.cos(o.rotation.y);
+      f.obj.position.copy(e.desde); look.scale.setScalar(1); look.position.set(0, 0, 0);
+      // el amigo mira al dragón (así, al caer "de espaldas", cae lejos de él)
+      look.rotation.order = 'YXZ'; look.rotation.set(0, Math.atan2(o.position.x - e.desde.x, o.position.z - e.desde.z), 0);
+      if (e.dragon === 'red') {
+        // su brazo derecho se estira hasta el amigo y se ENVUELVE en espiral alrededor de él (0–0.6 s), lo sube frente a su cara
+        // (0.6–1.3 s), la cabeza se abre como tapa y se lo traga (1.3–1.9 s)
+        const sube = entre(t, 0.6, 1.3), traga = entre(t, 1.3, 1.9), envuelve = entre(t, 0, 0.6);
+        const frente = _v1.set(o.position.x + fx * 1.2, o.position.y + 2.2, o.position.z + fz * 1.2);
+        const boca = _v2.set(o.position.x + fx * 0.5, o.position.y + 3.1, o.position.z + fz * 0.5);
+        f.obj.position.lerpVectors(e.desde, frente, sube).lerp(boca, traga);
+        c.cabeza.position.y = (0.28 + 0.9 * entre(t, 1.0, 1.4) * (1 - entre(t, 1.9, 2.2))) * c.tamCabeza;   // abre la boca… y la cierra
+        look.scale.setScalar(1 - 0.8 * traga); look.visible = traga < 1;
+        brazoQueEnvuelve(e, c, f.obj.position, envuelve * (1 - traga), look.scale.x);
+      } else if (e.dragon === 'grey') {
+        // se para, lo empuja: el amigo cae de espaldas (0.3–0.7 s); muerde dos veces (0.8–1.8 s); se baja y se va. El amigo queda tirado
+        const parado = entre(t, 0, 0.3) * (1 - entre(t, 2.0, 2.4));
+        o.rotation.order = 'YXZ'; o.rotation.x = -1.0 * parado;
+        const muerde = Math.max(0, Math.sin((t - 0.8) * Math.PI * 2)) * (t > 0.8 && t < 1.8 ? 1 : 0);
+        c.abajo.rotation.x = 0.9 * muerde; c.arriba.rotation.x = -0.35 * muerde;
+        const cae = entre(t, 0.3, 0.7);
+        look.rotation.x = -Math.PI / 2 * cae; look.position.y = 0.45 * cae;   // de espaldas en el piso
+      } else if (e.dragon === 'yellow') {
+        // embiste (0.1–0.4 s): el amigo sale volando hacia atrás y cae (0.4–1.1 s); se queda en el piso… y ¡BUM! explota (1.8 s)
+        const vuela = entre(t, 0.35, 1.1);
+        f.obj.position.set(e.desde.x + fx * 3 * vuela, e.desde.y + Math.sin(vuela * Math.PI) * 1.4, e.desde.z + fz * 3 * vuela);
+        look.rotation.x = -Math.PI / 2 * entre(t, 0.5, 1.1); look.position.y = 0.45 * entre(t, 0.5, 1.1);
+        o.position.x += fx * 1.2 * Math.sin(entre(t, 0.1, 0.6) * Math.PI); o.position.z += fz * 1.2 * Math.sin(entre(t, 0.1, 0.6) * Math.PI);
+        if (t > 1.8 && !e.exploto) { e.exploto = true; explode(f); }
+        look.visible = !e.exploto;
+      } else {   // white
+        // la boca crece (0–0.8 s) y el amigo se va metiendo, cada vez más chiquito (0.8–1.6 s)
+        const crece = entre(t, 0, 0.8) * (1 - entre(t, 1.7, 2.1));
+        c.boca.scale.set(1 + 4 * crece * 0.8, 1 + 4 * crece, 1);
+        const entra = entre(t, 0.8, 1.6);
+        c.boca.getWorldPosition(_v2);
+        f.obj.position.lerpVectors(e.desde, _v2.setY(Math.max(0, _v2.y - 0.9)), entra);
+        look.scale.setScalar(1 - 0.85 * entra); look.visible = entra < 1;
+      }
+      f.label.visible = look.visible;
+      if (t >= fin) {
+        // Terminó. Si se lo comieron, sigue escondido hasta que vuelva a aparecer en otro lado (pagó o se fue al lobby). Grey lo deja tirado ahí
+        o.rotation.x = 0; for (const b of c.brazos || []) { b.hombro.rotation.x = 0; b.hombro.visible = true; }
+        if (e.brazo) { scene.remove(e.brazo); e.brazo.geometry.dispose(); e.brazo = null; }
+        const real = valoresEn(f.suave, performance.now());   // dónde está DE VERDAD (lo que manda su compu)
+        const sigueAhi = real && Math.hypot(real[0] - e.desde.x, real[2] - e.desde.z) < 2.5;
+        if ((e.dragon === 'grey' || !look.visible) && sigueAhi && t < 12) continue;   // (sigue tirado o comido mientras no reaparezca en otro lado)
+        look.rotation.set(0, look.rotation.y, 0); look.rotation.order = 'XYZ'; look.position.y = 0; look.scale.setScalar(1); look.visible = !f.oculto; f.label.visible = !f.oculto;
+        escenasAmigo.delete(id);
+      }
     }
   }
   const miraA = new THREE.Vector3();
@@ -3277,6 +3376,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
     updateEscondites(dt);
     moverCaja(miCaja, enCaja, moving, dt, t);
     updateDragones(dt);
+    updateEscenasAmigos(dt);
     updateNoches(dt);
     const fiestaCamara = updateFiesta(dt);
     revisarPuertaLobby();
