@@ -277,12 +277,12 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=18';
+import { subirCamara, alLado, moveAndCollide, squashStretch, rumboDeMovimiento, saveKey, serializeSave, parseSave, GUIA_COLORES, siguienteColorGuia } from './src/logic.js?v=19';
 import { PUERTO, leerSala, ENVIOS_POR_SEGUNDO, nuevoSuavizador, agregarMuestra, valoresEn, corto, acercarAngulo, piezasExplosion } from './src/red.js?v=19';
 import { SALAS, ESCOTILLAS, ESCONDITES, SPAWN, LOBBY_SPAWN, FIESTA_SPAWN, ALTO, ALTO_SUBSUELO, altoDe, puertaDe, PISO_PRINCIPAL, PISO_SUBSUELO, tramosDePared, salaEn, escotillaEn, esconditeCerca } from './src/laboratorio.js?v=19';
 import { DRAGONES, MODOS, PLATO, nuevosDragones, tickDragones } from './src/dragones.js?v=20';
 import { crearDragon, animarDragon } from './src/criaturas.js?v=18';
-import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=32';   // (v=19: textos nuevos del 🔊 sonido)
+import { t as tr, ponerIdioma, idioma, s as plural, ies } from './src/idioma.js?v=33';   // (v=19: textos nuevos del 🔊 sonido)
 import { multiplicadorRapidez, MASCOTAS, PRECIO_HUEVO, mascotaDe, abrirHuevo, venderRepetida, llevarMascota, TODAS, mascotasQueLlevas, CAMINOS, puedeEntrarCaminos, comprarCamino, ponerCamino, CAJAS, PALETA, COSTO_SEGUIR, nuevaCuenta, ganarNoche, pintar, puedeEntrar, comprar, ponerCaja, pagarParaSeguir, leerCuenta } from './src/tienda.js?v=20';
 import { NOCHES, OBJETOS, MAQUINA, MESA_LINTERNAS, INTRO_SEGUNDOS, FIN_SEGUNDOS, nocheDe, nuevaNoche, NOCHE_FINAL, PISTA_SEGUNDOS, entregados, llevaDe, objetoCerca, recoger, entregar, soltar, cercaDeMaquina, cercaDeMesa, MESA_CENTRAL, tickNoche, siguienteNoche } from './src/noches.js?v=22';
 import * as F from './src/fiesta.js?v=20';
@@ -3339,14 +3339,21 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
     t += dt;
 
     let fx = 0, fz = 0;
-    if (keys.KeyW || keys.ArrowUp) fz -= 1;
-    if (keys.KeyS || keys.ArrowDown) fz += 1;
+    if (keys.KeyW) fz -= 1;   // (las flechas ↑↓ ya no te mueven: ahora mueven la cámara)
+    if (keys.KeyS) fz += 1;
     if (keys.KeyA) fx -= 1;
     if (keys.KeyD) fx += 1;
-    // Flechas izquierda/derecha giran la cámara (más rápido que con el ratón)
-    const CAM_TURN = 3 * sensGiro();
+    // 🎮 Las 4 flechas mueven la cámara (idea de Mathias): ← → la giran; ↑ la sube (te ve más desde arriba, como un dron) y ↓ la baja.
+    // En primera persona, ↑ mira hacia arriba y ↓ hacia abajo
+    const CAM_TURN = 3 * sensGiro(), CAM_SUBE = 1.4 * sensGiro();
     if (keys.ArrowLeft) { camYaw += CAM_TURN * dt; tocasteCamara(); }
     if (keys.ArrowRight) { camYaw -= CAM_TURN * dt; tocasteCamara(); }
+    const subeCam = (keys.ArrowUp ? 1 : 0) - (keys.ArrowDown ? 1 : 0);
+    if (subeCam) {
+      tocasteCamara();
+      if (firstPerson) fpPitch = Math.min(1.3, Math.max(-1.3, fpPitch + subeCam * CAM_SUBE * dt));
+      else camPitch = subirCamara(camPitch, subeCam, dt, CAM_SUBE);
+    }
     fx += joy.x; fz += joy.y;
     // Joystick de la cámara (celular): a los lados gira, arriba y abajo mira hacia arriba o abajo
     if (camJoy.x || camJoy.y) {
@@ -3385,7 +3392,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
     // 🪜 En una escotilla: W o ESPACIO suben por la escalera, S baja. Si no tocas nada, resbalas despacito hacia abajo
     const esc = !oculto() && escotillaEn(ps.pos.x, ps.pos.y, ps.pos.z);
     if (esc) {
-      const sube = keys.KeyW || keys.ArrowUp || keys.Space || joy.y < -0.5, baja = keys.KeyS || keys.ArrowDown || joy.y > 0.5;
+      const sube = keys.KeyW || keys.Space || joy.y < -0.5, baja = keys.KeyS || joy.y > 0.5;
       if (sube || baja) {
         ps.vel.y = sube ? 5.5 : -5.5;
         // Colgado de la escalera no caminas hacia los lados (si no, W te sacaría de la escalera en vez de subirte).

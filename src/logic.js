@@ -89,3 +89,8 @@ export const textoQueHago = lugar => GUIA_QUE_HAGO[lugar] || GUIA_QUE_HAGO.mundo
 // Colores del bot guía: C pasa al siguiente (y después del último vuelve al primero)
 export const GUIA_COLORES = [0xffffff, 0x64d2ff, 0xffd60a, 0xff6bb5, 0x9b6bff, 0xff8a3d];
 export const siguienteColorGuia = i => (i + 1) % GUIA_COLORES.length;
+
+// 🎮 Subir o bajar la cámara con las flechas (idea de Mathias): direccion 1 = ↑ (sube), -1 = ↓ (baja).
+// Tiene un techo y un piso: no puede subir más de CAMARA_MAX ni bajar de CAMARA_MIN (si no, daría la vuelta o se metería en el piso)
+export const CAMARA_MIN = 0.1, CAMARA_MAX = 1.2;
+export const subirCamara = (inclinacion, direccion, dt, vel = 1.4) => Math.min(CAMARA_MAX, Math.max(CAMARA_MIN, inclinacion + direccion * vel * dt));

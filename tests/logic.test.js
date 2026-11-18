@@ -62,3 +62,11 @@ describe('aparecer al lado', () => {
     for (let i = 0; i < 50; i++) { const p = alLado({ x: 0, y: 0, z: 0 }), d = Math.hypot(p.x, p.z); expect(d).toBeGreaterThanOrEqual(0.8); expect(d).toBeLessThanOrEqual(2.2); }
   });
 });
+
+// 🟥→🟩 Jefe rojo de Mathias: la cámara con las flechas (los números los dijo él)
+import { subirCamara } from '../src/logic.js';
+describe('🎮 subir y bajar la cámara con las flechas (test de Mathias)', () => {
+  const apretar = (direccion, segundos) => { let c = 0.35; for (let t = 0; t < segundos; t += 1 / 60) c = subirCamara(c, direccion, 1 / 60); return c; };
+  it('↑ apretada 10 segundos: queda en 1.2', () => expect(apretar(1, 10)).toBeCloseTo(1.2));
+  it('↓ apretada 10 segundos: queda en 0.1', () => expect(apretar(-1, 10)).toBeCloseTo(0.1));
+});
