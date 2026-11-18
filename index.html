@@ -2165,7 +2165,8 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
   let noche = null, activos = new Set(), platoLleno = true;
   const contadorEl = document.getElementById('contador'), introEl = document.getElementById('intro'), introTexto = document.getElementById('introTexto'), cartelEl = document.getElementById('cartelNoche');
   // Los objetos que hay que buscar (formas simples, con un anillo que brilla debajo para encontrarlos)
-  function modeloObjeto(tipo) {
+  // conAnillo: el anillo amarillo del piso (para ver los objetos sueltos). Los que ya entregaste (en la mesa) no lo llevan
+  function modeloObjeto(tipo, conAnillo = true) {
     const g = new THREE.Group(), add = (geo, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); g.add(m); return m; };
     if (tipo === 'tubo') {   // 🧪 tubo de ensayo: vidrio con líquido de color y tapón
       add(new THREE.CylinderGeometry(0.09, 0.09, 0.55, 14), new THREE.MeshLambertMaterial({ color: 0xcfe3e4, transparent: true, opacity: 0.45 }));
@@ -2191,7 +2192,7 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
     }
     const anillo = new THREE.Mesh(new THREE.RingGeometry(0.35, 0.5, 28), new THREE.MeshBasicMaterial({ color: 0xf0e6a0, transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false }));
     anillo.rotation.x = -Math.PI / 2; anillo.position.y = -0.95;
-    const raiz = new THREE.Group(); raiz.add(g, anillo); raiz.userData.giro = g;
+    const raiz = new THREE.Group(); raiz.add(g); if (conAnillo) raiz.add(anillo); raiz.userData.giro = g;
     return raiz;
   }
   let mallasObjetos = [];
@@ -2331,13 +2332,43 @@ document.querySelector('#sinGraficos button').addEventListener('click', () => lo
   const pilaTubos = (() => {
     const filas = [5, 4, 3, 2, 1], D = 0.2, ALTO_FILA = D * 0.87, tubos = [];
     const poner = (t, z, y, giro = 0) => { t.rotation.set(giro, 0.05 * (Math.random() - 0.5), Math.PI / 2); t.position.set(MESA_CENTRAL.x + (Math.random() - 0.5) * 0.06, y, z); t.visible = false; scene.add(t); tubos.push(t); };
-    filas.forEach((n, f) => { for (let i = 0; i < n; i++) poner(modeloObjeto('tubo'), MESA_CENTRAL.z + (i - (n - 1) / 2) * D, TOPE_MESA + D / 2 + f * ALTO_FILA); });
-    poner(modeloObjeto('tubo'), MESA_CENTRAL.z + 2.5 * D + 0.12, TOPE_MESA + 0.22, -0.9);   // el número 16: apoyado contra la pila
+    filas.forEach((n, f) => { for (let i = 0; i < n; i++) poner(modeloObjeto('tubo', false), MESA_CENTRAL.z + (i - (n - 1) / 2) * D, TOPE_MESA + D / 2 + f * ALTO_FILA); });
+    poner(modeloObjeto('tubo', false), MESA_CENTRAL.z + 2.5 * D + 0.12, TOPE_MESA + 0.22, -0.9);   // el número 16: apoyado contra la pila
     return tubos;
   })();
+  // Noche 2 (diseño de Mathias): una máquina con 9 ventanitas (3×3). Cada paquete entregado aparece en su ventanita y la
+  // ventanita se prende. Las ventanitas están de los dos lados de la máquina (la ves llegues por donde llegues)
+  const maquinaComidaMesa = (() => {
+    const g = new THREE.Group(); g.position.set(MESA_CENTRAL.x, TOPE_MESA, MESA_CENTRAL.z); g.visible = false; scene.add(g);
+    const A = 1.7, F = 0.8, metal = lambert(0x7d8a8f), marco = lambert(0x4a5458);
+    const caja = new THREE.Mesh(new THREE.BoxGeometry(A, A, F), metal); caja.position.y = A / 2; g.add(caja);
+    const techo = new THREE.Mesh(new THREE.BoxGeometry(A + 0.12, 0.1, F + 0.12), marco); techo.position.y = A + 0.05; g.add(techo);
+    const celdas = [], L = 0.42, PASO = 0.52;
+    for (let fila = 0; fila < 3; fila++) for (let col = 0; col < 3; col++) {
+      const x = (col - 1) * PASO, y = A - 0.32 - fila * PASO;   // se llena de arriba hacia abajo, de izquierda a derecha
+      const luces = [], paquetes = [];
+      for (const lado of [-1, 1]) {
+        const z = lado * (F / 2 + 0.005);
+        const fondo = new THREE.Mesh(new THREE.PlaneGeometry(L, L), new THREE.MeshBasicMaterial({ color: 0x1b2326 }));   // la ventanita apagada
+        fondo.position.set(x, y, z); fondo.rotation.y = lado > 0 ? 0 : Math.PI; g.add(fondo); luces.push(fondo.material);
+        const p = modeloObjeto('comida', false); p.scale.setScalar(0.7); p.position.set(x, y - 0.05, z + lado * 0.03); p.rotation.y = lado > 0 ? 0 : Math.PI; p.visible = false; g.add(p); paquetes.push(p);
+        for (const [w, h, dx, dy] of [[L + 0.06, 0.04, 0, L / 2], [L + 0.06, 0.04, 0, -L / 2], [0.04, L, L / 2, 0], [0.04, L, -L / 2, 0]]) {   // el marquito
+          const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.03), marco); m.position.set(x + dx, y + dy, z); g.add(m);
+        }
+      }
+      celdas.push({ luces, paquetes });
+    }
+    return { g, celdas };
+  })();
   function mostrarMesa() {
-    const tubos = noche && nocheDe(noche.n).objeto === 'tubo' ? entregados(noche) : 0;
-    pilaTubos.forEach((t, i) => { t.visible = i < tubos; });
+    const objeto = noche && nocheDe(noche.n).objeto, n = noche ? entregados(noche) : 0;
+    pilaTubos.forEach((t, i) => { t.visible = objeto === 'tubo' && i < n; });
+    maquinaComidaMesa.g.visible = objeto === 'comida';
+    maquinaComidaMesa.celdas.forEach((c, i) => {
+      const llena = objeto === 'comida' && i < n;
+      for (const p of c.paquetes) p.visible = llena;
+      for (const l of c.luces) l.color.setHex(llena ? 0xf6e7b0 : 0x1b2326);   // prendida (luz cálida) o apagada
+    });
   }
   function updateNoches(dt) {
     mostrarMesa();
